@@ -39,7 +39,7 @@ you'd like to contribute or issues.
 
 ## TODO
 
--   :white_large_square reduce dependencies (remove jsondiff & dynamic).
+-   :white_large_square: reduce dependencies (remove jsondiff & dynamic).
 
 ## License
 
