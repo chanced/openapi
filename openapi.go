@@ -1,6 +1,8 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/openapi/yamlutil"
 )
 
@@ -61,6 +63,15 @@ type OpenAPI struct {
 	Extensions   `json:"-"`
 }
 type openapi OpenAPI
+
+// Validate validates an OpenAPI 3.1 specification
+func (o OpenAPI) Validate() error {
+	b, err := json.Marshal(o)
+	if err != nil {
+		return err
+	}
+	return Validate(b)
+}
 
 // MarshalJSON marshals JSON
 func (o OpenAPI) MarshalJSON() ([]byte, error) {

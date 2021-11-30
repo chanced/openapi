@@ -36,7 +36,7 @@ func TestHeader(t *testing.T) {
 		assert.NoError(err)
 		assert.True(jsonpatch.Equal(data, b), string(p))
 
-		// checking yaml
+		// testing yaml
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)

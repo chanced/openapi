@@ -34,7 +34,7 @@ func TestContact(t *testing.T) {
 		assert.NoError(err)
 		assert.True(jsonpatch.Equal(data, b), p)
 
-		// checking yaml
+		// testing yaml
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)

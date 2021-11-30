@@ -15,7 +15,6 @@ import (
 )
 
 func TestOpenAPI(t *testing.T) {
-
 	pass := []string{
 		`{
       "openapi": "3.1.0",
@@ -280,22 +279,6 @@ func TestOpenAPI(t *testing.T) {
   }`,
 	}
 
-	fail := []string{
-		`openapi: 3.1.1
-  
-    # this example shows invalid types for the schemaObject
-    
-    info:
-      title: API
-      version: 1.0.0
-    components:
-      schemas:
-        invalid_null: null
-        invalid_number: 0
-        invalid_array: []
-    `,
-	}
-	_ = fail
 	assert := require.New(t)
 
 	for _, d := range pass {
@@ -312,7 +295,12 @@ func TestOpenAPI(t *testing.T) {
 
 		assert.True(jsonpatch.Equal(data, b), cmpjson.Diff(data, b))
 
-		// checking yaml
+		// testing validation
+		err = o.Validate()
+		assert.NoError(err)
+		err = openapi.Validate(data)
+		assert.NoError(err)
+		// testing yaml
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
@@ -326,5 +314,74 @@ func TestOpenAPI(t *testing.T) {
 		}
 		assert.True(jsonpatch.Equal(data, yb), cmpjson.Diff(data, yb))
 
+	}
+
+	fail := []string{
+		`{
+      "openapi": "3.1.1",
+      "info": {
+        "title": "API",
+        "version": "1.0.0"
+      },
+      "components": {
+        "schemas": {
+          "invalid_null": null,
+          "invalid_number": 0,
+          "invalid_array": []
+        }
+      }
+    }`,
+		`{
+      "openapi": "3.1.0",
+      "info": {
+        "title": "API",
+        "version": "1.0.0"
+      }
+    }`,
+		`{
+      "openapi": "3.1.0",
+      "info": {
+        "title": "API",
+        "version": "1.0.0"
+      },
+      "servers": [
+        {
+          "url": "https://example.com/{var}",
+          "variables": {
+            "var": {
+              "enum": [],
+              "default": "a"
+            }
+          }
+        }
+      ],
+      "components": {}
+    }`,
+		`{
+      "openapi": "3.1.0",
+      "info": {
+        "title": "API",
+        "version": "1.0.0"
+      },
+      "paths": {},
+      "servers": {
+        "url": "/v1",
+        "description": "Run locally."
+      }
+    }`,
+		`{
+      "openapi": "3.1.0",
+      "info": {
+        "title": "API",
+        "version": "1.0.0"
+      },
+      "overlays": {}
+    }`,
+	}
+	for _, d := range fail {
+		data := []byte(d)
+
+		err := openapi.Validate(data)
+		assert.Error(err)
 	}
 }

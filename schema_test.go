@@ -338,7 +338,7 @@ func TestSchema(t *testing.T) {
 		assert.NoError(err)
 		assert.True(jsonpatch.Equal(b, data))
 
-		// checking yaml
+		// testing yaml
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)

@@ -102,7 +102,7 @@ func TestParameter(t *testing.T) {
 
 		assert.True(jsonpatch.Equal(data, b), cmpjson.Diff(data, b))
 
-		// checking yaml
+		// testing yaml
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)

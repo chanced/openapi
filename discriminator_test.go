@@ -42,7 +42,7 @@ func TestDiscriminator(t *testing.T) {
 		_, err = json.MarshalIndent(div, "", "  ")
 		assert.NoError(err)
 
-		// checking yaml
+		// testing yaml
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
