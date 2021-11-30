@@ -70,7 +70,11 @@ func (o OpenAPI) Validate() error {
 	if err != nil {
 		return err
 	}
-	return Validate(b)
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+	return validate(m)
 }
 
 // MarshalJSON marshals JSON

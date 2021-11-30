@@ -95,10 +95,13 @@ func Validate(data []byte) error {
 		return Validate(b)
 	}
 	for _, o := range list {
-		err := jsonschemaval.Validate(o)
-		if err != nil {
+		if err := validate(o); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func validate(v map[string]interface{}) error {
+	return jsonschemaval.Validate(v)
 }
