@@ -5,6 +5,10 @@ Package openapi is a set of Go types for [OpenAPI Specification
 is to assist in generation of OpenAPI documentation or to offer building blocks
 for code-generation.
 
+## Documentation
+
+[Documentation for the package can be found on pkg.go.dev](https://pkg.go.dev/github.com/chanced/openapi).
+
 ## Validation
 
 Currently, specifications are validated with JSON Schema. Per OpenAPI's
