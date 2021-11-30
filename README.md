@@ -37,10 +37,6 @@ you'd like to contribute or issues.
 -   github.com/chanced/dynamic (json parsing)
 -   github.com/pkg/errors (errors)
 
-## TODO
-
--   :white_large_square: reduce dependencies (remove jsondiff & dynamic).
-
 ## License
 
 MIT
