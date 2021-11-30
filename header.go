@@ -116,9 +116,9 @@ type Headers map[string]Header
 
 // UnmarshalJSON unmarshals JSON data into p
 func (h *Headers) UnmarshalJSON(data []byte) error {
-	*h = Headers{}
 	var m map[string]json.RawMessage
 	err := json.Unmarshal(data, &m)
+	*h = make(Headers, len(m))
 	if err != nil {
 		return err
 	}

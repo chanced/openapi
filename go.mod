@@ -8,7 +8,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.12.0
 	github.com/tidwall/sjson v1.2.3

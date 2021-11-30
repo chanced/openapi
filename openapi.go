@@ -84,3 +84,5 @@ func (o OpenAPI) MarshalYAML() (interface{}, error) {
 func (o *OpenAPI) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, o)
 }
+
+type OpenAPIs []*OpenAPI
