@@ -23,6 +23,24 @@ If you run into an edge case that is not validated adequetely, please open a tic
 Please feel free to open up an issue or create a pull request if there are features
 you'd like to contribute or issues.
 
+## Dependencies
+
+-   github.com/santhosh-tekuri/jsonschema/v5 (used for json schema validation)
+-   github.com/evanphx/json-patch/v5 (used for testing purposes)
+-   github.com/stretchr/testify (testing)
+-   github.com/tidwall/gjson (json parsing)
+-   github.com/tidwall/sjson (json manipulation)
+-   github.com/wI2L/jsondiff (testing purposes)
+-   gopkg.in/yaml.v2 (yaml)
+-   sigs.k8s.io/yaml (yaml)
+-   github.com/chanced/cmpjson (testing purposes)
+-   github.com/chanced/dynamic (json parsing)
+-   github.com/pkg/errors (errors)
+
+## TODO
+
+-   :white_large_square reduce dependencies (remove jsondiff & dynamic).
+
 ## License
 
 MIT
