@@ -16,7 +16,7 @@ documentation, this may not be enough to properly encapsulate all the nuances
 of a specification. However, JSON Schema is able to properly validate the current
 OpenAPI 3.1 Specification test suite.
 
-If you run into an edge case that is not validated adequetely, please open a ticket.
+Please open an issue if you run into an edge case that is not validated adequately.
 
 ## Contributions
 
