@@ -25,17 +25,17 @@ you'd like to contribute or issues.
 
 ## Dependencies
 
--   github.com/santhosh-tekuri/jsonschema/v5 (used for json schema validation)
--   github.com/evanphx/json-patch/v5 (used for testing purposes)
--   github.com/stretchr/testify (testing)
--   github.com/tidwall/gjson (json parsing)
--   github.com/tidwall/sjson (json manipulation)
--   github.com/wI2L/jsondiff (testing purposes)
--   gopkg.in/yaml.v2 (yaml)
--   sigs.k8s.io/yaml (yaml)
--   github.com/chanced/cmpjson (testing purposes)
--   github.com/chanced/dynamic (json parsing)
--   github.com/pkg/errors (errors)
+-   [github.com/santhosh-tekuri/jsonschema/v5](https://github.com/santhosh-tekuri/jsonschema/v5) (used for json schema validation)
+-   [github.com/evanphx/json-patch/v5](https://github.com/evanphx/json-patch/v5) (used for testing purposes)
+-   [github.com/stretchr/testify](https://github.com/stretchr/testify) (testing)
+-   [github.com/tidwall/gjson](https://github.com/tidwall/gjson) (json parsing)
+-   [github.com/tidwall/sjson](https://github.com/tidwall/sjson) (json manipulation)
+-   [github.com/wI2L/jsondiff](https://github.com/wI2L/jsondiff) (testing purposes)
+-   [gopkg.in/yaml.v2](https://github.com/wI2L/jsondiff) (yaml)
+-   [sigs.k8s.io/yaml](https://sigs.k8s.io/yaml) (yaml)
+-   [github.com/chanced/cmpjson](https://github.com/chanced/cmpjson) (testing purposes)
+-   [github.com/chanced/dynamic](https://github.com/chanced/dynamic) (json parsing)
+-   [github.com/pkg/errors](https://github.com/pkg/errors) (errors)
 
 ## License
 
