@@ -66,14 +66,14 @@ func (e *Encoding) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// UnmarshalYAML unmarshals YAML data into p
-func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, e)
-}
-
-// MarshalYAML marshals p into YAML
+// MarshalYAML marshals YAML
 func (e Encoding) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(e)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, e)
 }
 
 // Encodings is a map between a property name and its encoding information. The

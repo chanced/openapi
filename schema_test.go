@@ -7,7 +7,7 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	yaml "sigs.k8s.io/yaml"
 
 	"github.com/chanced/cmpjson"
 	"github.com/chanced/openapi"
@@ -16,7 +16,7 @@ import (
 func TestSchema(t *testing.T) {
 	assert := require.New(t)
 
-	d := []string{`{
+	j := []string{`{
 		"$schema": "https://json-schema.org/draft/2020-12/schema",
 		"$id": "https://example.com/tree",
 		"$dynamicAnchor": "node",
@@ -309,8 +309,8 @@ func TestSchema(t *testing.T) {
 		}
 	  }`,
 	}
-	for _, j := range d {
-		var data = []byte(j)
+	for _, d := range j {
+		var data = []byte(d)
 		var v *openapi.SchemaObj
 		err := json.Unmarshal(data, &v)
 		assert.NoError(err)
@@ -322,7 +322,7 @@ func TestSchema(t *testing.T) {
 		assert.NoError(err)
 
 		if !jsonpatch.Equal(data, b) {
-			fmt.Println(j)
+			fmt.Println(d)
 			fmt.Println(string(b))
 			// litter.Dump(v)
 		}
@@ -338,8 +338,19 @@ func TestSchema(t *testing.T) {
 		assert.NoError(err)
 		assert.True(jsonpatch.Equal(b, data))
 
-		y, err := yaml.Marshal(s)
+		// checking yaml
+
+		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
-		_ = y
+		var yo openapi.SchemaObj
+		err = yaml.Unmarshal(y, &yo)
+		assert.NoError(err)
+		yb, err := json.MarshalIndent(yo, "", "  ")
+		assert.NoError(err)
+		if !jsonpatch.Equal(data, yb) {
+			fmt.Println(string(data), "\n------------------------\n", string(yb))
+		}
+		assert.True(jsonpatch.Equal(data, yb), cmpjson.Diff(data, yb))
+
 	}
 }

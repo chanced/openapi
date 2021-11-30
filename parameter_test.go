@@ -9,13 +9,14 @@ import (
 	"github.com/chanced/openapi"
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/stretchr/testify/require"
+	yaml "sigs.k8s.io/yaml"
 )
 
 func TestParameter(t *testing.T) {
 	assert := require.New(t)
 
-	j := [][]byte{
-		[]byte(`{
+	j := []string{
+		`{
 			"name": "token",
 			"in": "header",
 			"description": "token to be passed as a header",
@@ -28,8 +29,8 @@ func TestParameter(t *testing.T) {
 			  }
 			},
 			"style": "simple"
-		  }`),
-		[]byte(`{
+		  }`,
+		`{
 			"name": "username",
 			"in": "path",
 			"description": "username to fetch",
@@ -37,8 +38,8 @@ func TestParameter(t *testing.T) {
 			"schema": {
 			  "type": "string"
 			}
-		  }`),
-		[]byte(`{
+		  }`,
+		`{
 			"name": "id",
 			"in": "query",
 			"description": "ID of the object to fetch",
@@ -51,8 +52,8 @@ func TestParameter(t *testing.T) {
 			},
 			"style": "form",
 			"explode": true
-		  }`),
-		[]byte(`{
+		  }`,
+		`{
 			"in": "query",
 			"name": "freeForm",
 			"schema": {
@@ -62,8 +63,8 @@ func TestParameter(t *testing.T) {
 			  }
 			},
 			"style": "form"
-		  }`),
-		[]byte(`{
+		  }`,
+		`{
 			"in": "query",
 			"name": "coordinates",
 			"content": {
@@ -85,9 +86,10 @@ func TestParameter(t *testing.T) {
 				}
 			  }
 			}
-		  }`),
+		  }`,
 	}
-	for _, data := range j {
+	for _, d := range j {
+		data := []byte(d)
 		var p openapi.ParameterObj
 		err := json.Unmarshal(data, &p)
 		assert.NoError(err)
@@ -99,5 +101,20 @@ func TestParameter(t *testing.T) {
 		}
 
 		assert.True(jsonpatch.Equal(data, b), cmpjson.Diff(data, b))
+
+		// checking yaml
+
+		y, err := yaml.JSONToYAML(data)
+		assert.NoError(err)
+		var yo openapi.ParameterObj
+		err = yaml.Unmarshal(y, &yo)
+		assert.NoError(err)
+		yb, err := json.MarshalIndent(yo, "", "  ")
+		assert.NoError(err)
+		if !jsonpatch.Equal(data, yb) {
+			fmt.Println(string(data), "\n------------------------\n", string(yb))
+		}
+		assert.True(jsonpatch.Equal(data, yb), cmpjson.Diff(data, yb))
+
 	}
 }

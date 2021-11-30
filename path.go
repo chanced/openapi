@@ -161,7 +161,7 @@ func (p *PathObj) UnmarshalJSON(data []byte) error {
 
 // MarshalYAML first marshals and unmarshals into JSON and then marshals into
 // YAML
-func (p *PathObj) MarshalYAML() (interface{}, error) {
+func (p PathObj) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(p)
 }
 

@@ -73,7 +73,7 @@ func (r *Responses) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // MarshalYAML marshals r into YAML
-func (r *Responses) MarshalYAML() (interface{}, error) {
+func (r Responses) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (r *ResponseObj) UnmarshalJSON(data []byte) error {
 
 // MarshalYAML first marshals and unmarshals into JSON and then marshals into
 // YAML
-func (r *ResponseObj) MarshalYAML() (interface{}, error) {
+func (r ResponseObj) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(r)
 	if err != nil {
 		return nil, err

@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/openapi/yamlutil"
+
 // OAuthFlows allows configuration of the supported OAuth Flows.
 type OAuthFlows struct {
 	// Configuration for the OAuth Implicit flow
@@ -17,18 +19,28 @@ type OAuthFlows struct {
 type oauthflows OAuthFlows
 
 // MarshalJSON marshals json
-func (o OAuthFlows) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(oauthflows(o))
+func (oaf OAuthFlows) MarshalJSON() ([]byte, error) {
+	return marshalExtendedJSON(oauthflows(oaf))
 }
 
 // UnmarshalJSON unmarshals json
-func (o *OAuthFlows) UnmarshalJSON(data []byte) error {
+func (oaf *OAuthFlows) UnmarshalJSON(data []byte) error {
 	var v oauthflows
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
-	*o = OAuthFlows(v)
+	*oaf = OAuthFlows(v)
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (oaf OAuthFlows) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(oaf)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (oaf *OAuthFlows) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, oaf)
 }
 
 // OAuthFlow configuration details for a supported OAuth Flow
@@ -73,4 +85,14 @@ func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
 	}
 	*o = OAuthFlow(v)
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (o OAuthFlow) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(o)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (o *OAuthFlow) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, o)
 }

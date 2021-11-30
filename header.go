@@ -147,7 +147,7 @@ func (h *Headers) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // MarshalYAML marshals p into YAML
-func (h *Headers) MarshalYAML() (interface{}, error) {
+func (h Headers) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(h)
 	if err != nil {
 		return nil, err

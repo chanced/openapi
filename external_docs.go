@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/openapi/yamlutil"
+
 // ExternalDocs allows referencing an external resource for extended
 // documentation.
 type ExternalDocs struct {
@@ -24,4 +26,14 @@ func (ed *ExternalDocs) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*ed = ExternalDocs(v)
 	return err
+}
+
+// MarshalYAML marshals YAML
+func (ed ExternalDocs) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(ed)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (ed *ExternalDocs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, ed)
 }

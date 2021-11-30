@@ -73,7 +73,7 @@ func (mt *MediaType) UnmarshalJSON(data []byte) error {
 
 // MarshalYAML first marshals and unmarshals into JSON and then marshals into
 // YAML
-func (mt *MediaType) MarshalYAML() (interface{}, error) {
+func (mt MediaType) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(mt)
 	if err != nil {
 		return nil, err

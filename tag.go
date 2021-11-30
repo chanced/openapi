@@ -44,7 +44,7 @@ func (t *Tag) UnmarshalJSON(data []byte) error {
 
 // MarshalYAML first marshals and unmarshals into JSON and then marshals into
 // YAML
-func (t *Tag) MarshalYAML() (interface{}, error) {
+func (t Tag) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(t)
 	if err != nil {
 		return nil, err

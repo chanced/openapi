@@ -11,7 +11,7 @@ type Regexp struct {
 }
 
 // MarshalJSON unmarshals data into sr
-func (sr *Regexp) MarshalJSON() ([]byte, error) {
+func (sr Regexp) MarshalJSON() ([]byte, error) {
 	if sr.IsNil() {
 		return []byte{}, nil
 	}

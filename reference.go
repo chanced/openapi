@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
 
@@ -38,6 +39,16 @@ type Reference struct {
 	// the referenced object-type does not allow a description field, then this
 	// field has no effect.
 	Description string `yaml:"description" json:"description,omitempty"`
+}
+
+// MarshalYAML marshals YAML
+func (r Reference) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(r)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (r *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, r)
 }
 
 // ParameterType returns ParameterTypeReference

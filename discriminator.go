@@ -41,7 +41,7 @@ func (d *Discriminator) UnmarshalJSON(data []byte) error {
 
 // MarshalYAML first marshals and unmarshals into JSON and then marshals into
 // YAML
-func (d *Discriminator) MarshalYAML() (interface{}, error) {
+func (d Discriminator) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(d)
 }
 

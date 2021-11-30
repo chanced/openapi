@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -108,4 +109,14 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	}
 	*o = Operation(v)
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (o Operation) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(o)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (o *Operation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, o)
 }

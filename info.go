@@ -45,7 +45,7 @@ func (i *Info) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalYAML marshals YAML
-func (i *Info) MarshalYAML() (interface{}, error) {
+func (i Info) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(i)
 }
 

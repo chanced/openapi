@@ -30,11 +30,11 @@ func (c *Contact) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalYAML marshals YAML
-func (c *Contact) MarshalYAML() (interface{}, error) {
+func (c Contact) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(c)
 }
 
-// UnmarshalYAML unmarshals YAML data into c
+// UnmarshalYAML unmarshals YAML
 func (c *Contact) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }

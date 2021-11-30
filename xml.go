@@ -25,5 +25,6 @@ type XML struct {
 	// wrapped (for example, <books><book/><book/></books>) or unwrapped
 	// (<book/><book/>). Default value is false. The definition takes effect
 	// only when defined alongside type being array (outside the items).
-	Wrapped bool `json:"wrapped,omitempty"`
+	Wrapped    bool `json:"wrapped,omitempty"`
+	Extensions `json:"-"`
 }

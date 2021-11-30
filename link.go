@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/chanced/openapi/yamlutil"
 )
 
 // LinkKind differentiates a Link and a Reference
@@ -64,13 +66,6 @@ func (l LinkObj) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(link(l))
 }
 
-// DecodeRequestBody decodes l.RequestBody into dst
-//
-// dst should be a pointer to a concrete type
-func (l *LinkObj) DecodeRequestBody(dst interface{}) error {
-	return json.Unmarshal(l.RequestBody, dst)
-}
-
 // UnmarshalJSON unmarshals JSON
 func (l *LinkObj) UnmarshalJSON(data []byte) error {
 	var lv link
@@ -79,6 +74,23 @@ func (l *LinkObj) UnmarshalJSON(data []byte) error {
 	}
 	*l = LinkObj(lv)
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (l LinkObj) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(l)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (l *LinkObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, l)
+}
+
+// DecodeRequestBody decodes l.RequestBody into dst
+//
+// dst should be a pointer to a concrete type
+func (l *LinkObj) DecodeRequestBody(dst interface{}) error {
+	return json.Unmarshal(l.RequestBody, dst)
 }
 
 // LinkKind returns LinkKindObj

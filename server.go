@@ -33,7 +33,7 @@ func (s *Server) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalYAML marshals YAML
-func (s *Server) MarshalYAML() (interface{}, error) {
+func (s Server) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(s)
 }
 
@@ -77,7 +77,7 @@ func (sv *ServerVariable) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalYAML marshals YAML
-func (sv *ServerVariable) MarshalYAML() (interface{}, error) {
+func (sv ServerVariable) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(sv)
 }
 

@@ -1,6 +1,10 @@
 package openapi
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/chanced/openapi/yamlutil"
+)
 
 // ExampleKind indicates wheter the ExampleObj is an Example or a Reference
 type ExampleKind uint8
@@ -56,6 +60,16 @@ func (e *ExampleObj) UnmarshalJSON(data []byte) error {
 	}
 	*e = ExampleObj(v)
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (e ExampleObj) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(e)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (e *ExampleObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, e)
 }
 
 // ExampleKind returns ExampleKindObj

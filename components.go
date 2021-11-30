@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/openapi/yamlutil"
+
 // Components holds a set of reusable objects for different aspects of the OAS.
 // All objects defined within the components object will have no effect on the
 // API unless they are explicitly referenced from properties outside the
@@ -42,4 +44,14 @@ func (c *Components) UnmarshalJSON(data []byte) error {
 	}
 	*c = Components(v)
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (c Components) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(c)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (c *Components) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, c)
 }

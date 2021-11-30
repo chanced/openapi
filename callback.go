@@ -3,6 +3,7 @@ package openapi
 import (
 	"encoding/json"
 
+	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
 
@@ -65,6 +66,16 @@ func (c *CallbackObj) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// MarshalYAML marshals YAML
+func (c CallbackObj) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(c)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (c *CallbackObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, c)
+}
+
 // CallbackKind returns CallbackKindCallback
 func (c *CallbackObj) CallbackKind() CallbackKind {
 	return CallbackKindObj
@@ -103,4 +114,14 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 	}
 	*c = res
 	return nil
+}
+
+// MarshalYAML marshals YAML
+func (c Callbacks) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(c)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (c *Callbacks) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, c)
 }
