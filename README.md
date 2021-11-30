@@ -7,7 +7,7 @@ for code-generation.
 
 ## Documentation
 
-[Documentation for the package can be found on pkg.go.dev](https://pkg.go.dev/github.com/chanced/openapi).
+[Documentation can be found on pkg.go.dev](https://pkg.go.dev/github.com/chanced/openapi).
 
 ## Validation
 
