@@ -21,7 +21,7 @@ If you run into an edge case that is not validated adequetely, please open a tic
 ## Contributions
 
 Please feel free to open up an issue or create a pull request if there are features
-you'd like to contribute or issues you'd like to resolve.
+you'd like to contribute or issues.
 
 ## License
 
