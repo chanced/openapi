@@ -1,0 +1,56 @@
+{
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/*.code-search": true,
+    "**/.svelte-kit": true,
+    "node_modules": true,
+  },
+  "emmet.includeLanguages": {
+    "postcss": "css"
+  },
+  "go.formatTool": "goimports",
+  "go.formatFlags": [
+    "--local=github.com/chanced/openapi",
+  ],
+  "go.lintTool": "golangci-lint",
+  "go.useLanguageServer": true,
+  "go.languageServerFlags": [],
+  "[go]": {
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true,
+    },
+    // Optional: Disable snippets, as they conflict with completion ranking.
+    "editor.snippetSuggestions": "none",
+  },
+  "[go.mod]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true,
+    },
+  },
+  "gopls": {
+    "ui.diagnostic.analyses": {
+      "composites": false,
+    },
+    "directoryFilters": [
+      "-node_modules"
+    ],
+    // Add parameter placeholders when completing a function.
+    "usePlaceholders": false,
+    // If true, enable additional analyses with staticcheck.
+    // Warning: This will significantly increase memory usage.
+    "staticcheck": true,
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "build/**": true,
+    "tabled": true,
+    "tabled/**": true
+  },
+}
