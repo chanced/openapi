@@ -39,10 +39,10 @@ func (pv PathValue) String() string {
 	return str
 }
 
-// Params returns all params in the path
-func (pv PathValue) Params() []string {
-	panic("not impl")
-}
+// // Params returns all params in the path
+// func (pv PathValue) Params() []string {
+// 	panic("not impl")
+// }
 
 // MarshalJSON Marshals PathEntry to JSON
 func (pv PathValue) MarshalJSON() ([]byte, error) {

@@ -98,14 +98,13 @@ func (rb RequestBodies) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &dm); err != nil {
 		return err
 	}
-	res := make(RequestBodies, len(dm))
-
 	for k, d := range dm {
 		var v RequestBody
 		if err := unmarshalRequestBody(d, &v); err != nil {
 			return err
 		}
-		res[k] = v
+		rb[k] = v
 	}
+
 	return nil
 }
