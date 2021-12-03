@@ -18,6 +18,7 @@ const (
 
 // Header is either a Header or a Reference
 type Header interface {
+	ResolveHeader(HeaderResolver) (*HeaderObj, error)
 	HeaderKind() HeaderKind
 }
 
@@ -79,7 +80,12 @@ type HeaderObj struct {
 type header HeaderObj
 
 // HeaderKind distinguishes h as a Header by returning HeaderKindHeader
-func (h HeaderObj) HeaderKind() HeaderKind { return HeaderKindObj }
+func (h *HeaderObj) HeaderKind() HeaderKind { return HeaderKindObj }
+
+// ResolveHeader resolves HeaderObj by returning itself. resolve is  not called.
+func (h *HeaderObj) ResolveHeader(HeaderResolver) (*HeaderObj, error) {
+	return h, nil
+}
 
 // MarshalJSON marshals h into JSON
 func (h HeaderObj) MarshalJSON() ([]byte, error) {

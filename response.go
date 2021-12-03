@@ -18,6 +18,7 @@ const (
 
 // Response is either a Response or a Reference
 type Response interface {
+	ResolveResponse(ResponseResolver) (*ResponseObj, error)
 	ResponseKind() ResponseKind
 }
 
@@ -56,15 +57,6 @@ func (r *Responses) UnmarshalJSON(data []byte) error {
 		rv[k] = v
 	}
 	return nil
-}
-
-func unmarshalResponse(data []byte) (Response, error) {
-	if isRefJSON(data) {
-		return unmarshalReferenceJSON(data)
-	}
-	var v ResponseObj
-	err := json.Unmarshal(data, &v)
-	return &v, err
 }
 
 // UnmarshalYAML unmarshals YAML data into r
@@ -110,8 +102,11 @@ type ResponseObj struct {
 type response ResponseObj
 
 // ResponseKind returns ResponseKindResponse, indicates that this is a Response
-func (r ResponseObj) ResponseKind() ResponseKind {
-	return ResponseKindObj
+func (r *ResponseObj) ResponseKind() ResponseKind { return ResponseKindObj }
+
+// ResolveResponse resolves ResponseObj by returning itself. resolve is  not called.
+func (r *ResponseObj) ResolveResponse(ResponseResolver) (*ResponseObj, error) {
+	return r, nil
 }
 
 // MarshalJSON marshals r into JSON
@@ -142,4 +137,13 @@ func (r ResponseObj) MarshalYAML() (interface{}, error) {
 // UnmarshalYAML unmarshals yaml into s
 func (r *ResponseObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, r)
+}
+
+func unmarshalResponse(data []byte) (Response, error) {
+	if isRefJSON(data) {
+		return unmarshalReferenceJSON(data)
+	}
+	var v ResponseObj
+	err := json.Unmarshal(data, &v)
+	return &v, err
 }

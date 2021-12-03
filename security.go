@@ -173,11 +173,15 @@ func (sso *SecuritySchemeObj) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 // SecuritySchemeKind returns SecuritySchemeKindObj
-func (sso SecuritySchemeObj) SecuritySchemeKind() SecuritySchemeKind {
-	return SecuritySchemeKindObj
+func (sso *SecuritySchemeObj) SecuritySchemeKind() SecuritySchemeKind { return SecuritySchemeKindObj }
+
+// ResolveSecurityScheme resolves SecuritySchemeObj by returning itself. resolve is  not called.
+func (sso *SecuritySchemeObj) ResolveSecurityScheme(SecuritySchemeResolver) (*SecuritySchemeObj, error) {
+	return sso, nil
 }
 
 // SecurityScheme can either be a ScecuritySchemeObj or a Reference
 type SecurityScheme interface {
+	ResolveSecurityScheme(SecuritySchemeResolver) (*SecuritySchemeObj, error)
 	SecuritySchemeKind() SecuritySchemeKind
 }

@@ -37,6 +37,11 @@ type requestbody RequestBodyObj
 // RequestBodyKind returns RequestBodyKindRequestBody
 func (rb *RequestBodyObj) RequestBodyKind() RequestBodyKind { return RequestBodyKindObj }
 
+// ResolveRequestBody resolves RequestBodyObj by returning itself. resolve is  not called.
+func (rb *RequestBodyObj) ResolveRequestBody(RequestBodyResolver) (*RequestBodyObj, error) {
+	return rb, nil
+}
+
 // MarshalJSON marshals h into JSON
 func (rb RequestBodyObj) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(requestbody(rb))
@@ -68,6 +73,7 @@ func (rb RequestBodyObj) MarshalYAML() (interface{}, error) {
 
 // RequestBody can either be a RequestBody or a Reference
 type RequestBody interface {
+	ResolveRequestBody(RequestBodyResolver) (*RequestBodyObj, error)
 	RequestBodyKind() RequestBodyKind
 }
 

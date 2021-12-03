@@ -18,6 +18,7 @@ const (
 
 // Example is either an Example or a Reference
 type Example interface {
+	ResolveExample(ExampleResolver) (*ExampleObj, error)
 	ExampleKind() ExampleKind
 }
 
@@ -73,7 +74,12 @@ func (e *ExampleObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // ExampleKind returns ExampleKindObj
-func (e ExampleObj) ExampleKind() ExampleKind { return ExampleKindObj }
+func (e *ExampleObj) ExampleKind() ExampleKind { return ExampleKindObj }
+
+// ResolveExample resolves ExampleObj by returning itself. resolve is  not called.
+func (e *ExampleObj) ResolveExample(ExampleResolver) (*ExampleObj, error) {
+	return e, nil
+}
 
 // Examples is an object to hold reusable Examples.
 type Examples map[string]Example

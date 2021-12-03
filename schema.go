@@ -11,157 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	// TypeString = string
-	//
-	// https://json-schema.org/understanding-json-schema/reference/string.html#string
-	TypeString SchemaType = "string"
-	// TypeNumber = number
-	//
-	// https://json-schema.org/understanding-json-schema/reference/numeric.html#number
-	TypeNumber SchemaType = "number"
-	// TypeInteger = integer
-	//
-	// https://json-schema.org/understanding-json-schema/reference/numeric.html#integer
-	TypeInteger SchemaType = "integer"
-	// TypeObject = object
-	//
-	// https://json-schema.org/understanding-json-schema/reference/object.html#object
-	TypeObject SchemaType = "object"
-	// TypeArray = array
-	//
-	// https://json-schema.org/understanding-json-schema/reference/array.html#array
-	TypeArray SchemaType = "array"
-	// TypeBoolean = boolean
-	//
-	// https://json-schema.org/understanding-json-schema/reference/boolean.html#boolean
-	TypeBoolean SchemaType = "boolean"
-	// TypeNull = null
-	//
-	// https://json-schema.org/understanding-json-schema/reference/null.html#null
-	TypeNull SchemaType = "null"
-)
-
-// SchemaType restricts to a JSON Schema specific type
-//
-// https://json-schema.org/understanding-json-schema/reference/type.html#type
-type SchemaType string
-
-func (t SchemaType) String() string {
-	return string(t)
-}
-
-// Types is a set of Types. A single Type marshals/unmarshals into a string
-// while 2+ marshals into an array.
-type Types []SchemaType
-type types Types
-
-// ContainsString returns true if TypeString is present
-func (t Types) ContainsString() bool {
-	return t.Contains(TypeString)
-}
-
-// ContainsNumber returns true if TypeNumber is present
-func (t Types) ContainsNumber() bool {
-	return t.Contains(TypeNumber)
-}
-
-// ContainsInteger returns true if TypeInteger is present
-func (t Types) ContainsInteger() bool {
-	return t.Contains(TypeInteger)
-}
-
-// ContainsObject returns true if TypeObject is present
-func (t Types) ContainsObject() bool {
-	return t.Contains(TypeObject)
-}
-
-// ContainsArray returns true if TypeArray is present
-func (t Types) ContainsArray() bool {
-	return t.Contains(TypeArray)
-}
-
-// ContainsBoolean returns true if TypeBoolean is present
-func (t Types) ContainsBoolean() bool {
-	return t.Contains(TypeBoolean)
-}
-
-// ContainsNull returns true if TypeNull is present
-func (t Types) ContainsNull() bool {
-	return t.Contains(TypeNull)
-}
-
-// IsSingle returns true if len(t) == 1
-func (t Types) IsSingle() bool {
-	return len(t) == 1
-}
-
-// IsEmpty returns true if len(t) == 0
-func (t SchemaType) IsEmpty() bool {
-	return len(t) == 0
-}
-
-// Len returns len(t)
-func (t Types) Len() int {
-	return len(t)
-}
-
-// Contains returns true if t contains typ
-func (t Types) Contains(typ SchemaType) bool {
-	for _, v := range t {
-		if v == typ {
-			return true
-		}
-	}
-	return false
-}
-
-// Add adds typ if not present
-func (t *Types) Add(typ SchemaType) Types {
-	if !t.Contains(typ) {
-		*t = append(*t, typ)
-	}
-	return *t
-}
-
-// Remove removes typ if present
-func (t *Types) Remove(typ SchemaType) Types {
-	for i, v := range *t {
-		if typ == v {
-			copy((*t)[i:], (*t)[i+1:])
-			(*t)[len(*t)-1] = ""
-			*t = (*t)[:len(*t)-1]
-		}
-	}
-	return *t
-}
-
-// MarshalJSON marshals JSON
-func (t Types) MarshalJSON() ([]byte, error) {
-	switch len(t) {
-	case 1:
-		return json.Marshal(t[0].String())
-	default:
-		return json.Marshal(types(t))
-	}
-}
-
-// UnmarshalJSON unmarshals JSON
-func (t *Types) UnmarshalJSON(data []byte) error {
-	d := dynamic.JSON(data)
-	if d.IsString() {
-		var v SchemaType
-		err := json.Unmarshal(data, &v)
-		*t = Types{v}
-		return err
-	}
-	var v types
-	err := json.Unmarshal(data, &v)
-	*t = Types(v)
-	return err
-}
-
-// SchemaKind indicates whether the Schema is a SchemaObj, Reference, or Boolean
+// SchemaKind indicates whether the *SchemaObj is a SchemaObj, Reference, or Boolean
 type SchemaKind uint8
 
 const (
@@ -171,14 +21,8 @@ const (
 	SchemaKindBool
 )
 
-// Schema can either be a SchemaObj, Reference, or Boolean
-type Schema interface {
-	SchemaKind() SchemaKind
-	IsRef() bool
-}
-
 // Schemas is a map of Schemas
-type Schemas map[string]Schema
+type Schemas map[string]*SchemaObj
 
 // UnmarshalJSON unmarshals JSON
 func (s *Schemas) UnmarshalJSON(data []byte) error {
@@ -239,6 +83,8 @@ func (s *Schemas) UnmarshalJSON(data []byte) error {
 // arbitrary properties.
 // A SchemaObj represents compiled version of json-schema.
 type SchemaObj struct {
+	// Always will be assigned if the schema value is a boolean
+	Always *bool  `json:"-"`
 	Schema string `json:"$schema,omitempty"`
 	// The value of $id is a URI-reference without a fragment that resolves
 	// against the Retrieval URI. The resulting URI is the base URI for the
@@ -246,7 +92,7 @@ type SchemaObj struct {
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=id#id
 	ID string `json:"$id,omitempty"`
-	// At its core, JSON Schema defines the following basic types:
+	// At its core, JSON *SchemaObj defines the following basic types:
 	//
 	// 	"string", "number", "integer", "object", "array", "boolean", "null"
 	//
@@ -271,7 +117,7 @@ type SchemaObj struct {
 	// directly affect the validation result.
 	//
 	// This keyword's value MUST be an object. Each member value of this object
-	// MUST be a valid JSON Schema.
+	// MUST be a valid JSON *SchemaObj.
 	//
 	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
 	//
@@ -283,7 +129,7 @@ type SchemaObj struct {
 	// enable format to function as an assertion rather than just an annotation.
 	// That means that validation will fail if, for example, a value with a date
 	// format isn’t in a form that can be parsed as a date. This can allow values to
-	// be constrained beyond what the other tools in JSON Schema, including Regular
+	// be constrained beyond what the other tools in JSON *SchemaObj, including Regular
 	// Expressions can do.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/string.html#format
@@ -326,7 +172,7 @@ type SchemaObj struct {
 	// validate against the given subschema.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=not#not
-	Not Schema `json:"not,omitempty"`
+	Not *SchemaObj `json:"not,omitempty"`
 	// validate against allOf, the given data must be valid against all of the
 	// given subschemas.
 	//
@@ -346,19 +192,19 @@ type SchemaObj struct {
 	// you’ve probably seen in traditional programming languages.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	If Schema `json:"if,omitempty"`
+	If *SchemaObj `json:"if,omitempty"`
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Then Schema `json:"then,omitempty"`
+	Then *SchemaObj `json:"then,omitempty"`
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Else                 Schema   `json:"else,omitempty"`
-	MinProperties        *int     `json:"minProperties,omitempty"`
-	MaxProperties        *int     `json:"maxProperties,omitempty"`
-	Required             []string `json:"required,omitempty"`
-	Properties           Schemas  `json:"properties,omitempty"`
-	PropertyNames        Schema   `json:"propertyNames,omitempty"`
-	RegexProperties      *bool    `json:"regexProperties,omitempty"`
-	PatternProperties    Schemas  `json:"patternProperties,omitempty"`
-	AdditionalProperties Schema   `json:"additionalProperties,omitempty"`
+	Else                 *SchemaObj `json:"else,omitempty"`
+	MinProperties        *int       `json:"minProperties,omitempty"`
+	MaxProperties        *int       `json:"maxProperties,omitempty"`
+	Required             []string   `json:"required,omitempty"`
+	Properties           Schemas    `json:"properties,omitempty"`
+	PropertyNames        *SchemaObj `json:"propertyNames,omitempty"`
+	RegexProperties      *bool      `json:"regexProperties,omitempty"`
+	PatternProperties    Schemas    `json:"patternProperties,omitempty"`
+	AdditionalProperties *SchemaObj `json:"additionalProperties,omitempty"`
 	// The dependentRequired keyword conditionally requires that certain
 	// properties must be present if a given property is present in an object.
 	// For example, suppose we have a schema representing a customer. If you
@@ -374,18 +220,18 @@ type SchemaObj struct {
 	// given property is present. This schema is applied in the same way allOf
 	// applies schemas. Nothing is merged or extended. Both schemas apply
 	// independently.
-	DependentSchemas      Schemas `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties Schema  `json:"unevaluatedProperties,omitempty"`
-	UniqueObjs            *bool   `json:"uniqueObjs,omitempty"`
+	DependentSchemas      Schemas    `json:"dependentSchemas,omitempty"`
+	UnevaluatedProperties *SchemaObj `json:"unevaluatedProperties,omitempty"`
+	UniqueObjs            *bool      `json:"uniqueObjs,omitempty"`
 	// List validation is useful for arrays of arbitrary length where each item
 	// matches the same schema. For this kind of array, set the items keyword to
 	// a single schema that will be used to validate all of the items in the
 	// array.
-	Items            Schema          `json:"items,omitempty"`
-	UnevaluatedObjs  Schema          `json:"unevaluatedObjs,omitempty"`
-	AdditionalObjs   Schema          `json:"additionalObjs,omitempty"`
+	Items            *SchemaObj      `json:"items,omitempty"`
+	UnevaluatedObjs  *SchemaObj      `json:"unevaluatedObjs,omitempty"`
+	AdditionalObjs   *SchemaObj      `json:"additionalObjs,omitempty"`
 	PrefixObjs       SchemaSet       `json:"prefixObjs,omitempty"`
-	Contains         Schema          `json:"contains,omitempty"`
+	Contains         *SchemaObj      `json:"contains,omitempty"`
 	MinContains      *Number         `json:"minContains,omitempty"`
 	MaxContains      *Number         `json:"maxContains,omitempty"`
 	MinLength        *Number         `json:"minLength,omitempty"`
@@ -422,13 +268,16 @@ type SchemaObj struct {
 
 type schema SchemaObj
 
-// Detail returns a ptr to the Schema
+// Detail returns a ptr to the *SchemaObj
 func (s SchemaObj) Detail() *SchemaObj {
 	return &s
 }
 
 // MarshalJSON marshals JSON
 func (s SchemaObj) MarshalJSON() ([]byte, error) {
+	if s.Always != nil {
+		return json.Marshal(s.Always)
+	}
 	data, err := marshalExtendedJSON(schema(s))
 	if s.Keywords != nil {
 		for k, v := range s.Keywords {
@@ -442,18 +291,17 @@ func (s SchemaObj) MarshalJSON() ([]byte, error) {
 }
 
 // SchemaKind returns SchemaKindObj
-func (s *SchemaObj) SchemaKind() SchemaKind {
-	return SchemaKindObj
+func (s *SchemaObj) SchemaKind() SchemaKind { return SchemaKindObj }
+
+// ResolveSchema resolves *SchemaObj by returning s
+func (s *SchemaObj) ResolveSchema(SchemaResolver) (*SchemaObj, error) {
+	return s, nil
 }
 
 // UnmarshalJSON unmarshals JSON
 func (s *SchemaObj) UnmarshalJSON(data []byte) error {
 	sv, err := unmarshalSchemaJSON(data)
-	v, ok := sv.(*SchemaObj)
-	if !ok {
-		return errors.New("invalid schema")
-	}
-	*s = *v
+	*s = *sv
 	return err
 }
 
@@ -522,8 +370,8 @@ func (s *SchemaObj) DecodeKeywords(dst interface{}) error {
 	return json.Unmarshal(data, dst)
 }
 
-// SchemaSet is a slice of *Schema
-type SchemaSet []Schema
+// SchemaSet is a slice of **SchemaObj
+type SchemaSet []*SchemaObj
 
 //  UnmarshalJSON unmarshals JSON
 func (s *SchemaSet) UnmarshalJSON(data []byte) error {
@@ -543,7 +391,7 @@ func (s *SchemaSet) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func unmarshalSchemaJSON(data []byte) (Schema, error) {
+func unmarshalSchemaJSON(data []byte) (*SchemaObj, error) {
 	var str string
 	l := len(data)
 	if l >= 4 && l <= 5 {
@@ -551,15 +399,17 @@ func unmarshalSchemaJSON(data []byte) (Schema, error) {
 	}
 	switch {
 	case str == "true":
-		return Boolean(true), nil
+		t := true
+		return &SchemaObj{Always: &t}, nil
 	case str == "false":
-		return Boolean(false), nil
+		f := false
+		return &SchemaObj{Always: &f}, nil
 	default:
 		return unmarshalSchemaObjJSON(data)
 	}
 }
 
-func unmarshalSchemaObjJSON(data []byte) (Schema, error) {
+func unmarshalSchemaObjJSON(data []byte) (*SchemaObj, error) {
 	var err error
 	exts := Extensions{}
 	kw := make(map[string]json.RawMessage)
@@ -576,7 +426,7 @@ func unmarshalSchemaObjJSON(data []byte) (Schema, error) {
 		if strings.HasPrefix(key, "x-") {
 			exts[key] = d
 		} else if set, isSchema := schemaFieldSetters[key]; isSchema {
-			var v Schema
+			var v *SchemaObj
 			v, err = unmarshalSchemaJSON(d)
 			if err != nil {
 				return nil, err
@@ -592,18 +442,18 @@ func unmarshalSchemaObjJSON(data []byte) (Schema, error) {
 	return &res, err
 }
 
-var schemaFieldSetters = map[string]func(s *partialschema, v Schema){
-	"not":                   func(s *partialschema, v Schema) { s.Not = v },
-	"if":                    func(s *partialschema, v Schema) { s.If = v },
-	"then":                  func(s *partialschema, v Schema) { s.Then = v },
-	"else":                  func(s *partialschema, v Schema) { s.Else = v },
-	"propertyNames":         func(s *partialschema, v Schema) { s.PropertyNames = v },
-	"additionalProperties":  func(s *partialschema, v Schema) { s.AdditionalProperties = v },
-	"unevaluatedProperties": func(s *partialschema, v Schema) { s.UnevaluatedProperties = v },
-	"items":                 func(s *partialschema, v Schema) { s.Items = v },
-	"contains":              func(s *partialschema, v Schema) { s.Contains = v },
-	"unevaluatedObjs":       func(s *partialschema, v Schema) { s.UnevaluatedObjs = v },
-	"additionalObjs":        func(s *partialschema, v Schema) { s.AdditionalObjs = v },
+var schemaFieldSetters = map[string]func(s *partialschema, v *SchemaObj){
+	"not":                   func(s *partialschema, v *SchemaObj) { s.Not = v },
+	"if":                    func(s *partialschema, v *SchemaObj) { s.If = v },
+	"then":                  func(s *partialschema, v *SchemaObj) { s.Then = v },
+	"else":                  func(s *partialschema, v *SchemaObj) { s.Else = v },
+	"propertyNames":         func(s *partialschema, v *SchemaObj) { s.PropertyNames = v },
+	"additionalProperties":  func(s *partialschema, v *SchemaObj) { s.AdditionalProperties = v },
+	"unevaluatedProperties": func(s *partialschema, v *SchemaObj) { s.UnevaluatedProperties = v },
+	"items":                 func(s *partialschema, v *SchemaObj) { s.Items = v },
+	"contains":              func(s *partialschema, v *SchemaObj) { s.Contains = v },
+	"unevaluatedObjs":       func(s *partialschema, v *SchemaObj) { s.UnevaluatedObjs = v },
+	"additionalObjs":        func(s *partialschema, v *SchemaObj) { s.AdditionalObjs = v },
 }
 
 var jsfields = map[string]struct{}{
@@ -670,6 +520,7 @@ var jsfields = map[string]struct{}{
 }
 
 type partialschema struct {
+	Always                *bool               `json:"-"`
 	Schema                string              `json:"$schema,omitempty"`
 	ID                    string              `json:"$id,omitempty"`
 	Type                  Types               `json:"type,omitempty"`
@@ -682,30 +533,30 @@ type partialschema struct {
 	Const                 json.RawMessage     `json:"const,omitempty"`
 	Enum                  []string            `json:"enum,omitempty"`
 	Comments              string              `json:"$comment,omitempty"`
-	Not                   Schema              `json:"-"`
+	Not                   *SchemaObj          `json:"-"`
 	AllOf                 SchemaSet           `json:"allOf,omitempty"`
 	AnyOf                 SchemaSet           `json:"anyOf,omitempty"`
 	OneOf                 SchemaSet           `json:"oneOf,omitempty"`
-	If                    Schema              `json:"-"`
-	Then                  Schema              `json:"-"`
-	Else                  Schema              `json:"-"`
+	If                    *SchemaObj          `json:"-"`
+	Then                  *SchemaObj          `json:"-"`
+	Else                  *SchemaObj          `json:"-"`
 	MinProperties         *int                `json:"minProperties,omitempty"`
 	MaxProperties         *int                `json:"maxProperties,omitempty"`
 	Required              []string            `json:"required,omitempty"`
 	Properties            Schemas             `json:"properties,omitempty"`
-	PropertyNames         Schema              `json:"-"`
+	PropertyNames         *SchemaObj          `json:"-"`
 	RegexProperties       *bool               `json:"regexProperties,omitempty"`
 	PatternProperties     Schemas             `json:"patternProperties,omitempty"`
-	AdditionalProperties  Schema              `json:"-"`
+	AdditionalProperties  *SchemaObj          `json:"-"`
 	DependentRequired     map[string][]string `json:"dependentRequired,omitempty"`
 	DependentSchemas      Schemas             `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties Schema              `json:"-"`
+	UnevaluatedProperties *SchemaObj          `json:"-"`
 	UniqueObjs            *bool               `json:"uniqueObjs,omitempty"`
-	Items                 Schema              `json:"-"`
-	UnevaluatedObjs       Schema              `json:"-"`
-	AdditionalObjs        Schema              `json:"-"`
+	Items                 *SchemaObj          `json:"-"`
+	UnevaluatedObjs       *SchemaObj          `json:"-"`
+	AdditionalObjs        *SchemaObj          `json:"-"`
 	PrefixObjs            SchemaSet           `json:"prefixObjs,omitempty"`
-	Contains              Schema              `json:"-"`
+	Contains              *SchemaObj          `json:"-"`
 	MinContains           *Number             `json:"minContains,omitempty"`
 	MaxContains           *Number             `json:"maxContains,omitempty"`
 	MinLength             *Number             `json:"minLength,omitempty"`

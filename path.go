@@ -144,6 +144,11 @@ type path PathObj
 // PathKind returns PathKindPath
 func (p *PathObj) PathKind() PathKind { return PathKindObj }
 
+// ResolvePath resolves PathObj by returning itself. resolve is  not called.
+func (p *PathObj) ResolvePath(PathResolver) (*PathObj, error) {
+	return p, nil
+}
+
 // MarshalJSON marshals p into JSON
 func (p PathObj) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(path(p))
@@ -172,6 +177,7 @@ func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Path can either be a Path or a Reference
 type Path interface {
+	ResolvePath(PathResolver) (*PathObj, error)
 	PathKind() PathKind
 }
 

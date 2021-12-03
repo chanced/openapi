@@ -94,12 +94,16 @@ func (l *LinkObj) DecodeRequestBody(dst interface{}) error {
 }
 
 // LinkKind returns LinkKindObj
-func (l *LinkObj) LinkKind() LinkKind {
-	return LinkKindObj
+func (l *LinkObj) LinkKind() LinkKind { return LinkKindObj }
+
+// ResolveLink resolves LinkObj by returning itself. resolve is  not called.
+func (l *LinkObj) ResolveLink(LinkResolver) (*LinkObj, error) {
+	return l, nil
 }
 
 // Link can either be a Link or a Reference
 type Link interface {
+	ResolveLink(LinkResolver) (*LinkObj, error)
 	LinkKind() LinkKind
 }
 

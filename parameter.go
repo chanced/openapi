@@ -7,19 +7,20 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// ParameterType indicates whether the entry is a ParameterDef or a Reference
-type ParameterType uint
+// ParameterKind indicates whether the entry is a ParameterDef or a Reference
+type ParameterKind uint
 
 const (
-	// ParameterTypeObj is a ParameterObj
-	ParameterTypeObj ParameterType = iota
-	// ParameterTypeReference indicates the Parameter is a Reference
-	ParameterTypeReference
+	// ParameterKindObj is a ParameterObj
+	ParameterKindObj ParameterKind = iota
+	// ParameterKindReference indicates the Parameter is a Reference
+	ParameterKindReference
 )
 
 // Parameter is either a ParameterObject or a ReferenceObject
 type Parameter interface {
-	ParameterType() ParameterType
+	ParameterKind() ParameterKind
+	ResolveParameter(ParameterResolver) (*ParameterObj, error)
 }
 
 /*
@@ -212,7 +213,7 @@ type ParameterObj struct {
 	// value of query. The default value is false.
 	AllowReserved bool `json:"allowReserved,omitempty"`
 	// The schema defining the type used for the parameter.
-	Schema Schema `json:"schema,omitempty"`
+	Schema *SchemaObj `json:"schema,omitempty"`
 	// Examples of the parameter's potential value. Each example SHOULD
 	// contain a value in the correct format as specified in the parameter
 	// encoding. The examples field is mutually exclusive of the example
@@ -230,11 +231,14 @@ type ParameterObj struct {
 	Extensions `json:"-"`
 }
 
-// ParameterType indicates that this is a Parameter for unmarshaling
-// ParameterObjs by returning ParameterTypeParameter
-func (p *ParameterObj) ParameterType() ParameterType {
-	return ParameterTypeObj
+// ResolveParameter resolves p by returning itself
+func (p *ParameterObj) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
+	return p, nil
 }
+
+// ParameterKind indicates that this is a Parameter for unmarshaling
+// ParameterObjs by returning ParameterKindParameter
+func (p *ParameterObj) ParameterKind() ParameterKind { return ParameterKindObj }
 
 // MarshalJSON marshals h into JSON
 func (p ParameterObj) MarshalJSON() ([]byte, error) {
@@ -254,7 +258,7 @@ func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 		Style           string             `json:"style,omitempty"`
 		Explode         bool               `json:"explode,omitempty"`
 		AllowReserved   bool               `json:"allowReserved,omitempty"`
-		Schema          Schema             `json:"-"`
+		Schema          *SchemaObj         `json:"-"`
 		Examples        map[string]Example `json:"examples,omitempty"`
 		Content         Content            `json:"content,omitempty"`
 		Extensions      `json:"-"`
