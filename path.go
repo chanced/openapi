@@ -139,24 +139,24 @@ type PathObj struct {
 	Extensions `json:"-"`
 }
 
-type path PathObj
+type pathobj PathObj
 
 // PathKind returns PathKindPath
 func (p *PathObj) PathKind() PathKind { return PathKindObj }
 
 // ResolvePath resolves PathObj by returning itself. resolve is  not called.
-func (p *PathObj) ResolvePath(PathResolver) (*PathObj, error) {
+func (p *PathObj) ResolvePath(PathResolverFunc) (*PathObj, error) {
 	return p, nil
 }
 
 // MarshalJSON marshals p into JSON
 func (p PathObj) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(path(p))
+	return marshalExtendedJSON(pathobj(p))
 }
 
 // UnmarshalJSON unmarshals json into p
 func (p *PathObj) UnmarshalJSON(data []byte) error {
-	var v path
+	var v pathobj
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Path can either be a Path or a Reference
 type Path interface {
-	ResolvePath(PathResolver) (*PathObj, error)
+	ResolvePath(PathResolverFunc) (*PathObj, error)
 	PathKind() PathKind
 }
 
@@ -232,7 +232,7 @@ func unmarshalPathJSON(data []byte) (Path, error) {
 	if isRefJSON(data) {
 		return unmarshalReferenceJSON(data)
 	}
-	var p path
+	var p pathobj
 	err := json.Unmarshal(data, &p)
 	v := PathObj(p)
 	return &v, err

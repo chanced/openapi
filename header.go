@@ -18,7 +18,7 @@ const (
 
 // Header is either a Header or a Reference
 type Header interface {
-	ResolveHeader(HeaderResolver) (*HeaderObj, error)
+	ResolveHeader(HeaderResolverFunc) (*HeaderObj, error)
 	HeaderKind() HeaderKind
 }
 
@@ -83,7 +83,7 @@ type header HeaderObj
 func (h *HeaderObj) HeaderKind() HeaderKind { return HeaderKindObj }
 
 // ResolveHeader resolves HeaderObj by returning itself. resolve is  not called.
-func (h *HeaderObj) ResolveHeader(HeaderResolver) (*HeaderObj, error) {
+func (h *HeaderObj) ResolveHeader(HeaderResolverFunc) (*HeaderObj, error) {
 	return h, nil
 }
 

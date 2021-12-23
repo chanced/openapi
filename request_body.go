@@ -38,7 +38,7 @@ type requestbody RequestBodyObj
 func (rb *RequestBodyObj) RequestBodyKind() RequestBodyKind { return RequestBodyKindObj }
 
 // ResolveRequestBody resolves RequestBodyObj by returning itself. resolve is  not called.
-func (rb *RequestBodyObj) ResolveRequestBody(RequestBodyResolver) (*RequestBodyObj, error) {
+func (rb *RequestBodyObj) ResolveRequestBody(RequestBodyResolverFunc) (*RequestBodyObj, error) {
 	return rb, nil
 }
 
@@ -73,7 +73,7 @@ func (rb RequestBodyObj) MarshalYAML() (interface{}, error) {
 
 // RequestBody can either be a RequestBody or a Reference
 type RequestBody interface {
-	ResolveRequestBody(RequestBodyResolver) (*RequestBodyObj, error)
+	ResolveRequestBody(RequestBodyResolverFunc) (*RequestBodyObj, error)
 	RequestBodyKind() RequestBodyKind
 }
 

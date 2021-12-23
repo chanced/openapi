@@ -80,13 +80,13 @@ func (c *CallbackObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (c *CallbackObj) CallbackKind() CallbackKind { return CallbackKindObj }
 
 // ResolveCallback resolves CallbackObj by returning itself. resolve is  not called.
-func (c *CallbackObj) ResolveCallback(CallbackResolver) (*CallbackObj, error) {
+func (c *CallbackObj) ResolveCallback(CallbackResolverFunc) (*CallbackObj, error) {
 	return c, nil
 }
 
 // Callback can either be a CallbackObj or a Reference
 type Callback interface {
-	ResolveCallback(CallbackResolver) (*CallbackObj, error)
+	ResolveCallback(CallbackResolverFunc) (*CallbackObj, error)
 	CallbackKind() CallbackKind
 }
 

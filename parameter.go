@@ -20,7 +20,7 @@ const (
 // Parameter is either a ParameterObject or a ReferenceObject
 type Parameter interface {
 	ParameterKind() ParameterKind
-	ResolveParameter(ParameterResolver) (*ParameterObj, error)
+	ResolveParameter(ParameterResolverFunc) (*ParameterObj, error)
 }
 
 /*
@@ -232,7 +232,7 @@ type ParameterObj struct {
 }
 
 // ResolveParameter resolves p by returning itself
-func (p *ParameterObj) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
+func (p *ParameterObj) ResolveParameter(resolve ParameterResolverFunc) (*ParameterObj, error) {
 	return p, nil
 }
 

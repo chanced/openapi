@@ -8,26 +8,6 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type ParameterResolver func(ref string) (*ParameterObj, error)
-
-type ResponseResolver func(ref string) (*ResponseObj, error)
-
-type ExampleResolver func(ref string) (*ExampleObj, error)
-
-type HeaderResolver func(ref string) (*HeaderObj, error)
-
-type RequestBodyResolver func(ref string) (*RequestBodyObj, error)
-
-type CallbackResolver func(ref string) (*CallbackObj, error)
-
-type PathResolver func(ref string) (*PathObj, error)
-
-type SecuritySchemeResolver func(ref string) (*SecuritySchemeObj, error)
-
-type LinkResolver func(ref string) (*LinkObj, error)
-
-type SchemaResolver func(ref string) (*SchemaObj, error)
-
 // Referencable is any object type which could also be a Reference
 type Referencable interface {
 	IsRef() bool
@@ -117,47 +97,47 @@ func (r *Reference) LinkKind() LinkKind {
 }
 
 // ResolveParameter resolves r by invoking resolve
-func (r *Reference) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
+func (r *Reference) ResolveParameter(resolve ParameterResolverFunc) (*ParameterObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveResponse resolves r by invoking resolve
-func (r *Reference) ResolveResponse(resolve ResponseResolver) (*ResponseObj, error) {
+func (r *Reference) ResolveResponse(resolve ResponseResolverFunc) (*ResponseObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveExample resolves r by invoking resolve
-func (r *Reference) ResolveExample(resolve ExampleResolver) (*ExampleObj, error) {
+func (r *Reference) ResolveExample(resolve ExampleResolverFunc) (*ExampleObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveHeader resolves r by invoking resolve
-func (r *Reference) ResolveHeader(resolve HeaderResolver) (*HeaderObj, error) {
+func (r *Reference) ResolveHeader(resolve HeaderResolverFunc) (*HeaderObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveRequestBody resolves r by invoking resolve
-func (r *Reference) ResolveRequestBody(resolve RequestBodyResolver) (*RequestBodyObj, error) {
+func (r *Reference) ResolveRequestBody(resolve RequestBodyResolverFunc) (*RequestBodyObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveCallback resolves r by invoking resolve
-func (r *Reference) ResolveCallback(resolve CallbackResolver) (*CallbackObj, error) {
+func (r *Reference) ResolveCallback(resolve CallbackResolverFunc) (*CallbackObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolvePath resolves r by invoking resolve
-func (r *Reference) ResolvePath(resolve PathResolver) (*PathObj, error) {
+func (r *Reference) ResolvePath(resolve PathResolverFunc) (*PathObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveSecurityScheme resolves r by invoking resolve
-func (r *Reference) ResolveSecurityScheme(resolve SecuritySchemeResolver) (*SecuritySchemeObj, error) {
+func (r *Reference) ResolveSecurityScheme(resolve SecuritySchemeResolverFunc) (*SecuritySchemeObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveLink resolves r by invoking resolve
-func (r *Reference) ResolveLink(resolve LinkResolver) (*LinkObj, error) {
+func (r *Reference) ResolveLink(resolve LinkResolverFunc) (*LinkObj, error) {
 	return resolve(r.Ref)
 }
 func isRefJSON(data []byte) bool {
