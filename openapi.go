@@ -1,7 +1,9 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 
 	"github.com/chanced/openapi/yamlutil"
 )
@@ -60,7 +62,9 @@ type OpenAPI struct {
 	Security []*SecurityRequirement `json:"security,omitempty" yaml:"security,omitempty"`
 	// externalDocs	Additional external documentation.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
-	Extensions   `json:"-"`
+
+	buffer     io.ReadSeeker
+	Extensions `json:"-"`
 }
 type openapi OpenAPI
 
@@ -103,9 +107,16 @@ func (o *OpenAPI) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // Resolve resolves all references and returns a *ResolvedOpenAPI instance or an
 // error
 func (o *OpenAPI) Resolve(resolver Resolver) (*ResolvedOpenAPI, error) {
-	r := &ResolvedOpenAPI{}
-	o.Components
-	return r, nil
+	// r := &ResolvedOpenAPI{}
+
+	// TODO: finish this
+	panic("not implemented")
+}
+
+func (o *OpenAPI) EncodeJSON() (io.Reader, error) {
+	buf := &bytes.Buffer{}
+	err := json.NewEncoder(buf).Encode(o)
+	return buf, err
 }
 
 type OpenAPIs []*OpenAPI

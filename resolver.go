@@ -30,20 +30,28 @@ import (
 //
 // Example:
 //
-//  import (
-//  	"embed"
-//  	"github.com/chanced/openapi"
-//  )
+//	import (
+//		"log"
+//		"embed"
+//		"github.com/chanced/openapi"
+//	)
 //	//go:embed "openapi"
 //	var embeddedfs embed.FS
 //
-//  oai, err := embeddedfs.Open("openapi.yaml")
-//  if err != nil {
-//
-//
-//	o, err := openapi.Load(,
+//	oai, err := embeddedfs.Open("openapi.yaml")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+// 	o, err := openapi.Load(oai, openapi.NewResolver(openapi.Openers{
+// 		"https://network.local": &openapi.FSOpener{FS: embeddedfs},
+// 		"https://example.com": &openapi.HTTPOpener{},
+//	}))
 type Opener interface {
 	Open(path string) (io.ReadCloser, error)
+}
+
+type openiniter interface {
+	Init(string) error
 }
 
 // Openers is a map of URI addresses to Openers.
@@ -97,12 +105,18 @@ type resolver struct {
 	cache   *cache
 }
 
-func NewResolver(openers map[string]Opener) (*resolver, error) {
+func NewResolver(openers Openers) *resolver {
+	for k, o := range openers {
+		if oi, ok := o.(openiniter); ok {
+			// ignoring errors; presumably they'll be returned by o.Open
+			_ = oi.Init(k)
+		}
+	}
 	dr := &resolver{
 		openers: openers,
 		cache:   newCache(),
 	}
-	return dr, nil
+	return dr
 }
 
 type readercloser struct {
@@ -224,23 +238,38 @@ type HTTPOpener struct {
 	PrepareRequest func(req http.Request) http.Request
 }
 
-func (o *HTTPOpener) Open(name string) (io.ReadCloser, error) {
+func (o *HTTPOpener) Init(v string) error {
+	if v == "" {
+		return errors.New("openapi: HTTPOpener URL must not be empty")
+	}
+	if o.URL == "" {
+		o.URL = v
+	}
+	if o.url == nil {
+		u, err := url.Parse(o.URL)
+		if err == nil {
+			o.url = u
+		}
+		return err
+	}
 	if o.Client == nil {
 		o.Client = &http.Client{}
 	}
-	if o.url == nil {
-		if o.URL == "" {
-			return nil, errors.New("no URL specified")
-		}
-		u, err := url.Parse(o.URL)
-		if err != nil {
+	return nil
+}
+
+// Open opens the remote JSON or YAML by making an HTTP GET request, returning a io.Reader
+func (o *HTTPOpener) Open(name string) (io.ReadCloser, error) {
+	if o.url == nil || o.Client == nil {
+		if err := o.Init(o.URL); err != nil {
 			return nil, err
 		}
-
-		o.url = u
 	}
-	path.Join(o.url.Path, name)
-	req, err := http.NewRequest("GET", o.url.String(), nil)
+	if o.Client == nil {
+		o.Client = &http.Client{}
+	}
+	addr := path.Join(o.url.Path, name)
+	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -256,33 +285,52 @@ func (o *HTTPOpener) Open(name string) (io.ReadCloser, error) {
 }
 
 const (
-	invalidEncoding uint8 = iota
-	jsonEncoding
+	jsonEncoding = iota + 1
 	yamlEncoding
 )
 
-func decode(r io.Reader, ptr string, dst interface{}) error {
-	var err error
-	var encoding uint8
-	r, encoding, err = detectEncoding(r)
+func decodePtr(dec *json.Decoder, ptr string, dst interface{}) error {
+	rv := reflect.ValueOf(dst)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return &json.InvalidUnmarshalError{Type: reflect.TypeOf(dst)}
+	}
+	var v interface{}
+	if err := dec.Decode(&v); err != nil {
+		return err
+	}
+	p, err := jsonptr.NewJsonPointer(ptr)
 	if err != nil {
 		return err
 	}
-	hasPtr := len(ptr) > 0
-	if encoding == jsonEncoding {
-		dec := json.NewDecoder(r)
-		if hasPtr {
-			rv := reflect.ValueOf(dst)
-			if rv.Kind() != reflect.Ptr || rv.IsNil() {
-				return &json.InvalidUnmarshalError{reflect.TypeOf(dst)}
-			}
+	pv, _, err := p.Get(&v)
+	if err != nil {
+		return err
+	}
+	b, err := json.Marshal(pv)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, dst)
+}
 
+func decode(r io.Reader, ptr string, dst interface{}) error {
+	var err error
+	var enc uint8
+	r, enc, err = detectEncoding(r)
+	if err != nil {
+		return err
+	}
+	if enc == yamlEncoding {
+		r, err = yamlutil.EncodeYAMLToJSON(r)
+		if err != nil {
+			return err
 		}
-		return dec.Decode(dst)
 	}
-	if len(ptr) != 0 {
+	d := json.NewDecoder(r)
+	if len(ptr) > 0 {
+		return decodePtr(d, ptr, dst)
 	}
-	_ = encoding
+	return d.Decode(dst)
 }
 
 func decodeAndClose(r io.ReadCloser, ptr string, dst interface{}) error {
