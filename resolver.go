@@ -40,10 +40,8 @@ import (
 //  oai, err := embeddedfs.Open("openapi.yaml")
 //  if err != nil {
 //
-//	o, err := openapi.Load(, openapi.Openers{
-//		"https://network.local": &openapi.FSOpener{FS: embeddedfs},
-//		"https://example.com": &openapi.HTTPOpener{}, // makes HTTP requests to https://example.com
-//	})
+//
+//	o, err := openapi.Load(,
 type Opener interface {
 	Open(path string) (io.ReadCloser, error)
 }
@@ -318,6 +316,7 @@ func removeURI(r string, u string) string {
 	if r[0] == '#' {
 		return r
 	}
+
 	return "./" + r
 }
 
