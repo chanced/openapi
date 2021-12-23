@@ -213,7 +213,7 @@ linters-settings:
     # goimports:
     #     # # put imports beginning with prefix after 3rd-party packages;
     #     # # it's a comma-separated list of prefixes
-    #     # local-prefixes: github.com/chanced/triterra/
+    #     # local-prefixes: github.com/chanced/openapi/
 
     gosimple:
         # Select the Go version to target. The default is '1.13'.
