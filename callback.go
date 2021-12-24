@@ -129,3 +129,17 @@ func (c Callbacks) MarshalYAML() (interface{}, error) {
 func (c *Callbacks) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }
+
+// ResolvedCallback is map of possible out-of band callbacks related to the parent
+// operation. Each value in the map is a Path Item Object that describes a set
+// of requests that may be initiated by the API provider and the expected
+// responses. The key value used to identify the path item object is an
+// expression, evaluated at runtime, that identifies a URL to use for the
+// callback operation.
+//
+// To describe incoming requests from the API provider independent from another
+// API call, use the webhooks field.
+type ResolvedCallback struct {
+	Paths      ResolvedPathItems `json:"-"`
+	Extensions `json:"-"`
+}

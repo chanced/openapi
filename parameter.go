@@ -473,3 +473,13 @@ type ResolvedParameter struct {
 	Content    Content `json:"content,omitempty"`
 	Extensions `json:"-"`
 }
+
+// ResolvedParameterList is list of resolved parameters that are applicable for
+// a given operation. If a parameter is already defined at the Path Item, the
+// new definition will override it but can never remove it. The list MUST NOT
+// include duplicated parameters. A unique parameter is defined by a combination
+// of a name and location. The list can use the Reference Object to link to
+// parameters that are defined at the OpenAPI Object's components/parameters.
+//
+// Can either be a Parameter or a Reference
+type ResolvedParameterList []*ResolvedParameter

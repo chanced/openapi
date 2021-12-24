@@ -163,6 +163,9 @@ func (h Headers) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
+// Headers holds reusable HeaderObjs.
+type ResolvedHeaders map[string]*ResolvedHeader
+
 // ResolvedHeader follows the structure of the Parameter Object with the following
 // changes:
 //		- name MUST NOT be specified, it is given in the corresponding headers map.

@@ -8,25 +8,25 @@ import "github.com/chanced/openapi/yamlutil"
 // properties outside the components object.
 type ResolvedComponents struct {
 	// An object to hold reusable Schema Objects.
-	Schemas *Schemas `json:"schemas,omitempty"`
+	Schemas ResolvedSchemas `json:"schemas,omitempty"`
 	// An object to hold reusable Response Objects.
-	Responses *Responses `json:"responses,omitempty"`
+	Responses ResolvedResponses `json:"responses,omitempty"`
 	// An object to hold reusable Parameter Objects.
-	Parameters *Parameters `json:"parameters,omitempty"`
+	Parameters ResolvedParameters `json:"parameters,omitempty"`
 	// An object to hold reusable Example Objects.
-	Examples *Examples `json:"examples,omitempty"`
+	Examples ResolvedExamples `json:"examples,omitempty"`
 	// An object to hold reusable Request Body Objects.
-	RequestBodies *RequestBodies `json:"requestBodies,omitempty"`
+	RequestBodies ResolvedRequestBodies `json:"requestBodies,omitempty"`
 	// An object to hold reusable Header Objects.
-	Headers *Headers `json:"headers,omitempty"`
+	Headers ResolvedHeaders `json:"headers,omitempty"`
 	// An object to hold reusable Security Scheme Objects.
-	SecuritySchemes *SecuritySchemes `json:"securitySchemes,omitempty"`
+	SecuritySchemes ResolvedSecuritySchemes `json:"securitySchemes,omitempty"`
 	// An object to hold reusable Link Objects.
-	Links *Links `json:"links,omitempty"`
+	Links ResolvedLinks `json:"links,omitempty"`
 	// An object to hold reusable Callback Objects.
-	Callbacks *Callbacks `json:"callbacks,omitempty"`
+	Callbacks ResolvedCallbacks `json:"callbacks,omitempty"`
 	// An object to hold reusable Path Item Object.
-	PathItems  *PathItems `json:"pathItems,omitempty"`
+	PathItems  ResolvedPathItems `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
 

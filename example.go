@@ -111,7 +111,8 @@ func (e *Examples) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type ResolvedExamples map[string]ResolvedExample
+// ResolvedExamples is a map of *ResolvedExamples
+type ResolvedExamples map[string]*ResolvedExample
 
 // ResolvedExample is an example for various api interactions such as Responses
 // that has been resolved.

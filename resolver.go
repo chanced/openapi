@@ -231,16 +231,26 @@ type cache struct {
 
 func newCache() *cache {
 	return &cache{
-		Params:          make(map[string]*ParameterObj),
-		Responses:       make(map[string]*ResponseObj),
-		Examples:        make(map[string]*ExampleObj),
-		Headers:         make(map[string]*HeaderObj),
-		RequestBodies:   make(map[string]*RequestBodyObj),
-		Callbacks:       make(map[string]*CallbackObj),
-		Paths:           make(map[string]*PathObj),
-		SecuritySchemes: make(map[string]*SecuritySchemeObj),
-		Links:           make(map[string]*LinkObj),
-		Schemas:         make(map[string]*SchemaObj),
+		Params:                  make(map[string]*ParameterObj),
+		Responses:               make(map[string]*ResponseObj),
+		Examples:                make(map[string]*ExampleObj),
+		Headers:                 make(map[string]*HeaderObj),
+		RequestBodies:           make(map[string]*RequestBodyObj),
+		Callbacks:               make(map[string]*CallbackObj),
+		Paths:                   make(map[string]*PathObj),
+		SecuritySchemes:         make(map[string]*SecuritySchemeObj),
+		Links:                   make(map[string]*LinkObj),
+		Schemas:                 make(map[string]*SchemaObj),
+		ResolvedParams:          make(map[string]*ResolvedParameter),
+		ResolvedResponses:       make(map[string]*ResolvedResponse),
+		ResolvedExamples:        make(map[string]*ResolvedExample),
+		ResolvedHeaders:         make(map[string]*ResolvedHeader),
+		ResolvedRequestBodies:   make(map[string]*ResolvedRequestBody),
+		ResolvedCallbacks:       make(map[string]*ResolvedCallback),
+		ResolvedPaths:           make(map[string]*ResolvedPath),
+		ResolvedSecuritySchemes: make(map[string]*ResolvedSecurityScheme),
+		ResolvedLinks:           make(map[string]*ResolvedLink),
+		ResolvedSchemas:         make(map[string]*ResolvedSchema),
 	}
 }
 
