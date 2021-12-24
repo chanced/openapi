@@ -36,25 +36,25 @@ type ResolvedComponents struct {
 // components object.
 type Components struct {
 	// An object to hold reusable Schema Objects.
-	Schemas *Schemas `json:"schemas,omitempty"`
+	Schemas Schemas `json:"schemas,omitempty"`
 	// An object to hold reusable Response Objects.
-	Responses *Responses `json:"responses,omitempty"`
+	Responses Responses `json:"responses,omitempty"`
 	// An object to hold reusable Parameter Objects.
-	Parameters *Parameters `json:"parameters,omitempty"`
+	Parameters Parameters `json:"parameters,omitempty"`
 	// An object to hold reusable Example Objects.
-	Examples *Examples `json:"examples,omitempty"`
+	Examples Examples `json:"examples,omitempty"`
 	// An object to hold reusable Request Body Objects.
-	RequestBodies *RequestBodies `json:"requestBodies,omitempty"`
+	RequestBodies RequestBodies `json:"requestBodies,omitempty"`
 	// An object to hold reusable Header Objects.
-	Headers *Headers `json:"headers,omitempty"`
+	Headers Headers `json:"headers,omitempty"`
 	// An object to hold reusable Security Scheme Objects.
-	SecuritySchemes *SecuritySchemes `json:"securitySchemes,omitempty"`
+	SecuritySchemes SecuritySchemes `json:"securitySchemes,omitempty"`
 	// An object to hold reusable Link Objects.
-	Links *Links `json:"links,omitempty"`
+	Links Links `json:"links,omitempty"`
 	// An object to hold reusable Callback Objects.
-	Callbacks *Callbacks `json:"callbacks,omitempty"`
+	Callbacks Callbacks `json:"callbacks,omitempty"`
 	// An object to hold reusable Path Item Object.
-	PathItems  *PathItems `json:"pathItems,omitempty"`
+	PathItems  PathItems `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
 type components Components
@@ -84,6 +84,6 @@ func (c *Components) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }
 
-func (c *Components) resolve(resolver Resolver) (*ResolvedComponents, error) {
-	panic("not impl")
-}
+// func (c *Components) resolve(resolver Resolver) (*ResolvedComponents, error) {
+// 	panic("not impl")
+// }

@@ -20,28 +20,28 @@ import (
 
 // Opener is implemented by any value that has an Open method, which accepts a
 // path (string) and returns an io.ReadCloser.
-//
+
 // The path provided will be in the form of "./path-to-resource", relative to
 // the key provided to the Openers map.
 //
 // Two Openers are provided:
 // 	- openapi.FSOpener: opens from an fs.FS
-//	- openapi.HTTPOpener: opens by making HTTP requests
+// 	- openapi.HTTPOpener: opens by making HTTP requests
 //
 // Example:
 //
-//	import (
-//		"log"
-//		"embed"
-//		"github.com/chanced/openapi"
-//	)
-//	//go:embed "openapi"
-//	var embeddedfs embed.FS
+// 	import (
+// 		"log"
+// 		"embed"
+// 		"github.com/chanced/openapi"
+// 	)
+// 	//go:embed "openapi"
+// 	var embeddedfs embed.FS
 //
-//	oai, err := embeddedfs.Open("openapi.yaml")
-//	if err != nil {
-//		log.Fatal(err)
-//	}
+// 	oai, err := embeddedfs.Open("openapi.yaml")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 // 	o, err := openapi.Load(oai, openapi.NewResolver(openapi.Openers{
 // 		"https://network.local": &openapi.FSOpener{FS: embeddedfs},
 // 		"https://example.com": &openapi.HTTPOpener{},
@@ -87,7 +87,10 @@ type LinkResolverFunc func(ref string) (*LinkObj, error)
 // SchemaResolverFunc resolves Schemas
 type SchemaResolverFunc func(ref string) (*SchemaObj, error)
 
+// Resolver is implemented by any value that has ResolverFuns for each of the
+// referencable OpenAPI objects
 type Resolver interface {
+	Resolve() (*ResolvedOpenAPI, error)
 	ResolveParameterResolver(string) (*ParameterObj, error)
 	ResolveResponseResolver(string) (*ResponseObj, error)
 	ResolveExampleResolver(string) (*ExampleObj, error)
@@ -100,19 +103,21 @@ type Resolver interface {
 	ResolveSchemaResolver(string) (*SchemaObj, error)
 }
 
-type resolver struct {
+type OpenAPIResolver struct {
 	openers map[string]Opener
 	cache   *cache
+	openapi *OpenAPI
 }
 
-func NewResolver(openers Openers) *resolver {
+// NewResolver returns a new OpenAPIResolver which implements Resolver.
+func NewResolver(openers Openers) *OpenAPIResolver {
 	for k, o := range openers {
 		if oi, ok := o.(openiniter); ok {
 			// ignoring errors; presumably they'll be returned by o.Open
 			_ = oi.Init(k)
 		}
 	}
-	dr := &resolver{
+	dr := &OpenAPIResolver{
 		openers: openers,
 		cache:   newCache(),
 	}
@@ -124,11 +129,57 @@ type readercloser struct {
 	io.Closer
 }
 
-func (cr *resolver) opener(p string) (string, Opener, error) {
+func (oar *OpenAPIResolver) ResolveParameterResolver(ref string) (*ParameterObj, error) {
+	if v, ok := oar.cache.Params[ref]; ok {
+		return v, nil
+	}
+
+	if strings.HasPrefix(ref, "#/components/parameters/") {
+		c, ok := oar.openapi.Components.Parameters[strings.TrimPrefix(ref, "#/components/parameters/")]
+	}
+}
+
+func (oar *OpenAPIResolver) ResolveResponseResolver(p string) (*ResponseObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveExampleResolver(p string) (*ExampleObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveHeaderResolver(p string) (*HeaderObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveRequestBodyResolver(p string) (*RequestBodyObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveCallbackResolver(p string) (*CallbackObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolvePathResolver(p string) (*PathObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveSecuritySchemeResolver(p string) (*SecuritySchemeObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveLinkResolver(p string) (*LinkObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) ResolveSchemaResolver(p string) (*SchemaObj, error) {
+	panic("not implemented") // TODO: Implement
+}
+
+func (oar *OpenAPIResolver) opener(p string) (string, Opener, error) {
 	if p == "" {
 		return "", nil, errors.New("openapi: ref must not be empty")
 	}
-	for k, o := range cr.openers {
+	for k, o := range oar.openers {
 		if strings.HasPrefix(p, k) {
 			return k, o, nil
 		}
@@ -136,8 +187,8 @@ func (cr *resolver) opener(p string) (string, Opener, error) {
 	return "", nil, errors.New("openapi: no opener for " + p)
 }
 
-func (cr *resolver) open(pth string) (io.ReadCloser, error) {
-	u, o, err := cr.opener(pth)
+func (oar *OpenAPIResolver) open(pth string) (io.ReadCloser, error) {
+	u, o, err := oar.opener(pth)
 	if err != nil {
 		return nil, err
 	}
@@ -153,45 +204,6 @@ func (cr *resolver) open(pth string) (io.ReadCloser, error) {
 	}
 	return rc, nil
 }
-func (cr *resolver) ResolveParameterResolver(ref string) (*ParameterObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveResponseResolver(p string) (*ResponseObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveExampleResolver(p string) (*ExampleObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveHeaderResolver(p string) (*HeaderObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveRequestBodyResolver(p string) (*RequestBodyObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveCallbackResolver(p string) (*CallbackObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolvePathResolver(p string) (*PathObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveSecuritySchemeResolver(p string) (*SecuritySchemeObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveLinkResolver(p string) (*LinkObj, error) {
-	panic("not implemented") // TODO: Implement
-}
-
-func (cr *resolver) ResolveSchemaResolver(p string) (*SchemaObj, error) {
-	panic("not implemented") // TODO: Implement
-}
 
 type cache struct {
 	Params          map[string]*ParameterObj
@@ -204,6 +216,17 @@ type cache struct {
 	SecuritySchemes map[string]*SecuritySchemeObj
 	Links           map[string]*LinkObj
 	Schemas         map[string]*SchemaObj
+
+	ResolvedParams          map[string]*ResolvedParameter
+	ResolvedResponses       map[string]*ResolvedResponse
+	ResolvedExamples        map[string]*ResolvedExample
+	ResolvedHeaders         map[string]*ResolvedHeader
+	ResolvedRequestBodies   map[string]*ResolvedRequestBody
+	ResolvedCallbacks       map[string]*ResolvedCallback
+	ResolvedPaths           map[string]*ResolvedPath
+	ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
+	ResolvedLinks           map[string]*ResolvedLink
+	ResolvedSchemas         map[string]*ResolvedSchema
 }
 
 func newCache() *cache {
@@ -226,6 +249,7 @@ type FSOpener struct {
 	FS fs.FS
 }
 
+// Open an OpenAPI object
 func (o FSOpener) Open(name string) (io.ReadCloser, error) {
 	return o.FS.Open(name)
 }
@@ -238,6 +262,8 @@ type HTTPOpener struct {
 	PrepareRequest func(req http.Request) http.Request
 }
 
+// Init initializes the HTTPOpener. If an error occurs, it will be returned
+// uponn a call to Open.
 func (o *HTTPOpener) Init(v string) error {
 	if v == "" {
 		return errors.New("openapi: HTTPOpener URL must not be empty")
@@ -334,7 +360,7 @@ func decode(r io.Reader, ptr string, dst interface{}) error {
 }
 
 func decodeAndClose(r io.ReadCloser, ptr string, dst interface{}) error {
-	defer r.Close()
+	defer func(r io.ReadCloser) { _ = r.Close() }(r)
 	return decode(r, ptr, dst)
 }
 

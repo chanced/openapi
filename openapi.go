@@ -104,14 +104,14 @@ func (o *OpenAPI) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, o)
 }
 
-// Resolve resolves all references and returns a *ResolvedOpenAPI instance or an
-// error
-func (o *OpenAPI) Resolve(resolver Resolver) (*ResolvedOpenAPI, error) {
-	// r := &ResolvedOpenAPI{}
+// // Resolve resolves all references and returns a *ResolvedOpenAPI instance or an
+// // error
+// func (o *OpenAPI) Resolve(resolver Resolver) (*ResolvedOpenAPI, error) {
+// 	// r := &ResolvedOpenAPI{}
 
-	// TODO: finish this
-	panic("not implemented")
-}
+// 	// TODO: finish this
+// 	panic("not implemented")
+// }
 
 func (o *OpenAPI) EncodeJSON() (io.Reader, error) {
 	buf := &bytes.Buffer{}
