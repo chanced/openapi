@@ -15,6 +15,7 @@ func ExampleUsingLoaderToOpenExistingAPI() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer d.Close()
 	o, err := openapi.Load(d, openapi.NewResolver(
 		openapi.Openers{
 			"https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.1": &openapi.HTTPOpener{},

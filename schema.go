@@ -166,7 +166,7 @@ type SchemaObj struct {
 	// of the schema.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#comments
-	Comments string `json:"$comment,omitempty"`
+	Comment string `json:"$comment,omitempty"`
 
 	// The not keyword declares that an instance validates if it doesn’t
 	// validate against the given subschema.
@@ -322,11 +322,6 @@ func (s *SchemaObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, s)
 }
 
-// IsStrings returns false
-func (s *SchemaObj) IsStrings() bool {
-	return false
-}
-
 // IsBool returns true if s.Always is not nil
 func (s *SchemaObj) IsBool() bool {
 	return s.Always != nil
@@ -335,6 +330,48 @@ func (s *SchemaObj) IsBool() bool {
 // IsRef returns true if s.Ref is set
 func (s *SchemaObj) IsRef() bool {
 	return s.Ref != ""
+}
+
+// HasField returns true if json representation of the field exists on the
+// SchemaObj
+//
+// - if field is a member of the SchemaObj struct, its value is returned.
+//
+// - if field starts with "x-" then s.Extensinons is checked
+//
+// - if field is not a member field and does not have the extensions prefix,
+// s.Keywords is checked
+func (s *SchemaObj) HasField(field string) bool {
+	if _, ok := schemaobjfields[field]; ok {
+		return true
+	}
+	if strings.HasPrefix(field, "x-") {
+		_, ok := s.Extensions[field]
+		return ok
+	}
+	_, ok := s.Keywords[field]
+	return ok
+}
+
+// ValueOf returns the value of the field if it exists and a bool indicating
+// whether or not it does.
+//
+// - if field is a member of the SchemaObj struct, its value is returned.
+//
+// - if field starts with "x-" then s.Extensinons is checked
+//
+// - if field is not a member field and does not have the extensions prefix,
+// s.Keywords is checked
+func (s *SchemaObj) ValueOf(field string) (interface{}, bool) {
+	if fn, ok := schemaobjfields[field]; ok {
+		return fn(s), true
+	}
+	if strings.HasPrefix(field, "x-") {
+		v, ok := s.Extensions[field]
+		return v, ok
+	}
+	v, ok := s.Keywords[field]
+	return v, ok
 }
 
 // SetKeyword encodes and sets the keyword key to the encoded value
@@ -432,7 +469,7 @@ func unmarshalSchemaObjJSON(data []byte) (*SchemaObj, error) {
 				return nil, err
 			}
 			set(&dst, v)
-		} else if _, isfield := jsfields[key]; !isfield {
+		} else if _, isfield := schemaobjfields[key]; !isfield {
 			kw[key] = d
 		}
 	}
@@ -456,67 +493,144 @@ var schemaFieldSetters = map[string]func(s *partialschema, v *SchemaObj){
 	"additionalObjs":        func(s *partialschema, v *SchemaObj) { s.AdditionalObjs = v },
 }
 
-var jsfields = map[string]struct{}{
-	"$schema":               {},
-	"$id":                   {},
-	"type":                  {},
-	"$ref":                  {},
-	"$defs":                 {},
-	"format":                {},
-	"$dynamicAnchor":        {},
-	"$dynamicRef":           {},
-	"$anchor":               {},
-	"const":                 {},
-	"enum":                  {},
-	"$comment":              {},
-	"not":                   {},
-	"allOf":                 {},
-	"anyOf":                 {},
-	"oneOf":                 {},
-	"if":                    {},
-	"then":                  {},
-	"else":                  {},
-	"minProperties":         {},
-	"maxProperties":         {},
-	"required":              {},
-	"properties":            {},
-	"propertyNames":         {},
-	"regexProperties":       {},
-	"patternProperties":     {},
-	"additionalProperties":  {},
-	"dependentRequired":     {},
-	"dependentSchemas":      {},
-	"unevaluatedProperties": {},
-	"uniqueObjs":            {},
-	"items":                 {},
-	"unevaluatedObjs":       {},
-	"additionalObjs":        {},
-	"prefixObjs":            {},
-	"contains":              {},
-	"minContains":           {},
-	"maxContains":           {},
-	"minLength":             {},
-	"maxLength":             {},
-	"pattern":               {},
-	"contentEncoding":       {},
-	"contentMediaType":      {},
-	"minimum":               {},
-	"exclusiveMinimum":      {},
-	"maximum":               {},
-	"exclusiveMaximum":      {},
-	"multipleOf":            {},
-	"title":                 {},
-	"description":           {},
-	"default":               {},
-	"readOnly":              {},
-	"writeOnly":             {},
-	"examples":              {},
-	"deprecated":            {},
-	"externalDocs":          {},
-	"$recursiveAnchor":      {},
-	"$recursiveRef":         {},
-	"discriminator":         {},
-	"xml":                   {},
+func (sf schemaFields) Has(key string) bool {
+	_, ok := sf[key]
+	return ok
+}
+func (sf schemaFields) Get(schema *SchemaObj, key string) interface{} {
+	if f, ok := sf[key]; ok {
+		return f(schema)
+	}
+	if strings.HasPrefix(key, "x-") {
+		return schema.Extensions[key]
+	}
+	return schema.Keywords[key]
+}
+
+var schemaobjfields = map[string]func(s *SchemaObj) interface{}{
+	"$schema":               func(s *SchemaObj) interface{} { return s.Schema },
+	"$id":                   func(s *SchemaObj) interface{} { return s.ID },
+	"type":                  func(s *SchemaObj) interface{} { return s.Type },
+	"$ref":                  func(s *SchemaObj) interface{} { return s.Ref },
+	"$defs":                 func(s *SchemaObj) interface{} { return s.Definitions },
+	"format":                func(s *SchemaObj) interface{} { return s.Format },
+	"$dynamicAnchor":        func(s *SchemaObj) interface{} { return s.DynamicAnchor },
+	"$dynamicRef":           func(s *SchemaObj) interface{} { return s.DynamicRef },
+	"$anchor":               func(s *SchemaObj) interface{} { return s.Anchor },
+	"const":                 func(s *SchemaObj) interface{} { return s.Const },
+	"enum":                  func(s *SchemaObj) interface{} { return s.Enum },
+	"$comment":              func(s *SchemaObj) interface{} { return s.Comment },
+	"not":                   func(s *SchemaObj) interface{} { return s.Not },
+	"allOf":                 func(s *SchemaObj) interface{} { return s.AllOf },
+	"anyOf":                 func(s *SchemaObj) interface{} { return s.AnyOf },
+	"oneOf":                 func(s *SchemaObj) interface{} { return s.OneOf },
+	"if":                    func(s *SchemaObj) interface{} { return s.If },
+	"then":                  func(s *SchemaObj) interface{} { return s.Then },
+	"else":                  func(s *SchemaObj) interface{} { return s.Else },
+	"minProperties":         func(s *SchemaObj) interface{} { return s.MinProperties },
+	"maxProperties":         func(s *SchemaObj) interface{} { return s.MaxProperties },
+	"required":              func(s *SchemaObj) interface{} { return s.Required },
+	"properties":            func(s *SchemaObj) interface{} { return s.Properties },
+	"propertyNames":         func(s *SchemaObj) interface{} { return s.PropertyNames },
+	"regexProperties":       func(s *SchemaObj) interface{} { return s.RegexProperties },
+	"patternProperties":     func(s *SchemaObj) interface{} { return s.PatternProperties },
+	"additionalProperties":  func(s *SchemaObj) interface{} { return s.AdditionalProperties },
+	"dependentRequired":     func(s *SchemaObj) interface{} { return s.DependentRequired },
+	"dependentSchemas":      func(s *SchemaObj) interface{} { return s.DependentSchemas },
+	"unevaluatedProperties": func(s *SchemaObj) interface{} { return s.UnevaluatedProperties },
+	"uniqueObjs":            func(s *SchemaObj) interface{} { return s.UniqueObjs },
+	"items":                 func(s *SchemaObj) interface{} { return s.Items },
+	"unevaluatedObjs":       func(s *SchemaObj) interface{} { return s.UnevaluatedObjs },
+	"additionalObjs":        func(s *SchemaObj) interface{} { return s.AdditionalObjs },
+	"prefixObjs":            func(s *SchemaObj) interface{} { return s.PrefixObjs },
+	"contains":              func(s *SchemaObj) interface{} { return s.Contains },
+	"minContains":           func(s *SchemaObj) interface{} { return s.MinContains },
+	"maxContains":           func(s *SchemaObj) interface{} { return s.MaxContains },
+	"minLength":             func(s *SchemaObj) interface{} { return s.MinLength },
+	"maxLength":             func(s *SchemaObj) interface{} { return s.MaxLength },
+	"pattern":               func(s *SchemaObj) interface{} { return s.Pattern },
+	"contentEncoding":       func(s *SchemaObj) interface{} { return s.ContentEncoding },
+	"contentMediaType":      func(s *SchemaObj) interface{} { return s.ContentMediaType },
+	"minimum":               func(s *SchemaObj) interface{} { return s.Minimum },
+	"exclusiveMinimum":      func(s *SchemaObj) interface{} { return s.ExclusiveMinimum },
+	"maximum":               func(s *SchemaObj) interface{} { return s.Maximum },
+	"exclusiveMaximum":      func(s *SchemaObj) interface{} { return s.ExclusiveMaximum },
+	"multipleOf":            func(s *SchemaObj) interface{} { return s.MultipleOf },
+	"title":                 func(s *SchemaObj) interface{} { return s.Title },
+	"description":           func(s *SchemaObj) interface{} { return s.Description },
+	"default":               func(s *SchemaObj) interface{} { return s.Default },
+	"readOnly":              func(s *SchemaObj) interface{} { return s.ReadOnly },
+	"writeOnly":             func(s *SchemaObj) interface{} { return s.WriteOnly },
+	"examples":              func(s *SchemaObj) interface{} { return s.Examples },
+	"deprecated":            func(s *SchemaObj) interface{} { return s.Deprecated },
+	"externalDocs":          func(s *SchemaObj) interface{} { return s.ExternalDocs },
+	"$recursiveAnchor":      func(s *SchemaObj) interface{} { return s.RecursiveAnchor },
+	"$recursiveRef":         func(s *SchemaObj) interface{} { return s.RecursiveRef },
+	"discriminator":         func(s *SchemaObj) interface{} { return s.Discriminator },
+	"xml":                   func(s *SchemaObj) interface{} { return s.XML },
+}
+
+var ResolvedSchemafields = map[string]func(s *ResolvedSchema) interface{}{
+	"$schema":               func(s *ResolvedSchema) interface{} { return s.Schema },
+	"$id":                   func(s *ResolvedSchema) interface{} { return s.ID },
+	"type":                  func(s *ResolvedSchema) interface{} { return s.Type },
+	"$ref":                  func(s *ResolvedSchema) interface{} { return s.Ref },
+	"$defs":                 func(s *ResolvedSchema) interface{} { return s.Definitions },
+	"format":                func(s *ResolvedSchema) interface{} { return s.Format },
+	"$dynamicAnchor":        func(s *ResolvedSchema) interface{} { return s.DynamicAnchor },
+	"$dynamicRef":           func(s *ResolvedSchema) interface{} { return s.DynamicRef },
+	"$anchor":               func(s *ResolvedSchema) interface{} { return s.Anchor },
+	"const":                 func(s *ResolvedSchema) interface{} { return s.Const },
+	"enum":                  func(s *ResolvedSchema) interface{} { return s.Enum },
+	"$comment":              func(s *ResolvedSchema) interface{} { return s.Comment },
+	"not":                   func(s *ResolvedSchema) interface{} { return s.Not },
+	"allOf":                 func(s *ResolvedSchema) interface{} { return s.AllOf },
+	"anyOf":                 func(s *ResolvedSchema) interface{} { return s.AnyOf },
+	"oneOf":                 func(s *ResolvedSchema) interface{} { return s.OneOf },
+	"if":                    func(s *ResolvedSchema) interface{} { return s.If },
+	"then":                  func(s *ResolvedSchema) interface{} { return s.Then },
+	"else":                  func(s *ResolvedSchema) interface{} { return s.Else },
+	"minProperties":         func(s *ResolvedSchema) interface{} { return s.MinProperties },
+	"maxProperties":         func(s *ResolvedSchema) interface{} { return s.MaxProperties },
+	"required":              func(s *ResolvedSchema) interface{} { return s.Required },
+	"properties":            func(s *ResolvedSchema) interface{} { return s.Properties },
+	"propertyNames":         func(s *ResolvedSchema) interface{} { return s.PropertyNames },
+	"regexProperties":       func(s *ResolvedSchema) interface{} { return s.RegexProperties },
+	"patternProperties":     func(s *ResolvedSchema) interface{} { return s.PatternProperties },
+	"additionalProperties":  func(s *ResolvedSchema) interface{} { return s.AdditionalProperties },
+	"dependentRequired":     func(s *ResolvedSchema) interface{} { return s.DependentRequired },
+	"dependentSchemas":      func(s *ResolvedSchema) interface{} { return s.DependentSchemas },
+	"unevaluatedProperties": func(s *ResolvedSchema) interface{} { return s.UnevaluatedProperties },
+	"uniqueObjs":            func(s *ResolvedSchema) interface{} { return s.UniqueObjs },
+	"items":                 func(s *ResolvedSchema) interface{} { return s.Items },
+	"unevaluatedObjs":       func(s *ResolvedSchema) interface{} { return s.UnevaluatedObjs },
+	"additionalObjs":        func(s *ResolvedSchema) interface{} { return s.AdditionalObjs },
+	"prefixObjs":            func(s *ResolvedSchema) interface{} { return s.PrefixObjs },
+	"contains":              func(s *ResolvedSchema) interface{} { return s.Contains },
+	"minContains":           func(s *ResolvedSchema) interface{} { return s.MinContains },
+	"maxContains":           func(s *ResolvedSchema) interface{} { return s.MaxContains },
+	"minLength":             func(s *ResolvedSchema) interface{} { return s.MinLength },
+	"maxLength":             func(s *ResolvedSchema) interface{} { return s.MaxLength },
+	"pattern":               func(s *ResolvedSchema) interface{} { return s.Pattern },
+	"contentEncoding":       func(s *ResolvedSchema) interface{} { return s.ContentEncoding },
+	"contentMediaType":      func(s *ResolvedSchema) interface{} { return s.ContentMediaType },
+	"minimum":               func(s *ResolvedSchema) interface{} { return s.Minimum },
+	"exclusiveMinimum":      func(s *ResolvedSchema) interface{} { return s.ExclusiveMinimum },
+	"maximum":               func(s *ResolvedSchema) interface{} { return s.Maximum },
+	"exclusiveMaximum":      func(s *ResolvedSchema) interface{} { return s.ExclusiveMaximum },
+	"multipleOf":            func(s *ResolvedSchema) interface{} { return s.MultipleOf },
+	"title":                 func(s *ResolvedSchema) interface{} { return s.Title },
+	"description":           func(s *ResolvedSchema) interface{} { return s.Description },
+	"default":               func(s *ResolvedSchema) interface{} { return s.Default },
+	"readOnly":              func(s *ResolvedSchema) interface{} { return s.ReadOnly },
+	"writeOnly":             func(s *ResolvedSchema) interface{} { return s.WriteOnly },
+	"examples":              func(s *ResolvedSchema) interface{} { return s.Examples },
+	"deprecated":            func(s *ResolvedSchema) interface{} { return s.Deprecated },
+	"externalDocs":          func(s *ResolvedSchema) interface{} { return s.ExternalDocs },
+	"$recursiveAnchor":      func(s *ResolvedSchema) interface{} { return s.RecursiveAnchor },
+	"$recursiveRef":         func(s *ResolvedSchema) interface{} { return s.RecursiveRef },
+	"discriminator":         func(s *ResolvedSchema) interface{} { return s.Discriminator },
+	"xml":                   func(s *ResolvedSchema) interface{} { return s.XML },
 }
 
 type partialschema struct {
@@ -532,7 +646,7 @@ type partialschema struct {
 	Anchor                string              `json:"$anchor,omitempty"`
 	Const                 json.RawMessage     `json:"const,omitempty"`
 	Enum                  []string            `json:"enum,omitempty"`
-	Comments              string              `json:"$comment,omitempty"`
+	Comment               string              `json:"$comment,omitempty"`
 	Not                   *SchemaObj          `json:"-"`
 	AllOf                 SchemaSet           `json:"allOf,omitempty"`
 	AnyOf                 SchemaSet           `json:"anyOf,omitempty"`
@@ -586,6 +700,7 @@ type partialschema struct {
 }
 
 type ResolvedSchemas map[string]*ResolvedSchema
+type ResolvedSchemaSet []*ResolvedSchema
 
 type ResolvedSchema struct {
 	Always                *bool               `json:"-"`
@@ -600,31 +715,31 @@ type ResolvedSchema struct {
 	Anchor                string              `json:"$anchor,omitempty"`
 	Const                 json.RawMessage     `json:"const,omitempty"`
 	Enum                  []string            `json:"enum,omitempty"`
-	Comments              string              `json:"$comment,omitempty"`
-	Not                   *SchemaObj          `json:"-"`
-	AllOf                 SchemaSet           `json:"allOf,omitempty"`
-	AnyOf                 SchemaSet           `json:"anyOf,omitempty"`
-	OneOf                 SchemaSet           `json:"oneOf,omitempty"`
-	If                    *SchemaObj          `json:"-"`
-	Then                  *SchemaObj          `json:"-"`
-	Else                  *SchemaObj          `json:"-"`
+	Comment               string              `json:"$comment,omitempty"`
+	Not                   *ResolvedSchema     `json:"-"`
+	AllOf                 ResolvedSchemaSet   `json:"allOf,omitempty"`
+	AnyOf                 ResolvedSchemaSet   `json:"anyOf,omitempty"`
+	OneOf                 ResolvedSchemaSet   `json:"oneOf,omitempty"`
+	If                    *ResolvedSchema     `json:"-"`
+	Then                  *ResolvedSchema     `json:"-"`
+	Else                  *ResolvedSchema     `json:"-"`
 	MinProperties         *int                `json:"minProperties,omitempty"`
 	MaxProperties         *int                `json:"maxProperties,omitempty"`
 	Required              []string            `json:"required,omitempty"`
 	Properties            Schemas             `json:"properties,omitempty"`
 	PropertyNames         *SchemaObj          `json:"-"`
 	RegexProperties       *bool               `json:"regexProperties,omitempty"`
-	PatternProperties     Schemas             `json:"patternProperties,omitempty"`
-	AdditionalProperties  *SchemaObj          `json:"-"`
+	PatternProperties     ResolvedSchemas     `json:"patternProperties,omitempty"`
+	AdditionalProperties  *ResolvedSchema     `json:"-"`
 	DependentRequired     map[string][]string `json:"dependentRequired,omitempty"`
-	DependentSchemas      Schemas             `json:"dependentSchemas,omitempty"`
+	DependentSchemas      ResolvedSchemas     `json:"dependentSchemas,omitempty"`
 	UnevaluatedProperties *SchemaObj          `json:"-"`
 	UniqueObjs            *bool               `json:"uniqueObjs,omitempty"`
-	Items                 *SchemaObj          `json:"-"`
-	UnevaluatedObjs       *SchemaObj          `json:"-"`
-	AdditionalObjs        *SchemaObj          `json:"-"`
+	Items                 *ResolvedSchema     `json:"-"`
+	UnevaluatedObjs       *ResolvedSchema     `json:"-"`
+	AdditionalObjs        *ResolvedSchema     `json:"-"`
 	PrefixObjs            SchemaSet           `json:"prefixObjs,omitempty"`
-	Contains              *SchemaObj          `json:"-"`
+	Contains              *ResolvedSchema     `json:"-"`
 	MinContains           *Number             `json:"minContains,omitempty"`
 	MaxContains           *Number             `json:"maxContains,omitempty"`
 	MinLength             *Number             `json:"minLength,omitempty"`

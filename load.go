@@ -36,60 +36,22 @@ import (
 // 		"https://example.com": &openapi.HTTPOpener{},
 //	}))
 func Load(openapi io.Reader, resolver Resolver) (*ResolvedOpenAPI, error) {
-	panic("not implemented")
-
-}
-
-type cache struct {
-	Params                  map[string]*ParameterObj
-	Responses               map[string]*ResponseObj
-	Examples                map[string]*ExampleObj
-	Headers                 map[string]*HeaderObj
-	RequestBodies           map[string]*RequestBodyObj
-	Callbacks               map[string]*CallbackObj
-	Paths                   map[string]*PathObj
-	SecuritySchemes         map[string]*SecuritySchemeObj
-	Links                   map[string]*LinkObj
-	Schemas                 map[string]*SchemaObj
-	ResolvedParams          map[*ParameterObj]*ResolvedParameter
-	ResolvedResponses       map[*ResponseObj]*ResolvedResponse
-	ResolvedExamples        map[*ExampleObj]*ResolvedExample
-	ResolvedHeaders         map[*HeaderObj]*ResolvedHeader
-	ResolvedRequestBodies   map[*RequestBodyObj]*ResolvedRequestBody
-	ResolvedCallbacks       map[*CallbackObj]*ResolvedCallback
-	ResolvedPaths           map[*PathObj]*ResolvedPath
-	ResolvedSecuritySchemes map[*SecuritySchemeObj]*ResolvedSecurityScheme
-	ResolvedLinks           map[*LinkObj]*ResolvedLink
-	ResolvedSchemas         map[*SchemaObj]*ResolvedSchema
-}
-
-func newCache() *cache {
-	return &cache{
-		Params:                  make(map[string]*ParameterObj),
-		Responses:               make(map[string]*ResponseObj),
-		Examples:                make(map[string]*ExampleObj),
-		Headers:                 make(map[string]*HeaderObj),
-		RequestBodies:           make(map[string]*RequestBodyObj),
-		Callbacks:               make(map[string]*CallbackObj),
-		Paths:                   make(map[string]*PathObj),
-		SecuritySchemes:         make(map[string]*SecuritySchemeObj),
-		Links:                   make(map[string]*LinkObj),
-		Schemas:                 make(map[string]*SchemaObj),
-		ResolvedParams:          make(map[*ParameterObj]*ResolvedParameter),
-		ResolvedResponses:       make(map[*ResponseObj]*ResolvedResponse),
-		ResolvedExamples:        make(map[*ExampleObj]*ResolvedExample),
-		ResolvedHeaders:         make(map[*HeaderObj]*ResolvedHeader),
-		ResolvedRequestBodies:   make(map[*RequestBodyObj]*ResolvedRequestBody),
-		ResolvedCallbacks:       make(map[*CallbackObj]*ResolvedCallback),
-		ResolvedPaths:           make(map[*PathObj]*ResolvedPath),
-		ResolvedSecuritySchemes: make(map[*SecuritySchemeObj]*ResolvedSecurityScheme),
-		ResolvedLinks:           make(map[*LinkObj]*ResolvedLink),
-		ResolvedSchemas:         make(map[*SchemaObj]*ResolvedSchema),
+	var o *OpenAPI
+	if err := decode(openapi, "", &o); err != nil {
+		return nil, err
 	}
+	return loader{cache: newCache(), resolver: resolver, openapi: o}.load()
+
 }
 
 type loader struct {
 	*cache
+	resolver Resolver
+	openapi  *OpenAPI
+}
+
+func (l loader) load() (*ResolvedOpenAPI, error) {
+
 }
 
 const (
@@ -231,4 +193,52 @@ func readPtr(rc io.ReadCloser, ptr string) (io.ReadCloser, error) {
 		Reader: buf,
 		Closer: rc,
 	}, nil
+}
+
+type cache struct {
+	Params                  map[string]*ParameterObj
+	Responses               map[string]*ResponseObj
+	Examples                map[string]*ExampleObj
+	Headers                 map[string]*HeaderObj
+	RequestBodies           map[string]*RequestBodyObj
+	Callbacks               map[string]*CallbackObj
+	Paths                   map[string]*PathObj
+	SecuritySchemes         map[string]*SecuritySchemeObj
+	Links                   map[string]*LinkObj
+	Schemas                 map[string]*SchemaObj
+	ResolvedParams          map[*ParameterObj]*ResolvedParameter
+	ResolvedResponses       map[*ResponseObj]*ResolvedResponse
+	ResolvedExamples        map[*ExampleObj]*ResolvedExample
+	ResolvedHeaders         map[*HeaderObj]*ResolvedHeader
+	ResolvedRequestBodies   map[*RequestBodyObj]*ResolvedRequestBody
+	ResolvedCallbacks       map[*CallbackObj]*ResolvedCallback
+	ResolvedPaths           map[*PathObj]*ResolvedPath
+	ResolvedSecuritySchemes map[*SecuritySchemeObj]*ResolvedSecurityScheme
+	ResolvedLinks           map[*LinkObj]*ResolvedLink
+	ResolvedSchemas         map[*SchemaObj]*ResolvedSchema
+}
+
+func newCache() *cache {
+	return &cache{
+		Params:                  make(map[string]*ParameterObj),
+		Responses:               make(map[string]*ResponseObj),
+		Examples:                make(map[string]*ExampleObj),
+		Headers:                 make(map[string]*HeaderObj),
+		RequestBodies:           make(map[string]*RequestBodyObj),
+		Callbacks:               make(map[string]*CallbackObj),
+		Paths:                   make(map[string]*PathObj),
+		SecuritySchemes:         make(map[string]*SecuritySchemeObj),
+		Links:                   make(map[string]*LinkObj),
+		Schemas:                 make(map[string]*SchemaObj),
+		ResolvedParams:          make(map[*ParameterObj]*ResolvedParameter),
+		ResolvedResponses:       make(map[*ResponseObj]*ResolvedResponse),
+		ResolvedExamples:        make(map[*ExampleObj]*ResolvedExample),
+		ResolvedHeaders:         make(map[*HeaderObj]*ResolvedHeader),
+		ResolvedRequestBodies:   make(map[*RequestBodyObj]*ResolvedRequestBody),
+		ResolvedCallbacks:       make(map[*CallbackObj]*ResolvedCallback),
+		ResolvedPaths:           make(map[*PathObj]*ResolvedPath),
+		ResolvedSecuritySchemes: make(map[*SecuritySchemeObj]*ResolvedSecurityScheme),
+		ResolvedLinks:           make(map[*LinkObj]*ResolvedLink),
+		ResolvedSchemas:         make(map[*SchemaObj]*ResolvedSchema),
+	}
 }

@@ -56,10 +56,6 @@ func (c *Components) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }
 
-func (c *Components) resolve(resolver Resolver) (*ResolvedComponents, error) {
-	panic("not impl")
-}
-
 // ResolvedComponents holds a set of resolved reusable objects for different
 // aspects of the OAS. All objects defined within the components object will
 // have no effect on the API unless they are explicitly referenced from
