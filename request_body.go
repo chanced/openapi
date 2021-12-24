@@ -38,7 +38,7 @@ type requestbody RequestBodyObj
 func (rb *RequestBodyObj) RequestBodyKind() RequestBodyKind { return RequestBodyKindObj }
 
 // ResolveRequestBody resolves RequestBodyObj by returning itself. resolve is  not called.
-func (rb *RequestBodyObj) ResolveRequestBody(RequestBodyResolverFunc) (*RequestBodyObj, error) {
+func (rb *RequestBodyObj) ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error) {
 	return rb, nil
 }
 
@@ -73,7 +73,7 @@ func (rb RequestBodyObj) MarshalYAML() (interface{}, error) {
 
 // RequestBody can either be a RequestBody or a Reference
 type RequestBody interface {
-	ResolveRequestBody(RequestBodyResolverFunc) (*RequestBodyObj, error)
+	ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error)
 	RequestBodyKind() RequestBodyKind
 }
 
@@ -93,19 +93,20 @@ func unmarshalRequestBody(data []byte, rb *RequestBody) error {
 type RequestBodies map[string]RequestBody
 
 // UnmarshalJSON unmarshals JSON
-func (rb RequestBodies) UnmarshalJSON(data []byte) error {
+func (rb *RequestBodies) UnmarshalJSON(data []byte) error {
 	var dm map[string]json.RawMessage
 	if err := json.Unmarshal(data, &dm); err != nil {
 		return err
 	}
+	rv := make(map[string]RequestBody, len(dm))
 	for k, d := range dm {
 		var v RequestBody
 		if err := unmarshalRequestBody(d, &v); err != nil {
 			return err
 		}
-		rb[k] = v
+		rv[k] = v
 	}
-
+	*rb = rv
 	return nil
 }
 

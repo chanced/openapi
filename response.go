@@ -18,7 +18,7 @@ const (
 
 // Response is either a Response or a Reference
 type Response interface {
-	ResolveResponse(ResponseResolverFunc) (*ResponseObj, error)
+	ResolveResponse(func(ref string) (*ResponseObj, error)) (*ResponseObj, error)
 	ResponseKind() ResponseKind
 }
 
@@ -105,7 +105,7 @@ type response ResponseObj
 func (r *ResponseObj) ResponseKind() ResponseKind { return ResponseKindObj }
 
 // ResolveResponse resolves ResponseObj by returning itself. resolve is  not called.
-func (r *ResponseObj) ResolveResponse(ResponseResolverFunc) (*ResponseObj, error) {
+func (r *ResponseObj) ResolveResponse(func(ref string) (*ResponseObj, error)) (*ResponseObj, error) {
 	return r, nil
 }
 

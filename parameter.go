@@ -20,7 +20,7 @@ const (
 // Parameter is either a ParameterObject or a ReferenceObject
 type Parameter interface {
 	ParameterKind() ParameterKind
-	ResolveParameter(ParameterResolverFunc) (*ParameterObj, error)
+	ResolveParameter(func(ref string) (*ParameterObj, error)) (*ParameterObj, error)
 }
 
 /*
@@ -232,7 +232,7 @@ type ParameterObj struct {
 }
 
 // ResolveParameter resolves p by returning itself
-func (p *ParameterObj) ResolveParameter(resolve ParameterResolverFunc) (*ParameterObj, error) {
+func (p *ParameterObj) ResolveParameter(resolve func(ref string) (*ParameterObj, error)) (*ParameterObj, error) {
 	return p, nil
 }
 
@@ -483,3 +483,6 @@ type ResolvedParameter struct {
 //
 // Can either be a Parameter or a Reference
 type ResolvedParameterList []*ResolvedParameter
+
+// Parameters is a map of Parameter
+type ResolvedParameters map[string]*ResolvedParameter

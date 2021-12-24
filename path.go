@@ -145,7 +145,7 @@ type pathobj PathObj
 func (p *PathObj) PathKind() PathKind { return PathKindObj }
 
 // ResolvePath resolves PathObj by returning itself. resolve is  not called.
-func (p *PathObj) ResolvePath(PathResolverFunc) (*PathObj, error) {
+func (p *PathObj) ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error) {
 	return p, nil
 }
 
@@ -177,7 +177,7 @@ func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Path can either be a Path or a Reference
 type Path interface {
-	ResolvePath(PathResolverFunc) (*PathObj, error)
+	ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error)
 	PathKind() PathKind
 }
 
@@ -283,4 +283,4 @@ type ResolvedPath struct {
 }
 
 // ResolvedPathItems is a map of resolved Path objects
-type ResolvedPathItems map[string]Path
+type ResolvedPathItems map[string]*ResolvedPath

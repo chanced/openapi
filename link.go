@@ -97,13 +97,13 @@ func (l *LinkObj) DecodeRequestBody(dst interface{}) error {
 func (l *LinkObj) LinkKind() LinkKind { return LinkKindObj }
 
 // ResolveLink resolves LinkObj by returning itself. resolve is  not called.
-func (l *LinkObj) ResolveLink(LinkResolverFunc) (*LinkObj, error) {
+func (l *LinkObj) ResolveLink(func(ref string) (*LinkObj, error)) (*LinkObj, error) {
 	return l, nil
 }
 
 // Link can either be a Link or a Reference
 type Link interface {
-	ResolveLink(LinkResolverFunc) (*LinkObj, error)
+	ResolveLink(func(ref string) (*LinkObj, error)) (*LinkObj, error)
 	LinkKind() LinkKind
 }
 
@@ -189,6 +189,9 @@ func (lp *LinkParameters) Set(key string, value interface{}) error {
 func (lp *LinkParameters) SetEncoded(key string, value []byte) {
 	(*lp)[key] = json.RawMessage(value)
 }
+
+// ResolvedLinks is a map to hold reusable LinkObjs.
+type ResolvedLinks map[string]*ResolvedLink
 
 // ResolvedLink represents a resolved Link Object which is a possible
 // design-time link for a response. The presence of a link does not guarantee

@@ -97,47 +97,47 @@ func (r *Reference) LinkKind() LinkKind {
 }
 
 // ResolveParameter resolves r by invoking resolve
-func (r *Reference) ResolveParameter(resolve ParameterResolverFunc) (*ParameterObj, error) {
+func (r *Reference) ResolveParameter(resolve func(ref string) (*ParameterObj, error)) (*ParameterObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveResponse resolves r by invoking resolve
-func (r *Reference) ResolveResponse(resolve ResponseResolverFunc) (*ResponseObj, error) {
+func (r *Reference) ResolveResponse(resolve func(ref string) (*ResponseObj, error)) (*ResponseObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveExample resolves r by invoking resolve
-func (r *Reference) ResolveExample(resolve ExampleResolverFunc) (*ExampleObj, error) {
+func (r *Reference) ResolveExample(resolve func(ref string) (*ExampleObj, error)) (*ExampleObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveHeader resolves r by invoking resolve
-func (r *Reference) ResolveHeader(resolve HeaderResolverFunc) (*HeaderObj, error) {
+func (r *Reference) ResolveHeader(resolve func(ref string) (*HeaderObj, error)) (*HeaderObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveRequestBody resolves r by invoking resolve
-func (r *Reference) ResolveRequestBody(resolve RequestBodyResolverFunc) (*RequestBodyObj, error) {
+func (r *Reference) ResolveRequestBody(resolve func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveCallback resolves r by invoking resolve
-func (r *Reference) ResolveCallback(resolve CallbackResolverFunc) (*CallbackObj, error) {
+func (r *Reference) ResolveCallback(resolve func(ref string) (*CallbackObj, error)) (*CallbackObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolvePath resolves r by invoking resolve
-func (r *Reference) ResolvePath(resolve PathResolverFunc) (*PathObj, error) {
+func (r *Reference) ResolvePath(resolve func(ref string) (*PathObj, error)) (*PathObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveSecurityScheme resolves r by invoking resolve
-func (r *Reference) ResolveSecurityScheme(resolve SecuritySchemeResolverFunc) (*SecuritySchemeObj, error) {
+func (r *Reference) ResolveSecurityScheme(resolve func(ref string) (*SecuritySchemeObj, error)) (*SecuritySchemeObj, error) {
 	return resolve(r.Ref)
 }
 
 // ResolveLink resolves r by invoking resolve
-func (r *Reference) ResolveLink(resolve LinkResolverFunc) (*LinkObj, error) {
+func (r *Reference) ResolveLink(resolve func(ref string) (*LinkObj, error)) (*LinkObj, error) {
 	return resolve(r.Ref)
 }
 func isRefJSON(data []byte) bool {

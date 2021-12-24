@@ -294,7 +294,7 @@ func (s SchemaObj) MarshalJSON() ([]byte, error) {
 func (s *SchemaObj) SchemaKind() SchemaKind { return SchemaKindObj }
 
 // ResolveSchema resolves *SchemaObj by returning s
-func (s *SchemaObj) ResolveSchema(SchemaResolverFunc) (*SchemaObj, error) {
+func (s *SchemaObj) ResolveSchema(func(ref string) (*SchemaObj, error)) (*SchemaObj, error) {
 	return s, nil
 }
 
