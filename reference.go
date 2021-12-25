@@ -8,11 +8,6 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// Referencable is any object type which could also be a Reference
-type Referencable interface {
-	IsRef() bool
-}
-
 // ErrNotReference indicates not a reference
 var ErrNotReference = errors.New("error: data is not a Reference")
 
@@ -51,49 +46,9 @@ func (r *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, r)
 }
 
-// ParameterKind returns ParameterKindReference
-func (r *Reference) ParameterKind() ParameterKind {
-	return ParameterKindReference
-}
-
-// ResponseKind distinguishes Reference by returning HeaderKindRef
-func (r *Reference) ResponseKind() ResponseKind {
-	return ResponseKindRef
-}
-
-// ExampleKind distinguishes Reference by returning HeaderKindRef
-func (r *Reference) ExampleKind() ExampleKind {
-	return ExampleKindRef
-}
-
-// HeaderKind distinguishes Reference by returning HeaderKindRef
-func (r *Reference) HeaderKind() HeaderKind {
-	return HeaderKindRef
-}
-
-// RequestBodyKind returns RequestBodyKindRef
-func (r *Reference) RequestBodyKind() RequestBodyKind {
-	return RequestBodyKindRef
-}
-
-// CallbackKind returns CallbackKindRef
-func (r *Reference) CallbackKind() CallbackKind {
-	return CallbackKindRef
-}
-
-// PathKind returns PathKindRef
-func (r *Reference) PathKind() PathKind {
-	return PathKindRef
-}
-
-// SecuritySchemeKind returns SecuritySchemeKindRef
-func (r *Reference) SecuritySchemeKind() SecuritySchemeKind {
-	return SecuritySchemeKindRef
-}
-
-// LinkKind returns LinkKindRef
-func (r *Reference) LinkKind() LinkKind {
-	return LinkKindRef
+// Kind returns KindReference
+func (r *Reference) ParameterKind() Kind {
+	return KindReference
 }
 
 // ResolveParameter resolves r by invoking resolve

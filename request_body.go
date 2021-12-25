@@ -6,16 +6,11 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// RequestBodyKind distinguishes a RequestBodyObj as either a RequestBody or
-// Reference
-type RequestBodyKind int
-
-const (
-	// RequestBodyKindObj = RequestBodyObj
-	RequestBodyKindObj RequestBodyKind = iota
-	// RequestBodyKindRef = Reference
-	RequestBodyKindRef
-)
+// RequestBody can either be a RequestBody or a Reference
+type RequestBody interface {
+	ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error)
+	Node
+}
 
 // RequestBodyObj describes a single request body.
 type RequestBodyObj struct {
@@ -34,8 +29,8 @@ type RequestBodyObj struct {
 
 type requestbody RequestBodyObj
 
-// RequestBodyKind returns RequestBodyKindRequestBody
-func (rb *RequestBodyObj) RequestBodyKind() RequestBodyKind { return RequestBodyKindObj }
+// Kind returns KindRequestBody
+func (rb *RequestBodyObj) Kind() Kind { return KindRequestBody }
 
 // ResolveRequestBody resolves RequestBodyObj by returning itself. resolve is  not called.
 func (rb *RequestBodyObj) ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error) {
@@ -71,12 +66,6 @@ func (rb RequestBodyObj) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
-// RequestBody can either be a RequestBody or a Reference
-type RequestBody interface {
-	ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error)
-	RequestBodyKind() RequestBodyKind
-}
-
 func unmarshalRequestBody(data []byte, rb *RequestBody) error {
 	if isRefJSON(data) {
 		v, err := unmarshalReferenceJSON(data)
@@ -91,6 +80,11 @@ func unmarshalRequestBody(data []byte, rb *RequestBody) error {
 
 // RequestBodies is a map of RequestBody
 type RequestBodies map[string]RequestBody
+
+// Kind returns KindRequestBodies
+func (rb RequestBodies) Kind() Kind {
+	return KindRequestBodies
+}
 
 // UnmarshalJSON unmarshals JSON
 func (rb *RequestBodies) UnmarshalJSON(data []byte) error {
@@ -112,7 +106,6 @@ func (rb *RequestBodies) UnmarshalJSON(data []byte) error {
 
 // ResolvedRequestBody describes a single request body.
 type ResolvedRequestBody struct {
-
 	// TODO: reference
 
 	// A brief description of the request body. This could contain examples of
@@ -128,5 +121,20 @@ type ResolvedRequestBody struct {
 	Extensions `json:"-"`
 }
 
+// Kind returns KindRequestBody
+func (rrb *ResolvedRequestBody) Kind() Kind {
+	return KindRequestBody
+}
+
 // RequestBodies is a map of RequestBody
 type ResolvedRequestBodies map[string]*ResolvedRequestBody
+
+// Kind returns KindResolvedRequestBodies
+func (rrb ResolvedRequestBodies) Kind() Kind {
+	return KindResolvedRequestBodies
+}
+
+var _ Node = (*RequestBodyObj)(nil)
+var _ Node = (RequestBodies)(nil)
+var _ Node = (*ResolvedRequestBody)(nil)
+var _ Node = (ResolvedRequestBodies)(nil)

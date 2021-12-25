@@ -54,6 +54,8 @@ func (l loader) load() (*ResolvedOpenAPI, error) {
 
 }
 
+func (l loader) loadSchemas(schemas SchemaSet)
+
 const (
 	jsonEncoding = iota + 1
 	yamlEncoding

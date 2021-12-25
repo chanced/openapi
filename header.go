@@ -6,20 +6,10 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// HeaderKind distinguishes between Header and Reference
-type HeaderKind uint8
-
-const (
-	// HeaderKindObj = Header
-	HeaderKindObj HeaderKind = iota
-	// HeaderKindRef = Reference
-	HeaderKindRef
-)
-
 // Header is either a Header or a Reference
 type Header interface {
+	Node
 	ResolveHeader(func(ref string) (*HeaderObj, error)) (*HeaderObj, error)
-	HeaderKind() HeaderKind
 }
 
 // HeaderObj follows the structure of the Parameter Object with the following

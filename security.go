@@ -22,6 +22,10 @@ const (
 // SecurityRequirements is a list of SecurityRequirement
 type SecurityRequirements []SecurityRequirement
 
+func (sr SecurityRequirements) Kind() Kind {
+	return KindSecurityRequirements
+}
+
 // SecurityRequirement lists the required security schemes to execute this
 // operation. The name used for each property MUST correspond to a security
 // scheme declared in the Security Schemes under the Components Object.
@@ -51,16 +55,6 @@ func (ss SecuritySchemeType) String() string {
 	return string(ss)
 }
 
-// SecuritySchemeKind is either a SecuritySchemeObj or Reference
-type SecuritySchemeKind uint8
-
-const (
-	// SecuritySchemeKindObj = SecuritySchemeObj
-	SecuritySchemeKindObj SecuritySchemeKind = iota
-	// SecuritySchemeKindRef = Reference
-	SecuritySchemeKindRef
-)
-
 // SecuritySchemes is a map of SecurityScheme
 type SecuritySchemes map[string]SecurityScheme
 
@@ -88,6 +82,18 @@ func (ss *SecuritySchemes) UnmarshalJSON(data []byte) error {
 	}
 	*ss = res
 	return nil
+}
+
+func (ss SecuritySchemes) MarshalJSON() ([]byte, error) {
+	res := make(map[string]interface{}, len(ss))
+	for k, v := range ss {
+		if v.Ref != "" {
+			res[k] = v.Ref
+			continue
+		}
+		res[k] = v
+	}
+	return json.Marshal(res)
 }
 
 // MarshalYAML marshals YAML
@@ -172,18 +178,20 @@ func (sso *SecuritySchemeObj) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return yamlutil.Unmarshal(unmarshal, sso)
 }
 
-// SecuritySchemeKind returns SecuritySchemeKindObj
-func (sso *SecuritySchemeObj) SecuritySchemeKind() SecuritySchemeKind { return SecuritySchemeKindObj }
-
 // ResolveSecurityScheme resolves SecuritySchemeObj by returning itself. resolve is  not called.
 func (sso *SecuritySchemeObj) ResolveSecurityScheme(func(ref string) (*SecuritySchemeObj, error)) (*SecuritySchemeObj, error) {
 	return sso, nil
 }
 
+// Kind returns KindSecurityScheme
+func (sso *SecuritySchemeObj) Kind() Kind {
+	return KindSecurityScheme
+}
+
 // SecurityScheme can either be a ScecuritySchemeObj or a Reference
 type SecurityScheme interface {
 	ResolveSecurityScheme(func(ref string) (*SecuritySchemeObj, error)) (*SecuritySchemeObj, error)
-	SecuritySchemeKind() SecuritySchemeKind
+	Kind() Kind
 }
 
 // ResolvedSecurityScheme lists the required security schemes to execute this
@@ -257,3 +265,15 @@ type ResolvedSecurityScheme struct {
 
 // SecuritySchemes is a map of SecurityScheme
 type ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
+
+func (rss ResolvedSecuritySchemes) Kind() Kind {
+	return KindSecuritySchemes
+}
+
+var _ Node = (ResolvedSecuritySchemes)(nil)
+var _ Node = (ResolvedSecurityScheme)(nil)
+var _ Node = (SecuritySchemes)(nil)
+var _ Node = (*SecuritySchemeObj)(nil)
+var _ Node = (SecurityRequirements)(nil)
+var _ Node = (SecurityRequirements)(nil)
+var _ Node = (SecurityRequirement)(nil)

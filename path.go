@@ -139,6 +139,11 @@ type PathObj struct {
 	Extensions `json:"-"`
 }
 
+// KindPath returns KindPath
+func (p *PathObj) Kind() Kind {
+	return KindPath
+}
+
 type pathobj PathObj
 
 // PathKind returns PathKindPath
@@ -183,6 +188,11 @@ type Path interface {
 
 // PathItems is a map of Paths that can either be a Path or a Reference
 type PathItems map[string]Path
+
+// Kind returns PathKindPaths
+func (pi PathItems) Kind() Kind {
+	return KindPathItems
+}
 
 // UnmarshalJSON unmarshals JSON data into rp
 func (rp *PathItems) UnmarshalJSON(data []byte) error {
@@ -282,5 +292,47 @@ type ResolvedPath struct {
 	Extensions `json:"-"`
 }
 
+// Kind returns KindResolvedPath
+func (rp *ResolvedPath) Kind() Kind {
+	return KindResolvedPath
+}
+
 // ResolvedPathItems is a map of resolved Path objects
 type ResolvedPathItems map[string]*ResolvedPath
+
+// Kind returns KindResolvedPathItems
+func (rpi ResolvedPathItems) Kind() Kind {
+	return KindResolvedPathItems
+}
+
+// Paths holds the relative paths to the individual endpoints and their
+// operations. The path is appended to the URL from the Server Object in order
+// to construct the full URL. The Paths MAY be empty, due to Access Control List
+// (ACL) constraints.
+type ResolvedPaths struct {
+	Items      map[PathValue]*ResolvedPath `json:"-"`
+	Extensions `json:"-"`
+}
+
+func (rp *ResolvedPaths) Kind() Kind {
+	return KindResolvedPaths
+}
+
+// MarshalJSON marshals JSON
+func (p ResolvedPaths) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{}, len(p.Items)+len(p.Extensions))
+	for k, v := range p.Items {
+		m[k.String()] = v
+	}
+	for k, v := range p.Extensions {
+		m[k] = v
+	}
+	return json.Marshal(m)
+}
+
+var _ Node = (*ResolvedPath)(nil)
+var _ Node = (*PathObj)(nil)
+var _ Node = (*PathItems)(nil)
+var _ Node = (*ResolvedPathItems)(nil)
+var _ Node = (PathItems)(nil)
+var _ Node = (ResolvedPathItems)(nil)

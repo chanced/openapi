@@ -7,16 +7,6 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// CallbackKind indicates whether the CallbackObj is a Callback or a Reference
-type CallbackKind uint8
-
-const (
-	// CallbackKindObj = CallbackObj
-	CallbackKindObj CallbackKind = iota
-	// CallbackKindRef = Reference
-	CallbackKindRef
-)
-
 // CallbackObj is map of possible out-of band callbacks related to the parent
 // operation. Each value in the map is a Path Item Object that describes a set
 // of requests that may be initiated by the API provider and the expected
@@ -76,8 +66,8 @@ func (c *CallbackObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }
 
-// CallbackKind returns CallbackKindCallback
-func (c *CallbackObj) CallbackKind() CallbackKind { return CallbackKindObj }
+// Kind returns CallbackKindCallback
+func (c *CallbackObj) Kind() Kind { return KindCallback }
 
 // ResolveCallback resolves CallbackObj by returning itself. resolve is  not called.
 func (c *CallbackObj) ResolveCallback(func(ref string) (*CallbackObj, error)) (*CallbackObj, error) {
@@ -86,8 +76,8 @@ func (c *CallbackObj) ResolveCallback(func(ref string) (*CallbackObj, error)) (*
 
 // Callback can either be a CallbackObj or a Reference
 type Callback interface {
+	Node
 	ResolveCallback(func(ref string) (*CallbackObj, error)) (*CallbackObj, error)
-	CallbackKind() CallbackKind
 }
 
 // Callbacks is a map of reusable Callback Objects.

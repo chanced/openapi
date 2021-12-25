@@ -7,19 +7,9 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// ParameterKind indicates whether the entry is a ParameterDef or a Reference
-type ParameterKind uint
-
-const (
-	// ParameterKindObj is a ParameterObj
-	ParameterKindObj ParameterKind = iota
-	// ParameterKindReference indicates the Parameter is a Reference
-	ParameterKindReference
-)
-
 // Parameter is either a ParameterObject or a ReferenceObject
 type Parameter interface {
-	ParameterKind() ParameterKind
+	Node
 	ResolveParameter(func(ref string) (*ParameterObj, error)) (*ParameterObj, error)
 }
 
@@ -236,9 +226,8 @@ func (p *ParameterObj) ResolveParameter(resolve func(ref string) (*ParameterObj,
 	return p, nil
 }
 
-// ParameterKind indicates that this is a Parameter for unmarshaling
-// ParameterObjs by returning ParameterKindParameter
-func (p *ParameterObj) ParameterKind() ParameterKind { return ParameterKindObj }
+// Kind returns KindParameter
+func (p *ParameterObj) ParameterKind() Kind { return KindParameter }
 
 // MarshalJSON marshals h into JSON
 func (p ParameterObj) MarshalJSON() ([]byte, error) {
@@ -296,7 +285,7 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
-// ParameterList is list of parameters that are applicable for a given operation.
+// ParameterSet is list of parameters that are applicable for a given operation.
 // If a parameter is already defined at the Path Item, the new definition will
 // override it but can never remove it. The list MUST NOT include duplicated
 // parameters. A unique parameter is defined by a combination of a name and
@@ -304,10 +293,10 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 // are defined at the OpenAPI Object's components/parameters.
 //
 // Can either be a Parameter or a Reference
-type ParameterList []Parameter
+type ParameterSet []Parameter
 
 // MarshalJSON marshals JSON
-func (p ParameterList) MarshalJSON() ([]byte, error) {
+func (p ParameterSet) MarshalJSON() ([]byte, error) {
 	if p != nil {
 		return json.Marshal([]Parameter(p))
 	}
@@ -315,7 +304,7 @@ func (p ParameterList) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals JSON data into p
-func (p *ParameterList) UnmarshalJSON(data []byte) error {
+func (p *ParameterSet) UnmarshalJSON(data []byte) error {
 	var rd []json.RawMessage
 	var err error
 	if err = json.Unmarshal(data, &rd); err != nil {
@@ -350,12 +339,12 @@ func unmarshalParameterJSON(data []byte, dst *Parameter) error {
 }
 
 // UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterList) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (p *ParameterSet) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, p)
 }
 
 // MarshalYAML marshals p into YAML
-func (p ParameterList) MarshalYAML() (interface{}, error) {
+func (p ParameterSet) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(p)
 	if err != nil {
 		return nil, err

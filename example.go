@@ -6,20 +6,10 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// ExampleKind indicates wheter the ExampleObj is an Example or a Reference
-type ExampleKind uint8
-
-const (
-	// ExampleKindObj indicates an ExampleObj
-	ExampleKindObj ExampleKind = iota
-	// ExampleKindRef indicates a Reference
-	ExampleKindRef
-)
-
 // Example is either an Example or a Reference
 type Example interface {
+	Node
 	ResolveExample(func(ref string) (*ExampleObj, error)) (*ExampleObj, error)
-	ExampleKind() ExampleKind
 }
 
 // ExampleObj is an example for various api interactions such as Responses
@@ -73,8 +63,8 @@ func (e *ExampleObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, e)
 }
 
-// ExampleKind returns ExampleKindObj
-func (e *ExampleObj) ExampleKind() ExampleKind { return ExampleKindObj }
+// Kind returns KindExample
+func (e *ExampleObj) ExampleKind() Kind { return KindExample }
 
 // ResolveExample resolves ExampleObj by returning itself. resolve is  not called.
 func (e *ExampleObj) ResolveExample(func(ref string) (*ExampleObj, error)) (*ExampleObj, error) {

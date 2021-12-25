@@ -11,16 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// SchemaKind indicates whether the *SchemaObj is a SchemaObj, Reference, or Boolean
-type SchemaKind uint8
-
-const (
-	// SchemaKindObj = *SchemaObj
-	SchemaKindObj SchemaKind = iota
-	// SchemaKindBool = *Boolean
-	SchemaKindBool
-)
-
 // Schemas is a map of Schemas
 type Schemas map[string]*SchemaObj
 
@@ -290,8 +280,8 @@ func (s SchemaObj) MarshalJSON() ([]byte, error) {
 	return data, err
 }
 
-// SchemaKind returns SchemaKindObj
-func (s *SchemaObj) SchemaKind() SchemaKind { return SchemaKindObj }
+// Kind returns KindSchema
+func (s *SchemaObj) Kind() Kind { return KindSchema }
 
 // ResolveSchema resolves *SchemaObj by returning s
 func (s *SchemaObj) ResolveSchema(func(ref string) (*SchemaObj, error)) (*SchemaObj, error) {
@@ -426,6 +416,11 @@ func (s *SchemaSet) UnmarshalJSON(data []byte) error {
 	}
 	*s = res
 	return nil
+}
+
+// ResolveJSONPointer resolves JSON Pointer, into dst
+func (s *SchemaSet) ResolveJSONPointer(key string, dst interface{}) error {
+
 }
 
 func unmarshalSchemaJSON(data []byte) (*SchemaObj, error) {
