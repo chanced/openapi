@@ -227,7 +227,7 @@ func (p *ParameterObj) ResolveParameter(resolve func(ref string) (*ParameterObj,
 }
 
 // Kind returns KindParameter
-func (p *ParameterObj) ParameterKind() Kind { return KindParameter }
+func (p *ParameterObj) Kind() Kind { return KindParameter }
 
 // MarshalJSON marshals h into JSON
 func (p ParameterObj) MarshalJSON() ([]byte, error) {
@@ -384,6 +384,23 @@ func (p *Parameters) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ResolvedParameterSet is list of resolved parameters that are applicable for
+// a given operation. If a parameter is already defined at the Path Item, the
+// new definition will override it but can never remove it. The list MUST NOT
+// include duplicated parameters. A unique parameter is defined by a combination
+// of a name and location. The list can use the Reference Object to link to
+// parameters that are defined at the OpenAPI Object's components/parameters.
+//
+// Can either be a Parameter or a Reference
+type ResolvedParameterSet []*ResolvedParameter
+
+func (rpl ResolvedParameterSet) Kind() Kind {
+	return KindResolvedParameterSet
+}
+
+// Parameters is a map of Parameter
+type ResolvedParameters map[string]*ResolvedParameter
+
 // ResolvedParameter describes a single operation parameter that has been
 // fully resolved.
 //
@@ -463,15 +480,9 @@ type ResolvedParameter struct {
 	Extensions `json:"-"`
 }
 
-// ResolvedParameterList is list of resolved parameters that are applicable for
-// a given operation. If a parameter is already defined at the Path Item, the
-// new definition will override it but can never remove it. The list MUST NOT
-// include duplicated parameters. A unique parameter is defined by a combination
-// of a name and location. The list can use the Reference Object to link to
-// parameters that are defined at the OpenAPI Object's components/parameters.
-//
-// Can either be a Parameter or a Reference
-type ResolvedParameterList []*ResolvedParameter
-
-// Parameters is a map of Parameter
-type ResolvedParameters map[string]*ResolvedParameter
+var _ Node = (*ParameterObj)(nil)
+var _ Node = (*ResolvedParameter)(nil)
+var _ Node = (Parameters)(nil)
+var _ Node = (ResolvedParameters)(nil)
+var _ Node = (ParameterSet)(nil)
+var _ Node = (ResolvedParameterSet)(nil)

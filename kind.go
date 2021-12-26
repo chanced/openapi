@@ -13,40 +13,41 @@ const (
 	KindLinks                               // KindLinks represents Links
 	KindParameters                          // KindParameters represents Parameters
 	KindParameter                           // KindParameter represents *ParameterObj
+	KindParameterSet                        // KindParameterSet represents ParameterSet
 	KindInfo                                // KindInfo represents *Info
 	KindPath                                // KindPath represents *PathObj
 	KindPathItems                           // KindPathItems represents Paths
 	KindReference                           // KindReference represents *Reference
-	KindRequestBody                         // KindRequestBody represents a *RequestBodyObj
-	KindRequestBodies                       // KindRequestBodies represents a RequestBodies map
-	KindSecurityRequirement                 // KindSecurityRequirement represents a *SecurityRequirementObj
+	KindRequestBody                         // KindRequestBody represents*RequestBodyObj
+	KindRequestBodies                       // KindRequestBodies representsRequestBodies map
+	KindSecurityRequirement                 // KindSecurityRequirement represents*SecurityRequirementObj
 	KindSecurityRequirements                // KindSecurityRequirements represents aSecurityRquirements
-	KindSecurityScheme                      // KindSecurityScheme represents a *SecuritySchemeObj
+	KindSecurityScheme                      // KindSecurityScheme represents*SecuritySchemeObj
 	KindSecuritySchemes                     // KindSecuritySchemes represents SecuritySchemes
-	KindSchema                              // KindSchema represents a *SchemaObj
-	KindSchemaSet                           // KindSchemaSet represents a SchemaSet
+	KindSchema                              // KindSchema represents*SchemaObj
+	KindSchemaSet                           // KindSchemaSet representsSchemaSet
 	KindSchemas                             // KindSchemas represents Schemas
 	KindServer                              // KindServer represents *Server
-	KindWebhook                             // KindWebhook represents a *WebhookObj
-	KindWebhooks                            // KindWebhooks represents a Webhooks map
-	KindResolvedRequestBody                 // KindRequestBody represents a *ResolvedRequestBody
-	KindResolvedRequestBodies               // KindRequestBodies represents a
-	KindResolvedParameters                  // KindResolvedParameters represents a Parameters map
-	KindResolvedParameterSet                // KindResolvedParameterSet represents a ParameterSet
-	KindResolvedParameter                   // KindResolvedParameter represents a *ResolvedParameter
-	KindResolvedLink                        // KindLink represents a *ResolvedLink
-	KindResolvedLinks                       // KindLinks represents a ResolvedLinks map
-	KindResolvedCallback                    // KindResolvedCallback represents a *ResolvedCallback
+	KindWebhook                             // KindWebhook represents*WebhookObj
+	KindWebhooks                            // KindWebhooks representsWebhooks map
+	KindResolvedRequestBody                 // KindRequestBody represents*ResolvedRequestBody
+	KindResolvedRequestBodies               // KindRequestBodies represents ResolvedRequestBodies
+	KindResolvedParameters                  // KindResolvedParameters representsParameters map
+	KindResolvedParameterSet                // KindResolvedParameterSet representsParameterSet
+	KindResolvedParameter                   // KindResolvedParameter represents*ResolvedParameter
+	KindResolvedLink                        // KindLink represents*ResolvedLink
+	KindResolvedLinks                       // KindLinks representsResolvedLinks map
+	KindResolvedCallback                    // KindResolvedCallback represents*ResolvedCallback
 	KindResolvedComponents                  // KindResolvedComponents resolved Components
-	KindResolvedExample                     // KindResolvedExample represents a *ResolvedExample
-	KindResolvedOpenAPI                     // KindResolvedOpenAPI represents a *ResolvedOpenAPI
-	KindResolvedPath                        // KindResolvedPath represents a *ResolvedPath
-	KindResolvedPathItems                   // KindResolvedPathItems represents a ResolvedPathItems map
-	KindResolvedPaths                       // KindResolvedPaths represents a ResolvedPaths map
+	KindResolvedExample                     // KindResolvedExample represents*ResolvedExample
+	KindResolvedOpenAPI                     // KindResolvedOpenAPI represents*ResolvedOpenAPI
+	KindResolvedPath                        // KindResolvedPath represents*ResolvedPath
+	KindResolvedPathItems                   // KindResolvedPathItems representsResolvedPathItems map
+	KindResolvedPaths                       // KindResolvedPaths representsResolvedPaths map
 	KindResolvedSecurityScheme              // KindResolvedSecurityScheme resolved SecurityScheme
 	KindResolvedSecuritySchemes             // KindResolvedSecuritySchemes resolved SecuritySchemes
-	KindResolvedSchema                      // KindResolvedSchema represents a *ResolvedSchema
-	KindResolvedSchemaSet                   // KindResolvedSchemaSet represents a ResolvedSchemaSet
+	KindResolvedSchema                      // KindResolvedSchema represents*ResolvedSchema
+	KindResolvedSchemaSet                   // KindResolvedSchemaSet representsResolvedSchemaSet
 	KindResolvedSchemas                     // KindResolvedSchemas represents ResolvedSchemas
 )
 

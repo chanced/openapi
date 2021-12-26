@@ -47,7 +47,7 @@ func (r *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Kind returns KindReference
-func (r *Reference) ParameterKind() Kind {
+func (r *Reference) Kind() Kind {
 	return KindReference
 }
 
