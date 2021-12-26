@@ -69,8 +69,8 @@ type HeaderObj struct {
 
 type header HeaderObj
 
-// HeaderKind distinguishes h as a Header by returning HeaderKindHeader
-func (h *HeaderObj) HeaderKind() HeaderKind { return HeaderKindObj }
+// Kind returns KindHeader
+func (*HeaderObj) Kind() Kind { return KindHeader }
 
 // ResolveHeader resolves HeaderObj by returning itself. resolve is  not called.
 func (h *HeaderObj) ResolveHeader(func(ref string) (*HeaderObj, error)) (*HeaderObj, error) {
@@ -109,6 +109,11 @@ func (h *HeaderObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Headers holds reusable HeaderObjs.
 type Headers map[string]Header
+
+// Kind returns KindHeaders
+func (Headers) Kind() Kind {
+	return KindHeaders
+}
 
 // UnmarshalJSON unmarshals JSON data into p
 func (h *Headers) UnmarshalJSON(data []byte) error {
@@ -155,6 +160,11 @@ func (h Headers) MarshalYAML() (interface{}, error) {
 
 // Headers holds reusable HeaderObjs.
 type ResolvedHeaders map[string]*ResolvedHeader
+
+// Kind returns KindResolvedHeaders
+func (ResolvedHeaders) Kind() Kind {
+	return KindResolvedHeaders
+}
 
 // ResolvedHeader follows the structure of the Parameter Object with the following
 // changes:
@@ -215,3 +225,12 @@ type ResolvedHeader struct {
 	// OpenAPI extensions
 	Extensions `json:"-"`
 }
+
+func (*ResolvedHeader) Kind() Kind {
+	return KindResolvedHeader
+}
+
+var _ Node = (*HeaderObj)(nil)
+var _ Node = (*ResolvedHeader)(nil)
+var _ Node = (Headers)(nil)
+var _ Node = (ResolvedHeaders)(nil)

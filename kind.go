@@ -34,6 +34,10 @@ const (
 	KindResponse                            // KindResponse represents *ResponseObj
 	KindResponses                           // KindResponses represents Responses
 	KindOperation                           // KindOperation represents *Operation
+	KindHeader                              // KindHeader represents *HeaderObj
+	KindHeaders                             // KindHeaders represents Headers
+	KindResolvedHeader                      // KindResolvedHeader represents *ResolvedHeader
+	KindResolvedHeaders                     // KindResolvedHeaders represents ResolvedHeaders
 	KindResolvedOperation                   // KindResolvedOperation represents *ResolvedOperation
 	KindResolvedOpenAPI                     // KindResolvedOpenAPI represents *ResolvedOpenAPI
 	KindResolvedResponse                    // KindResolvedResponse represents *ResolvedResponse

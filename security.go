@@ -48,6 +48,10 @@ func (sr SecurityRequirements) Kind() Kind {
 // not otherwise defined or exchanged in-band.
 type SecurityRequirement map[string][]string
 
+func (SecurityRequirement) Kind() Kind {
+	return KindSecurityRequirement
+}
+
 // SecuritySchemeType represents the type of the security scheme.
 type SecuritySchemeType string
 
@@ -57,6 +61,10 @@ func (ss SecuritySchemeType) String() string {
 
 // SecuritySchemes is a map of SecurityScheme
 type SecuritySchemes map[string]SecurityScheme
+
+func (SecuritySchemes) Kind() Kind {
+	return KindSecuritySchemes
+}
 
 // UnmarshalJSON unmarshals json
 func (ss *SecuritySchemes) UnmarshalJSON(data []byte) error {
@@ -82,18 +90,6 @@ func (ss *SecuritySchemes) UnmarshalJSON(data []byte) error {
 	}
 	*ss = res
 	return nil
-}
-
-func (ss SecuritySchemes) MarshalJSON() ([]byte, error) {
-	res := make(map[string]interface{}, len(ss))
-	for k, v := range ss {
-		if v.Ref != "" {
-			res[k] = v.Ref
-			continue
-		}
-		res[k] = v
-	}
-	return json.Marshal(res)
 }
 
 // MarshalYAML marshals YAML
@@ -194,6 +190,13 @@ type SecurityScheme interface {
 	Kind() Kind
 }
 
+// SecuritySchemes is a map of SecurityScheme
+type ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
+
+func (rss ResolvedSecuritySchemes) Kind() Kind {
+	return KindSecuritySchemes
+}
+
 // ResolvedSecurityScheme lists the required security schemes to execute this
 // operation. The name used for each property MUST correspond to a security
 // scheme declared in the Security Schemes under the Components Object.
@@ -263,15 +266,12 @@ type ResolvedSecurityScheme struct {
 	Extensions       `json:"-"`
 }
 
-// SecuritySchemes is a map of SecurityScheme
-type ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
-
-func (rss ResolvedSecuritySchemes) Kind() Kind {
-	return KindSecuritySchemes
+func (*ResolvedSecurityScheme) Kind() Kind {
+	return KindResolvedSecurityScheme
 }
 
 var _ Node = (ResolvedSecuritySchemes)(nil)
-var _ Node = (ResolvedSecurityScheme)(nil)
+var _ Node = (*ResolvedSecurityScheme)(nil)
 var _ Node = (SecuritySchemes)(nil)
 var _ Node = (*SecuritySchemeObj)(nil)
 var _ Node = (SecurityRequirements)(nil)
