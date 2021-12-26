@@ -6,20 +6,10 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// ResponseKind is an indicator for either a ResponseObj or a Reference
-type ResponseKind int
-
-const (
-	// ResponseKindObj = Response
-	ResponseKindObj ResponseKind = iota
-	// ResponseKindRef = Reference
-	ResponseKindRef
-)
-
 // Response is either a Response or a Reference
 type Response interface {
+	Node
 	ResolveResponse(func(ref string) (*ResponseObj, error)) (*ResponseObj, error)
-	ResponseKind() ResponseKind
 }
 
 // Responses is a container for the expected responses of an operation. The
@@ -37,6 +27,11 @@ type Response interface {
 // response code is provided it SHOULD be the response for a successful
 // operation call.
 type Responses map[string]Response
+
+// Kind returns KindResponses
+func (Responses) Kind() Kind {
+	return KindResponses
+}
 
 // UnmarshalJSON unmarshals JSON data into r
 func (r *Responses) UnmarshalJSON(data []byte) error {
@@ -101,8 +96,10 @@ type ResponseObj struct {
 
 type response ResponseObj
 
-// ResponseKind returns ResponseKindResponse, indicates that this is a Response
-func (r *ResponseObj) ResponseKind() ResponseKind { return ResponseKindObj }
+// Kind returns ResolvedResponse
+func (*ResponseObj) Kind() Kind {
+	return KindResolvedResponse
+}
 
 // ResolveResponse resolves ResponseObj by returning itself. resolve is  not called.
 func (r *ResponseObj) ResolveResponse(func(ref string) (*ResponseObj, error)) (*ResponseObj, error) {
@@ -148,6 +145,27 @@ func unmarshalResponse(data []byte) (Response, error) {
 	return &v, err
 }
 
+// ResolvedResponses is a container for the expected responses of an operation. The
+// container maps a HTTP response code to the expected response.
+//
+// The documentation is not necessarily expected to cover all possible HTTP
+// response codes because they may not be known in advance. However,
+// documentation is expected to cover a successful operation response and any
+// known errors.
+//
+// The default MAY be used as a default response object for all HTTP codes that
+// are not covered individually by the Responses Object.
+//
+// The Responses Object MUST contain at least one response code, and if only one
+// response code is provided it SHOULD be the response for a successful
+// operation call.
+type ResolvedResponses map[string]*ResolvedResponse
+
+// Kind returns KindResolvedResponses
+func (ResolvedResponses) Kind() Kind {
+	return KindResolvedResponses
+}
+
 // ResponseObj describes a single response from an API Operation, including
 // design-time, static links to operations based on the response.
 type ResolvedResponse struct {
@@ -172,18 +190,12 @@ type ResolvedResponse struct {
 	Extensions `json:"-"`
 }
 
-// ResolvedResponses is a container for the expected responses of an operation. The
-// container maps a HTTP response code to the expected response.
-//
-// The documentation is not necessarily expected to cover all possible HTTP
-// response codes because they may not be known in advance. However,
-// documentation is expected to cover a successful operation response and any
-// known errors.
-//
-// The default MAY be used as a default response object for all HTTP codes that
-// are not covered individually by the Responses Object.
-//
-// The Responses Object MUST contain at least one response code, and if only one
-// response code is provided it SHOULD be the response for a successful
-// operation call.
-type ResolvedResponses map[string]*ResolvedResponse
+// Kind returns KindResolvedResponse
+func (*ResolvedResponse) Kind() Kind {
+	return KindResolvedResponse
+}
+
+var _ Node = (*ResolvedResponses)(nil)
+var _ Node = (*ResolvedResponse)(nil)
+var _ Node = (*ResponseObj)(nil)
+var _ Node = (Responses)(nil)

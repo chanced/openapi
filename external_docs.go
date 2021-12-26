@@ -15,6 +15,11 @@ type ExternalDocs struct {
 }
 type externaldocs ExternalDocs
 
+// Kind returns KindExternalDocs
+func (*ExternalDocs) Kind() Kind {
+	return KindExternalDocs
+}
+
 // MarshalJSON marshals JSON
 func (ed ExternalDocs) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(externaldocs(ed))

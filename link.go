@@ -9,18 +9,51 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// LinkKind differentiates a Link and a Reference
-type LinkKind uint8
-
-// ErrLinkParameterNotFound is returned if a
-var ErrLinkParameterNotFound = errors.New("error: link parameter not found")
-
-const (
-	// LinkKindObj = *Link
-	LinkKindObj LinkKind = iota
-	// LinkKindRef = *Reference
-	LinkKindRef
+var (
+	// ErrLinkParameterNotFound indicates that a parameter is not found
+	ErrLinkParameterNotFound = errors.New("openapi: link parameter not found")
 )
+
+// Link can either be a Link or a Reference
+type Link interface {
+	Node
+	ResolveLink(func(ref string) (*LinkObj, error)) (*LinkObj, error)
+}
+
+// Links is a map to hold reusable LinkObjs.
+type Links map[string]Link
+
+// Kind returns KindLinks
+func (Links) Kind() Kind {
+	return KindLinks
+}
+
+// UnmarshalJSON unmarshals JSON
+func (l *Links) UnmarshalJSON(data []byte) error {
+	var dm map[string]json.RawMessage
+	if err := json.Unmarshal(data, &dm); err != nil {
+		return err
+	}
+	res := make(Links, len(dm))
+	for k, d := range dm {
+		if isRefJSON(d) {
+			v, err := unmarshalReferenceJSON(d)
+			if err != nil {
+				return err
+			}
+			res[k] = v
+			continue
+		}
+		var v link
+		if err := unmarshalExtendedJSON(d, &v); err != nil {
+			return err
+		}
+		lv := LinkObj(v)
+		res[k] = &lv
+	}
+	*l = res
+	return nil
+}
 
 // LinkObj represents a possible design-time link for a response. The presence of a
 // link does not guarantee the caller's ability to successfully invoke it,
@@ -76,6 +109,11 @@ func (l *LinkObj) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Kind returns KindLink
+func (*LinkObj) Kind() Kind {
+	return KindLink
+}
+
 // MarshalYAML marshals YAML
 func (l LinkObj) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(l)
@@ -93,48 +131,9 @@ func (l *LinkObj) DecodeRequestBody(dst interface{}) error {
 	return json.Unmarshal(l.RequestBody, dst)
 }
 
-// LinkKind returns LinkKindObj
-func (l *LinkObj) LinkKind() LinkKind { return LinkKindObj }
-
 // ResolveLink resolves LinkObj by returning itself. resolve is  not called.
 func (l *LinkObj) ResolveLink(func(ref string) (*LinkObj, error)) (*LinkObj, error) {
 	return l, nil
-}
-
-// Link can either be a Link or a Reference
-type Link interface {
-	ResolveLink(func(ref string) (*LinkObj, error)) (*LinkObj, error)
-	LinkKind() LinkKind
-}
-
-// Links is a map to hold reusable LinkObjs.
-type Links map[string]Link
-
-// UnmarshalJSON unmarshals JSON
-func (l *Links) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(Links, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v link
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
-		lv := LinkObj(v)
-		res[k] = &lv
-	}
-	*l = res
-	return nil
 }
 
 // LinkParameters is a map representing parameters to pass to an operation as
@@ -193,6 +192,11 @@ func (lp *LinkParameters) SetEncoded(key string, value []byte) {
 // ResolvedLinks is a map to hold reusable LinkObjs.
 type ResolvedLinks map[string]*ResolvedLink
 
+// Kind returns KindResolvedLinks
+func (ResolvedLinks) Kind() Kind {
+	return KindResolvedLinks
+}
+
 // ResolvedLink represents a resolved Link Object which is a possible
 // design-time link for a response. The presence of a link does not guarantee
 // the caller's ability to successfully invoke it, rather it provides a known
@@ -233,3 +237,13 @@ type ResolvedLink struct {
 	Description string `json:"description,omitempty"`
 	Extensions  `json:"-"`
 }
+
+// Kind returns KindResolvedLink
+func (*ResolvedLink) Kind() Kind {
+	return KindResolvedLink
+}
+
+var _ Node = (*LinkObj)(nil)
+var _ Node = (*ResolvedLink)(nil)
+var _ Node = (Links)(nil)
+var _ Node = (ResolvedLinks)(nil)

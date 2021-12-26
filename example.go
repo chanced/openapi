@@ -12,6 +12,15 @@ type Example interface {
 	ResolveExample(func(ref string) (*ExampleObj, error)) (*ExampleObj, error)
 }
 
+// Examples is an object to hold reusable Examples.
+type Examples map[string]Example
+
+func (Examples) Kind() Kind {
+	return KindExamples
+}
+
+type example ExampleObj
+
 // ExampleObj is an example for various api interactions such as Responses
 //
 // In all cases, the example value is expected to be compatible with the type
@@ -36,7 +45,11 @@ type ExampleObj struct {
 	ExternalValue string `json:"externalValue,omitempty"`
 	Extensions    `json:"-"`
 }
-type example ExampleObj
+
+// Kind returns KindExample
+func (*ExampleObj) Kind() Kind {
+	return KindExample
+}
 
 // MarshalJSON marshals JSON
 func (e ExampleObj) MarshalJSON() ([]byte, error) {
@@ -71,9 +84,6 @@ func (e *ExampleObj) ResolveExample(func(ref string) (*ExampleObj, error)) (*Exa
 	return e, nil
 }
 
-// Examples is an object to hold reusable Examples.
-type Examples map[string]Example
-
 // UnmarshalJSON unmarshals JSON
 func (e *Examples) UnmarshalJSON(data []byte) error {
 	var dm map[string]json.RawMessage
@@ -104,6 +114,11 @@ func (e *Examples) UnmarshalJSON(data []byte) error {
 // ResolvedExamples is a map of *ResolvedExamples
 type ResolvedExamples map[string]*ResolvedExample
 
+// Kind returns KindResolvedExamples
+func (ResolvedExamples) Kind() Kind {
+	return KindResolvedExamples
+}
+
 // ResolvedExample is an example for various api interactions such as Responses
 // that has been resolved.
 //
@@ -132,3 +147,13 @@ type ResolvedExample struct {
 	ExternalValue string `json:"externalValue,omitempty"`
 	Extensions    `json:"-"`
 }
+
+// Kind returns KindResolvedExample
+func (*ResolvedExample) Kind() Kind {
+	return KindResolvedExample
+}
+
+var _ Node = (*ExampleObj)(nil)
+var _ Node = (Examples)(nil)
+var _ Node = (ResolvedExamples)(nil)
+var _ Node = (*ResolvedExample)(nil)

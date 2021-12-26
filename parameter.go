@@ -227,7 +227,7 @@ func (p *ParameterObj) ResolveParameter(resolve func(ref string) (*ParameterObj,
 }
 
 // Kind returns KindParameter
-func (p *ParameterObj) Kind() Kind { return KindParameter }
+func (*ParameterObj) Kind() Kind { return KindParameter }
 
 // MarshalJSON marshals h into JSON
 func (p ParameterObj) MarshalJSON() ([]byte, error) {
@@ -295,6 +295,10 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 // Can either be a Parameter or a Reference
 type ParameterSet []Parameter
 
+func (ps ParameterSet) Kind() Kind {
+	return KindParameterSet
+}
+
 // MarshalJSON marshals JSON
 func (p ParameterSet) MarshalJSON() ([]byte, error) {
 	if p != nil {
@@ -357,6 +361,10 @@ func (p ParameterSet) MarshalYAML() (interface{}, error) {
 // Parameters is a map of Parameter
 type Parameters map[string]Parameter
 
+func (ps Parameters) Kind() Kind {
+	return KindParameters
+}
+
 // UnmarshalJSON unmarshals JSON
 func (p *Parameters) UnmarshalJSON(data []byte) error {
 	var dm map[string]json.RawMessage
@@ -400,6 +408,11 @@ func (rpl ResolvedParameterSet) Kind() Kind {
 
 // Parameters is a map of Parameter
 type ResolvedParameters map[string]*ResolvedParameter
+
+// Kind returns KindResolvedParameters
+func (ResolvedParameters) Kind() Kind {
+	return KindResolvedParameters
+}
 
 // ResolvedParameter describes a single operation parameter that has been
 // fully resolved.
@@ -478,6 +491,11 @@ type ResolvedParameter struct {
 
 	Content    Content `json:"content,omitempty"`
 	Extensions `json:"-"`
+}
+
+// Kind returns KindResolvedParameter
+func (*ResolvedParameter) Kind() Kind {
+	return KindResolvedParameter
 }
 
 var _ Node = (*ParameterObj)(nil)

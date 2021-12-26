@@ -9,15 +9,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// PathKind indicates whether the PathObj is a Path or a Reference
-type PathKind uint8
-
-const (
-	// PathKindObj = PathObj
-	PathKindObj PathKind = iota
-	// PathKindRef = Reference
-	PathKindRef
-)
+// Path can either be a Path or a Reference
+type Path interface {
+	Node
+	ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error)
+}
 
 // PathValue is relative path to an individual endpoint. The path is appended
 // (no relative URL resolution) to the expanded URL from the Server Object's url
@@ -41,7 +37,6 @@ func (pv PathValue) String() string {
 
 // // Params returns all params in the path
 // func (pv PathValue) Params() []string {
-// 	panic("not impl")
 // }
 
 // MarshalJSON Marshals PathEntry to JSON
@@ -135,7 +130,7 @@ type PathObj struct {
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters *ParameterList `json:"parameters,omitempty"`
+	Parameters *ParameterSet `json:"parameters,omitempty"`
 	Extensions `json:"-"`
 }
 
@@ -145,9 +140,6 @@ func (p *PathObj) Kind() Kind {
 }
 
 type pathobj PathObj
-
-// PathKind returns PathKindPath
-func (p *PathObj) PathKind() PathKind { return PathKindObj }
 
 // ResolvePath resolves PathObj by returning itself. resolve is  not called.
 func (p *PathObj) ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error) {
@@ -178,12 +170,6 @@ func (p PathObj) MarshalYAML() (interface{}, error) {
 // UnmarshalYAML unmarshals yaml into s
 func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, p)
-}
-
-// Path can either be a Path or a Reference
-type Path interface {
-	ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error)
-	PathKind() PathKind
 }
 
 // PathItems is a map of Paths that can either be a Path or a Reference
@@ -288,7 +274,7 @@ type ResolvedPath struct {
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters *ResolvedParameterList `json:"parameters,omitempty"`
+	Parameters *ResolvedParameterSet `json:"parameters,omitempty"`
 	Extensions `json:"-"`
 }
 
