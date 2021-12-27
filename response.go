@@ -96,9 +96,9 @@ type ResponseObj struct {
 
 type response ResponseObj
 
-// Kind returns ResolvedResponse
+// Kind returns KindResponse
 func (*ResponseObj) Kind() Kind {
-	return KindResolvedResponse
+	return KindResponse
 }
 
 // ResolveResponse resolves ResponseObj by returning itself. resolve is  not called.

@@ -70,7 +70,9 @@ type HeaderObj struct {
 type header HeaderObj
 
 // Kind returns KindHeader
-func (*HeaderObj) Kind() Kind { return KindHeader }
+func (*HeaderObj) Kind() Kind {
+	return KindHeader
+}
 
 // ResolveHeader resolves HeaderObj by returning itself. resolve is  not called.
 func (h *HeaderObj) ResolveHeader(func(ref string) (*HeaderObj, error)) (*HeaderObj, error) {

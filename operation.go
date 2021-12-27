@@ -192,5 +192,7 @@ type operation struct {
 	Extensions   `json:"-"`
 }
 
-var _ Node = (*Operation)(nil)
-var _ Node = (*ResolvedOperation)(nil)
+var (
+	_ Node = (*Operation)(nil)
+	_ Node = (*ResolvedOperation)(nil)
+)

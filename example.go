@@ -15,7 +15,7 @@ type Example interface {
 // Examples is an object to hold reusable Examples.
 type Examples map[string]Example
 
-// Kind returns KindExample
+// Kind returns KindExamples
 func (Examples) Kind() Kind {
 	return KindExamples
 }

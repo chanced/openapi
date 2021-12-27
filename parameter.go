@@ -227,7 +227,9 @@ func (p *ParameterObj) ResolveParameter(_ func(ref string) (*ParameterObj, error
 }
 
 // Kind returns KindParameter
-func (*ParameterObj) Kind() Kind { return KindParameter }
+func (*ParameterObj) Kind() Kind {
+	return KindParameter
+}
 
 // MarshalJSON marshals h into JSON
 func (p ParameterObj) MarshalJSON() ([]byte, error) {

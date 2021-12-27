@@ -9,10 +9,8 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-var (
-	// ErrLinkParameterNotFound indicates that a parameter is not found
-	ErrLinkParameterNotFound = errors.New("openapi: link parameter not found")
-)
+// ErrLinkParameterNotFound indicates that a parameter is not found
+var ErrLinkParameterNotFound = errors.New("openapi: link parameter not found")
 
 // Link can either be a Link or a Reference
 type Link interface {
@@ -243,7 +241,9 @@ func (*ResolvedLink) Kind() Kind {
 	return KindResolvedLink
 }
 
-var _ Node = (*LinkObj)(nil)
-var _ Node = (*ResolvedLink)(nil)
-var _ Node = (Links)(nil)
-var _ Node = (ResolvedLinks)(nil)
+var (
+	_ Node = (*LinkObj)(nil)
+	_ Node = (*ResolvedLink)(nil)
+	_ Node = (Links)(nil)
+	_ Node = (ResolvedLinks)(nil)
+)

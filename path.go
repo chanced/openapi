@@ -175,7 +175,7 @@ func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // PathItems is a map of Paths that can either be a Path or a Reference
 type PathItems map[string]Path
 
-// Kind returns PathKindPaths
+// Kind returns KindPathItems
 func (PathItems) Kind() Kind {
 	return KindPathItems
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// Path can either be a Path or a Reference
+// Webhook can either be a WebhookObj or a Reference
 type Webhook interface {
 	Node
 	ResolveWebhook(func(ref string) (*WebhookObj, error)) (*WebhookObj, error)
@@ -14,10 +14,10 @@ type Webhook interface {
 
 type webhook pathobj
 
-// Webhook is a PathObj
+// WebhookObj is a PathObj
 type WebhookObj PathObj
 
-// KindPath returns KindWebhook
+// Kind returns KindWebhook
 func (*WebhookObj) Kind() Kind {
 	return KindWebhook
 }
@@ -107,6 +107,7 @@ func (ws Webhooks) MarshalYAML() (interface{}, error) {
 // ResolvedWebhook is a Webhook that has been fully resolved
 type ResolvedWebhook ResolvedPath
 
+// Kind returns KindResolvedWebhook
 func (*ResolvedWebhook) Kind() Kind {
 	return KindResolvedWebhook
 }
@@ -114,6 +115,7 @@ func (*ResolvedWebhook) Kind() Kind {
 // ResolvedWebhooks is a map of *ResolvedWebhook
 type ResolvedWebhooks map[string]*ResolvedWebhook
 
+// Kind returns KindResolvedWebhooks
 func (ResolvedWebhooks) Kind() Kind {
 	return KindResolvedWebhooks
 }

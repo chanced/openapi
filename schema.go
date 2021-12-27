@@ -286,7 +286,9 @@ func (s SchemaObj) MarshalJSON() ([]byte, error) {
 }
 
 // Kind returns KindSchema
-func (*SchemaObj) Kind() Kind { return KindSchema }
+func (*SchemaObj) Kind() Kind {
+	return KindSchema
+}
 
 // ResolveSchema resolves *SchemaObj by returning s
 func (s *SchemaObj) ResolveSchema(func(ref string) (*SchemaObj, error)) (*SchemaObj, error) {
@@ -552,9 +554,9 @@ type partialschema struct {
 // ResolvedSchemas is a map of *ResolvedScehma
 type ResolvedSchemas map[string]*ResolvedSchema
 
-// Kind returns KindSchemas
+// Kind returns KindResolvedSchemas
 func (ResolvedSchemas) Kind() Kind {
-	return KindSchemas
+	return KindResolvedSchemas
 }
 
 // Set sets val to key

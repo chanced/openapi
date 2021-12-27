@@ -30,7 +30,9 @@ type RequestBodyObj struct {
 type requestbody RequestBodyObj
 
 // Kind returns KindRequestBody
-func (*RequestBodyObj) Kind() Kind { return KindRequestBody }
+func (*RequestBodyObj) Kind() Kind {
+	return KindRequestBody
+}
 
 // ResolveRequestBody resolves RequestBodyObj by returning itself. resolve is  not called.
 func (rb *RequestBodyObj) ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error) {
@@ -121,9 +123,9 @@ type ResolvedRequestBody struct {
 	Extensions `json:"-"`
 }
 
-// Kind returns KindRequestBody
+// Kind returns KindResolvedRequestBody
 func (*ResolvedRequestBody) Kind() Kind {
-	return KindRequestBody
+	return KindResolvedRequestBody
 }
 
 // ResolvedRequestBodies is a map of *ResolvedRequestBody

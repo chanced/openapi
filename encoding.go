@@ -164,9 +164,9 @@ type ResolvedEncoding struct {
 	Extensions `json:"-"`
 }
 
-// Kind returns KindResolvedEncodings
+// Kind returns KindResolvedEncoding
 func (*ResolvedEncoding) Kind() Kind {
-	return KindResolvedEncodings
+	return KindResolvedEncoding
 }
 
 var (

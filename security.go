@@ -196,7 +196,7 @@ type SecurityScheme interface {
 // ResolvedSecuritySchemes is a map of *ResolvedSecurityScheme
 type ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
 
-// Kind returns KindKindResolvedSecuritySchemes
+// Kind returns KindResolvedSecuritySchemes
 func (ResolvedSecuritySchemes) Kind() Kind {
 	return KindResolvedSecuritySchemes
 }
