@@ -14,6 +14,11 @@ import (
 // Schemas is a map of Schemas
 type Schemas map[string]*SchemaObj
 
+// Kind returns KindSchemas
+func (Schemas) Kind() Kind {
+	return KindSchemas
+}
+
 // UnmarshalJSON unmarshals JSON
 func (s *Schemas) UnmarshalJSON(data []byte) error {
 	var dm map[string]json.RawMessage
@@ -371,7 +376,6 @@ func (s *SchemaObj) SetKeyword(key string, value interface{}) error {
 		return err
 	}
 	return s.SetEncodedKeyword(key, b)
-
 }
 
 // SetEncodedKeyword sets the keyword key to value
@@ -400,6 +404,15 @@ func (s *SchemaObj) DecodeKeywords(dst interface{}) error {
 // SchemaSet is a slice of **SchemaObj
 type SchemaSet []*SchemaObj
 
+func (s SchemaSet) Len() int {
+	return len(s)
+}
+
+// Kind returns KindSchemaSet
+func (s SchemaSet) Kind() Kind {
+	return KindSchemaSet
+}
+
 //  UnmarshalJSON unmarshals JSON
 func (s *SchemaSet) UnmarshalJSON(data []byte) error {
 	var j []dynamic.JSON
@@ -416,11 +429,6 @@ func (s *SchemaSet) UnmarshalJSON(data []byte) error {
 	}
 	*s = res
 	return nil
-}
-
-// ResolveJSONPointer resolves JSON Pointer, into dst
-func (s *SchemaSet) ResolveJSONPointer(key string, dst interface{}) error {
-
 }
 
 func unmarshalSchemaJSON(data []byte) (*SchemaObj, error) {
@@ -541,7 +549,33 @@ type partialschema struct {
 }
 
 type ResolvedSchemas map[string]*ResolvedSchema
+
+func (rs ResolvedSchemas) Kind() Kind {
+	return KindSchema
+}
+
+func (rs *ResolvedSchemas) Set(key string, val *ResolvedSchema) {
+	if *rs == nil {
+		*rs = ResolvedSchemas{key: val}
+	} else {
+		(*rs)[key] = val
+	}
+}
+
+func (rs ResolvedSchemas) Get(name string) *ResolvedSchema {
+	if v, ok := rs[name]; ok {
+		return v
+	}
+	return nil
+}
+
+// ResolvedSchemaSet is a slice of *ResolvedSchemas
 type ResolvedSchemaSet []*ResolvedSchema
+
+// Kind returns KindResolvedSchemaSet
+func (ResolvedSchemaSet) Kind() Kind {
+	return KindResolvedSchemaSet
+}
 
 type ResolvedSchema struct {
 	Always                *bool               `json:"-"`
@@ -607,6 +641,10 @@ type ResolvedSchema struct {
 	XML                   *XML                `json:"xml,omitempty"`
 	Extensions            `json:"-"`
 	Keywords              map[string]json.RawMessage `json:"-"`
+}
+
+func (*ResolvedSchema) Kind() Kind {
+	return KindResolvedSchema
 }
 
 var schemaFieldSetters = map[string]func(s *partialschema, v *SchemaObj){
@@ -749,7 +787,15 @@ var resolvedSchemafields = map[string]func(s *ResolvedSchema) interface{}{
 	"xml":                   func(s *ResolvedSchema) interface{} { return s.XML },
 }
 
-var _ json.Marshaler = (*SchemaObj)(nil)
-var _ json.Unmarshaler = (*SchemaObj)(nil)
-var _ yaml.Unmarshaler = (*SchemaObj)(nil)
-var _ yaml.Marshaler = (*SchemaObj)(nil)
+var (
+	_ Node             = (*SchemaObj)(nil)
+	_ Node             = (SchemaSet)(nil)
+	_ Node             = (Schemas)(nil)
+	_ Node             = (*ResolvedSchema)(nil)
+	_ Node             = (ResolvedSchemas)(nil)
+	_ Node             = (ResolvedSchemaSet)(nil)
+	_ json.Marshaler   = (*SchemaObj)(nil)
+	_ json.Unmarshaler = (*SchemaObj)(nil)
+	_ yaml.Unmarshaler = (*SchemaObj)(nil)
+	_ yaml.Marshaler   = (*SchemaObj)(nil)
+)

@@ -10,6 +10,13 @@ import (
 // is multipart or application/x-www-form-urlencoded.
 type Encodings map[string]*Encoding
 
+// Kind returns KindEncodings
+func (Encodings) Kind() Kind {
+	return KindEncodings
+}
+
+type encoding Encoding
+
 // Encoding definition applied to a single schema property.
 type Encoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -55,7 +62,11 @@ type Encoding struct {
 
 	Extensions `json:"-"`
 }
-type encoding Encoding
+
+// Kind returns KindEncoding
+func (*Encoding) Kind() Kind {
+	return KindEncoding
+}
 
 // MarshalJSON marshals e into JSON
 func (e Encoding) MarshalJSON() ([]byte, error) {
@@ -82,6 +93,12 @@ func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, e)
 }
 
+// Resolvedncodings is a map between a property name and its encoding
+// information. The key, being the property name, MUST exist in the schema as a
+// property. The encoding object SHALL only apply to requestBody objects when
+// the media type is multipart or application/x-www-form-urlencoded.
+type ResolvedEncodings map[string]*ResolvedEncoding
+
 // ResolvedEncoding definition applied to a single schema property.
 type ResolvedEncoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -98,7 +115,7 @@ type ResolvedEncoding struct {
 	// example Content-Disposition. Content-Type is described separately and
 	// SHALL be ignored in this section. This property SHALL be ignored if the
 	// request body media type is not a multipart.
-	Headers Headers `json:"headers,omitempty"`
+	Headers ResolvedHeaders `json:"headers,omitempty"`
 	// Describes how a specific property value will be serialized depending on
 	// its type. See Parameter Object for details on the style property. The
 	// behavior follows the same values as query parameters, including default
@@ -128,5 +145,9 @@ type ResolvedEncoding struct {
 	Extensions `json:"-"`
 }
 
-var _ Node = (*Encoding)(nil)
-var _ Node = (*ResolvedEncoding)(nil)
+var (
+	_ Node = (*Encoding)(nil)
+	_ Node = (Encodings)(nil)
+	_ Node = (*ResolvedEncoding)(nil)
+	_ Node = (ResolvedEncodings)(nil)
+)

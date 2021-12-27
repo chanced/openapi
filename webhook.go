@@ -13,13 +13,12 @@ type Webhook interface {
 }
 
 type WebhookObj PathObj
+type webhook pathobj
 
 // KindPath returns KindWebhook
 func (p *WebhookObj) Kind() Kind {
 	return KindWebhook
 }
-
-type webhook PathObj
 
 // ResolveWebhook resolves WebhookObj by returning itself. resolve is  not called.
 func (w *WebhookObj) ResolveWebhook(func(ref string) (*WebhookObj, error)) (*WebhookObj, error) {
@@ -195,9 +194,7 @@ func (ws *Webhooks) UnmarshalJSON(data []byte) error {
 // 	return json.Marshal(m)
 // }
 
-// var _ Node = (*ResolvedPath)(nil)
-// var _ Node = (*PathObj)(nil)
-// var _ Node = (*PathItems)(nil)
-// var _ Node = (*ResolvedPathItems)(nil)
-// var _ Node = (PathItems)(nil)
-// var _ Node = (ResolvedPathItems)(nil)
+var _ Node = (*WebhookObj)(nil)
+var _ Node = (*Webhooks)(nil)
+var _ Node = (*ResolvedWebhook)(nil)
+var _ Node = (ResolvedWebhooks)(nil)

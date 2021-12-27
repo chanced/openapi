@@ -316,9 +316,9 @@ func (p ResolvedPaths) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-var _ Node = (*ResolvedPath)(nil)
 var _ Node = (*PathObj)(nil)
 var _ Node = (*PathItems)(nil)
-var _ Node = (*ResolvedPathItems)(nil)
 var _ Node = (PathItems)(nil)
+var _ Node = (*ResolvedPath)(nil)
+var _ Node = (*ResolvedPaths)(nil)
 var _ Node = (ResolvedPathItems)(nil)

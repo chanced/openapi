@@ -178,5 +178,7 @@ type ResolvedOpenAPI struct {
 	Extensions   `json:"-"`
 }
 
-var _ Node = (*OpenAPI)(nil)
-var _ NOde = (*ResolvedOpenAPI)(nil)
+var (
+	_ Node = (*OpenAPI)(nil)
+	_ Node = (*ResolvedOpenAPI)(nil)
+)

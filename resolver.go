@@ -51,13 +51,7 @@ type readercloser struct {
 }
 
 func (oar *OpenAPIResolver) ResolveParameterResolver(ref string) (*ParameterObj, error) {
-	if v, ok := oar.cache.Params[ref]; ok {
-		return v, nil
-	}
-
-	if strings.HasPrefix(ref, "#/components/parameters/") {
-		c, ok := oar.openapi.Components.Parameters[strings.TrimPrefix(ref, "#/components/parameters/")]
-	}
+	panic("not impl") // TODO: impl
 }
 
 func (oar *OpenAPIResolver) ResolveResponseResolver(p string) (*ResponseObj, error) {

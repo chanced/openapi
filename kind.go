@@ -11,6 +11,7 @@ const (
 	KindContact                      // KindContact represents *Contact
 	KindDiscriminator                // KindDiscriminator represents *Discriminator
 	KindEncoding                     // KindEncoding represents *Encoding
+	KindEncodings                    // KindEncoding represents Encodings
 	KindExample                      // KindExample represents *ExampleObj
 	KindExamples                     // KindExamples represents Examples
 	KindExternalDocs                 // KindExternalDocs represents *ExternalDocs
@@ -50,6 +51,7 @@ const (
 	KindResolvedCallback             // KindResolvedCallback represents *ResolvedCallback
 	KindResolvedComponents           // KindResolvedComponents resolved Components
 	KindResolvedEncoding             // KindResolvedEncoding represents *ResolvedEncoding
+	KindResolvedEncodings            // KindResolvedEncoding represents ResolvedEncodings
 	KindResolvedExample              // KindResolvedExample represents *ResolvedExample
 	KindResolvedExamples             // KindResolvedExamples represents ResolvedExamples
 	KindResolvedHeader               // KindResolvedHeader represents *ResolvedHeader

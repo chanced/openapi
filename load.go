@@ -51,7 +51,7 @@ type loader struct {
 }
 
 func (l loader) load() (*ResolvedOpenAPI, error) {
-
+	panic("not implemented") // TODO: implement
 }
 
 func (l loader) loadSchemas(schemas SchemaSet)

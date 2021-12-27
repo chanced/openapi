@@ -218,7 +218,7 @@ func (rss ResolvedSecuritySchemes) Kind() Kind {
 // contain a list of role names which are required for the execution, but are
 // not otherwise defined or exchanged in-band.
 type ResolvedSecurityScheme struct {
-	//todo: refence
+	// todo: refence
 
 	Ref string `json:"$ref,omitempty"`
 	// The type of the security scheme.
@@ -270,10 +270,12 @@ func (*ResolvedSecurityScheme) Kind() Kind {
 	return KindResolvedSecurityScheme
 }
 
-var _ Node = (ResolvedSecuritySchemes)(nil)
-var _ Node = (*ResolvedSecurityScheme)(nil)
-var _ Node = (SecuritySchemes)(nil)
-var _ Node = (*SecuritySchemeObj)(nil)
-var _ Node = (SecurityRequirements)(nil)
-var _ Node = (SecurityRequirements)(nil)
-var _ Node = (SecurityRequirement)(nil)
+var (
+	_ Node = (ResolvedSecuritySchemes)(nil)
+	_ Node = (*ResolvedSecurityScheme)(nil)
+	_ Node = (SecuritySchemes)(nil)
+	_ Node = (*SecuritySchemeObj)(nil)
+	_ Node = (SecurityRequirements)(nil)
+	_ Node = (SecurityRequirements)(nil)
+	_ Node = (SecurityRequirement)(nil)
+)

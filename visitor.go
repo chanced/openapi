@@ -2,7 +2,7 @@ package openapi
 
 type Node interface {
 	Kind() Kind
-	Nodes() map[string]Node
+	// Nodes() map[string]Node
 
 	// NodeKind(nodepath string) Kind
 }

@@ -16,6 +16,10 @@ type OAuthFlows struct {
 	Extensions        `json:"-"`
 }
 
+func (*OAuthFlows) Kind() Kind {
+	return KindOAuthFlows
+}
+
 type oauthflows OAuthFlows
 
 // MarshalJSON marshals json
@@ -42,6 +46,8 @@ func (oaf OAuthFlows) MarshalYAML() (interface{}, error) {
 func (oaf *OAuthFlows) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, oaf)
 }
+
+type oauthflow OAuthFlow
 
 // OAuthFlow configuration details for a supported OAuth Flow
 type OAuthFlow struct {
@@ -70,7 +76,10 @@ type OAuthFlow struct {
 	Extensions `json:"-"`
 }
 
-type oauthflow OAuthFlow
+// Kind returns KindOAuthFlow
+func (*OAuthFlow) Kind() Kind {
+	return KindOAuthFlow
+}
 
 // MarshalJSON marshals json
 func (o OAuthFlow) MarshalJSON() ([]byte, error) {
