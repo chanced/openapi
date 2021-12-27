@@ -1,10 +1,20 @@
 package openapi
 
+type NodeDetail struct {
+	Node
+	// Kind is the Kind of the Node as it currently exists
+	// which can potentially be a Reference or the target
+	// if resolved or inline
+	Kind Kind
+	// TargetKind is Kind of the Node as if it were resolved/expanded inline
+	TargetKind Kind
+	// RelativePath is the relative path to the Node from the calling Node
+	RelativePath string
+}
+
 type Node interface {
 	Kind() Kind
-	// Nodes() map[string]Node
-
-	// NodeKind(nodepath string) Kind
+	NodeDetail(nodepath string) NodeDetail
 }
 
 type Visitor interface {
@@ -38,6 +48,36 @@ type ServerVisitor interface {
 // }
 type PassthroughVisitor struct{}
 
-func (v PassthroughVisitor) Visit(node Node, path string) (Visitor, error) {
+// Visit returns v and nil
+func (v PassthroughVisitor) Visit(_ Node, _ string) (Visitor, error) {
 	return v, nil
+}
+
+// WalkOpts are options for Walk
+type WalkOpts struct {
+	BasePath *string
+}
+
+// WalkOpt is an Option for walk
+type WalkOpt func(opts *WalkOpts) *WalkOpts
+
+// WalkWithBasePath sets the base path from which to resolve relative paths
+var WalkWithBasePath = func(basePath string) WalkOpt {
+	return func(opts *WalkOpts) *WalkOpts {
+		if opts == nil {
+			*opts = WalkOpts{}
+		}
+		opts.BasePath = &basePath
+		return opts
+	}
+}
+
+// Walk walks the node tree and calls the visitor for each node
+func Walk(node Node, opts ...WalkOpt) error {
+	options := &WalkOpts{}
+	for _, opt := range opts {
+		options = opt(options)
+	}
+	_ = node
+	panic("not impl") // TODO: impl
 }
