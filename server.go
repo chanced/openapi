@@ -2,6 +2,8 @@ package openapi
 
 import "github.com/chanced/openapi/yamlutil"
 
+type server Server
+
 // Server represention of a Server.
 type Server struct {
 	// A URL to the target host. This URL supports Server Variables and MAY be
@@ -17,7 +19,11 @@ type Server struct {
 	Variables  map[string]*ServerVariable `json:"variables,omitempty"`
 	Extensions `json:"-"`
 }
-type server Server
+
+// Kind returns KindServer
+func (*Server) Kind() Kind {
+	return KindServer
+}
 
 // MarshalJSON marshals JSON
 func (s Server) MarshalJSON() ([]byte, error) {

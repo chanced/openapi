@@ -8,6 +8,8 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
+type openapi OpenAPI
+
 // OpenAPI root object of the OpenAPI document.
 type OpenAPI struct {
 	// Version - OpenAPI Version
@@ -66,7 +68,11 @@ type OpenAPI struct {
 	buffer     io.ReadSeeker
 	Extensions `json:"-"`
 }
-type openapi OpenAPI
+
+// Kind returns KindOpenAPI
+func (OpenAPI) Kind() Kind {
+	return KindOpenAPI
+}
 
 // Validate validates an OpenAPI 3.1 specification
 func (o OpenAPI) Validate() error {
@@ -176,6 +182,10 @@ type ResolvedOpenAPI struct {
 	// externalDocs	Additional external documentation.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 	Extensions   `json:"-"`
+}
+
+func (ResolvedOpenAPI) Kind() Kind {
+	return KindResolvedOpenAPI
 }
 
 var (

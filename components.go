@@ -2,6 +2,8 @@ package openapi
 
 import "github.com/chanced/openapi/yamlutil"
 
+type components Components
+
 // Components holds a set of reusable objects for different aspects of the OAS.
 // All objects defined within the components object will have no effect on the
 // API unless they are explicitly referenced from properties outside the
@@ -29,7 +31,11 @@ type Components struct {
 	PathItems  PathItems `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
-type components Components
+
+// Kind returns KindComponents
+func (*Components) Kind() Kind {
+	return KindComponents
+}
 
 // MarshalJSON marshals JSON
 func (c Components) MarshalJSON() ([]byte, error) {
@@ -84,5 +90,12 @@ type ResolvedComponents struct {
 	Extensions `json:"-"`
 }
 
-var _ Node = (*Components)(nil)
-var _ Node = (*ResolvedComponents)(nil)
+// Kind returns KindResolvedComponents
+func (*ResolvedComponents) Kind() Kind {
+	return KindResolvedComponents
+}
+
+var (
+	_ Node = (*Components)(nil)
+	_ Node = (*ResolvedComponents)(nil)
+)

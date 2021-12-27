@@ -76,6 +76,8 @@ const (
 	KindResolvedSchemas              // KindResolvedSchemas represents ResolvedSchemas
 	KindResolvedSecurityScheme       // KindResolvedSecurityScheme resolved SecurityScheme
 	KindResolvedSecuritySchemes      // KindResolvedSecuritySchemes resolved SecuritySchemes
+	KindResolvedWebhook              // KindResolvedWebhook represents *ResolvedWebhook
+	KindResolvedWebhooks             // KindResolvedWebhooks represents ResolvedWebhooks
 
 )
 

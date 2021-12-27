@@ -99,6 +99,23 @@ func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // the media type is multipart or application/x-www-form-urlencoded.
 type ResolvedEncodings map[string]*ResolvedEncoding
 
+// Kind returns KindResolvedEncodings
+func (ResolvedEncodings) Kind() Kind {
+	return KindResolvedEncodings
+}
+
+func (re ResolvedEncodings) Get(name string) *ResolvedEncoding {
+	return re[name]
+}
+
+func (re *ResolvedEncodings) Set(name string, value *ResolvedEncoding) {
+	if (*re) == nil {
+		*re = ResolvedEncodings{name: value}
+	} else {
+		(*re)[name] = value
+	}
+}
+
 // ResolvedEncoding definition applied to a single schema property.
 type ResolvedEncoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -143,6 +160,10 @@ type ResolvedEncoding struct {
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 
 	Extensions `json:"-"`
+}
+
+func (*ResolvedEncoding) Kind() Kind {
+	return KindResolvedEncodings
 }
 
 var (

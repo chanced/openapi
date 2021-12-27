@@ -29,4 +29,9 @@ type XML struct {
 	Extensions `json:"-"`
 }
 
+// Kind returns KindXML
+func (*XML) Kind() Kind {
+	return KindXML
+}
+
 var _ Node = (*XML)(nil)

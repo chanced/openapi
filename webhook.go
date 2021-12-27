@@ -9,11 +9,13 @@ import (
 // Path can either be a Path or a Reference
 type Webhook interface {
 	Node
-	ResolveWebhook(func(ref string) (*PathObj, error)) (*WebhookObj, error)
+	ResolveWebhook(func(ref string) (*WebhookObj, error)) (*WebhookObj, error)
 }
 
-type WebhookObj PathObj
 type webhook pathobj
+
+// Webhook is a PathObj
+type WebhookObj PathObj
 
 // KindPath returns KindWebhook
 func (p *WebhookObj) Kind() Kind {
@@ -86,75 +88,35 @@ func (ws *Webhooks) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// // UnmarshalYAML unmarshals YAML data into rp
-// func (rp *PathItems) UnmarshalYAML(unmarshal func(interface{}) error) error {
-// 	return yamlutil.Unmarshal(unmarshal, rp)
-// }
+// UnmarshalYAML unmarshals YAML data into rp
+func (ws *Webhooks) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, ws)
+}
 
-// // MarshalYAML marshals rp into YAML
-// func (rp PathItems) MarshalYAML() (interface{}, error) {
-// 	b, err := json.Marshal(rp)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var v interface{}
-// 	err = json.Unmarshal(b, &v)
-// 	return v, err
-// }
+// MarshalYAML marshals rp into YAML
+func (ws Webhooks) MarshalYAML() (interface{}, error) {
+	b, err := json.Marshal(ws)
+	if err != nil {
+		return nil, err
+	}
+	var v interface{}
+	err = json.Unmarshal(b, &v)
+	return v, err
+}
 
-// func unmarshalPathJSON(data []byte) (Path, error) {
-// 	if isRefJSON(data) {
-// 		return unmarshalReferenceJSON(data)
-// 	}
-// 	var p pathobj
-// 	err := json.Unmarshal(data, &p)
-// 	v := PathObj(p)
-// 	return &v, err
-// }
+// ResolvedWebhook is a Webhook that has been fully resolved
+type ResolvedWebhook ResolvedPath
 
-// // ResolvedPath is a Path Object which has beeen resolved. It describes the
-// // operations available on a single path. A PathObj Item MAY be empty, due to
-// // ACL constraints. The path itself is still exposed to the documentation viewer
-// // but they will not know which operations and parameters are available.
-// type ResolvedPath struct {
-// 	// Allows for a referenced definition of this path item. The referenced
-// 	// structure MUST be in the form of a Path Item Object. In case a Path Item
-// 	// Object field appears both in the defined object and the referenced
-// 	// object, the behavior is undefined. See the rules for resolving Relative
-// 	// References.
-// 	Ref string `json:"$ref,omitempty"`
-// 	// An optional, string summary, intended to apply to all operations in this path.
-// 	Summary string `json:"summary,omitempty"`
-// 	// An optional, string description, intended to apply to all operations in
-// 	// this path. CommonMark syntax MAY be used for rich text representation.
-// 	Description string `json:"description,omitempty"`
-// 	// A definition of a GET operation on this path.
-// 	Get *Operation `json:"get,omitempty"`
-// 	// A definition of a PUT operation on this path.
-// 	Put *Operation `json:"put,omitempty"`
-// 	// A definition of a POST operation on this path.
-// 	Post *Operation `json:"post,omitempty"`
-// 	// A definition of a DELETE operation on this path.
-// 	Delete *Operation `json:"delete,omitempty"`
-// 	// A definition of a OPTIONS operation on this path.
-// 	Options *Operation `json:"options,omitempty"`
-// 	// A definition of a HEAD operation on this path.
-// 	Head *Operation `json:"head,omitempty"`
-// 	// A definition of a PATCH operation on this path.
-// 	Patch *Operation `json:"patch,omitempty"`
-// 	// A definition of a TRACE operation on this path.
-// 	Trace *Operation `json:"trace,omitempty"`
-// 	// An alternative server array to service all operations in this path.
-// 	Servers []*Server `json:"servers,omitempty"`
-// 	// A list of parameters that are applicable for all the operations described
-// 	// under this path. These parameters can be overridden at the operation
-// 	// level, but cannot be removed there. The list MUST NOT include duplicated
-// 	// parameters. A unique parameter is defined by a combination of a name and
-// 	// location. The list can use the Reference Object to link to parameters
-// 	// that are defined at the OpenAPI Object's components/parameters.
-// 	Parameters *ResolvedParameterSet `json:"parameters,omitempty"`
-// 	Extensions `json:"-"`
-// }
+func (*ResolvedWebhook) Kind() Kind {
+	return KindResolvedWebhook
+}
+
+// ResolvedWebhooks is a map of *ResolvedWebhook
+type ResolvedWebhooks map[string]*ResolvedWebhook
+
+func (ResolvedWebhooks) Kind() Kind {
+	return KindResolvedWebhooks
+}
 
 // // Kind returns KindResolvedPath
 // func (rp *ResolvedPath) Kind() Kind {
@@ -194,7 +156,9 @@ func (ws *Webhooks) UnmarshalJSON(data []byte) error {
 // 	return json.Marshal(m)
 // }
 
-var _ Node = (*WebhookObj)(nil)
-var _ Node = (*Webhooks)(nil)
-var _ Node = (*ResolvedWebhook)(nil)
-var _ Node = (ResolvedWebhooks)(nil)
+var (
+	_ Node = (*WebhookObj)(nil)
+	_ Node = (*Webhooks)(nil)
+	_ Node = (*ResolvedWebhook)(nil)
+	_ Node = (ResolvedWebhooks)(nil)
+)
