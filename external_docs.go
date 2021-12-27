@@ -20,6 +20,10 @@ func (*ExternalDocs) Kind() Kind {
 	return KindExternalDocs
 }
 
+func (*ExternalDocs) Nodes() map[string][]Node {
+	return nil
+}
+
 // MarshalJSON marshals JSON
 func (ed ExternalDocs) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(externaldocs(ed))
@@ -42,3 +46,5 @@ func (ed ExternalDocs) MarshalYAML() (interface{}, error) {
 func (ed *ExternalDocs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, ed)
 }
+
+var _ Node = (*ExternalDocs)(nil)

@@ -85,3 +85,5 @@ func (sv ServerVariable) MarshalYAML() (interface{}, error) {
 func (sv *ServerVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, sv)
 }
+
+var _ Node = (*Server)(nil)

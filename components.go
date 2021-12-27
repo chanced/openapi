@@ -83,3 +83,6 @@ type ResolvedComponents struct {
 	PathItems  ResolvedPathItems `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
+
+var _ Node = (*Components)(nil)
+var _ Node = (*ResolvedComponents)(nil)

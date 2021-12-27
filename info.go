@@ -29,6 +29,10 @@ type Info struct {
 	Extensions `json:"-"`
 }
 
+func (*Info) Kind() Kind {
+	return KindInfo
+}
+
 type info Info
 
 // MarshalJSON marshals JSON
@@ -53,3 +57,5 @@ func (i Info) MarshalYAML() (interface{}, error) {
 func (i *Info) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, i)
 }
+
+var _ Node = (*Info)(nil)

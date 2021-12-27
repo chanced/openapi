@@ -177,3 +177,6 @@ type ResolvedOpenAPI struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 	Extensions   `json:"-"`
 }
+
+var _ Node = (*OpenAPI)(nil)
+var _ NOde = (*ResolvedOpenAPI)(nil)

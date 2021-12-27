@@ -6,6 +6,7 @@ type Kind uint16
 const (
 	KindOpenAPI                 Kind = iota // KindOpenAPI represents *OpenAPI
 	KindExternalDocs                        // KindExternalDocs represents *ExternalDocs
+	KindTag                                 // KindTag represents *Tag
 	KindCallback                            // KindCallback represents *CallbackObj
 	KindComponents                          // KindComponents represents *Components
 	KindExample                             // KindExample represents *ExampleObj
@@ -36,6 +37,16 @@ const (
 	KindOperation                           // KindOperation represents *Operation
 	KindHeader                              // KindHeader represents *HeaderObj
 	KindHeaders                             // KindHeaders represents Headers
+	KindLicense                             // KindLicense represents *License
+	KindContact                             // KindContact represents *Contact
+	KindEncoding                            // KindEncoding represents *Encoding
+	KindMediaType                           // KindMediaType represents *MediaType
+	KindOAuthFlow                           // KindOAuthFlow represents *OAuthFlow
+	KindOAuthFlows                          // KindOAuthFlows represents *OAuthFlows
+	KindDiscriminator                       // KindDiscriminator represents *Discriminator
+	KindXML                                 // KindXML represents *XML
+	KindResolvedEncoding                    //KindResolvedEncoding represents *ResolvedEncoding
+	KindResolvedMediaType                   // KindResolvedMediaType represents *ResolvedMediaType
 	KindResolvedHeader                      // KindResolvedHeader represents *ResolvedHeader
 	KindResolvedHeaders                     // KindResolvedHeaders represents ResolvedHeaders
 	KindResolvedOperation                   // KindResolvedOperation represents *ResolvedOperation

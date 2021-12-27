@@ -2,6 +2,7 @@ package openapi
 
 type Node interface {
 	Kind() Kind
+	Nodes() []Node
 }
 
 type Visitor interface {

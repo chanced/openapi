@@ -28,3 +28,5 @@ type XML struct {
 	Wrapped    bool `json:"wrapped,omitempty"`
 	Extensions `json:"-"`
 }
+
+var _ Node = (*XML)(nil)

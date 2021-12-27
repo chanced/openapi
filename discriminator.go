@@ -49,3 +49,5 @@ func (d Discriminator) MarshalYAML() (interface{}, error) {
 func (d *Discriminator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, d)
 }
+
+var _ Node = (*Discriminator)(nil)
