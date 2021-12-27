@@ -2,23 +2,25 @@ package openapi
 
 type Node interface {
 	Kind() Kind
-	Nodes() []Node
+	Nodes() map[string]Node
+
+	// NodeKind(nodepath string) Kind
 }
 
 type Visitor interface {
-	Visit(node Node) (Visitor, error)
+	Visit(node Node, path string) (Visitor, error)
 }
 
 // InfoVisitor is implemented by visitors with a VisitInfo method
 type InfoVisitor interface {
 	Visitor
-	VisitInfo(node *Info) (Visitor, error)
+	VisitInfo(node *Info, path string) (Visitor, error)
 }
 
 // ServerVisitor is implemented by a visitor with a VisitServer method
 type ServerVisitor interface {
 	Visitor
-	VisitServer(node *Server) (Visitor, error)
+	VisitServer(node *Server, path string) (Visitor, error)
 }
 
 // PassthroughVisitor is a noop visitor which passes all nodes through
@@ -36,6 +38,6 @@ type ServerVisitor interface {
 // }
 type PassthroughVisitor struct{}
 
-func (v PassthroughVisitor) Visit(node Node) (Visitor, error) {
+func (v PassthroughVisitor) Visit(node Node, path string) (Visitor, error) {
 	return v, nil
 }

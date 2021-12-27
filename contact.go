@@ -42,3 +42,5 @@ func (c *Contact) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (*Contact) Kind() Kind {
 	return KindContact
 }
+
+var _ Node = (*Contact)(nil)

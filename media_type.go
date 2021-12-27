@@ -87,3 +87,10 @@ func (mt MediaType) MarshalYAML() (interface{}, error) {
 func (mt *MediaType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, mt)
 }
+
+
+func 
+
+func (mt MediaType) Nodes() map[string][]Node {
+	return nil
+}

@@ -96,3 +96,6 @@ func (o OAuthFlow) MarshalYAML() (interface{}, error) {
 func (o *OAuthFlow) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, o)
 }
+
+var _ Node = (*OAuthFlows)(nil)
+var _ Node = (*OAuthFlow)(nil)

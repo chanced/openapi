@@ -91,6 +91,11 @@ func (r *Reference) ResolveSecurityScheme(resolve func(ref string) (*SecuritySch
 	return resolve(r.Ref)
 }
 
+// ResolveWebhook resolves r by invoking resolve
+func (r *Reference) ResolveWebhook(resolve func(ref string) (*WebhookObj, error)) (*WebhookObj, error) {
+	return resolve(r.Ref)
+}
+
 // ResolveLink resolves r by invoking resolve
 func (r *Reference) ResolveLink(resolve func(ref string) (*LinkObj, error)) (*LinkObj, error) {
 	return resolve(r.Ref)
