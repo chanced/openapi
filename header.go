@@ -139,7 +139,6 @@ func (h *Headers) UnmarshalJSON(data []byte) error {
 		}
 	}
 	return nil
-
 }
 
 // UnmarshalYAML unmarshals YAML data into p
@@ -158,7 +157,7 @@ func (h Headers) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
-// Headers holds reusable HeaderObjs.
+// ResolvedHeaders holds reusable ResolvedHeaders.
 type ResolvedHeaders map[string]*ResolvedHeader
 
 // Kind returns KindResolvedHeaders
@@ -226,11 +225,14 @@ type ResolvedHeader struct {
 	Extensions `json:"-"`
 }
 
+// Kind returns KindResolvedHeader
 func (*ResolvedHeader) Kind() Kind {
 	return KindResolvedHeader
 }
 
-var _ Node = (*HeaderObj)(nil)
-var _ Node = (*ResolvedHeader)(nil)
-var _ Node = (Headers)(nil)
-var _ Node = (ResolvedHeaders)(nil)
+var (
+	_ Node = (*HeaderObj)(nil)
+	_ Node = (*ResolvedHeader)(nil)
+	_ Node = (Headers)(nil)
+	_ Node = (ResolvedHeaders)(nil)
+)

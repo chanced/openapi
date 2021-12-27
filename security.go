@@ -22,7 +22,8 @@ const (
 // SecurityRequirements is a list of SecurityRequirement
 type SecurityRequirements []SecurityRequirement
 
-func (sr SecurityRequirements) Kind() Kind {
+// Kind returns KindSecurityRequirements
+func (SecurityRequirements) Kind() Kind {
 	return KindSecurityRequirements
 }
 
@@ -48,6 +49,7 @@ func (sr SecurityRequirements) Kind() Kind {
 // not otherwise defined or exchanged in-band.
 type SecurityRequirement map[string][]string
 
+// Kind returns KindSecurityRequirement
 func (SecurityRequirement) Kind() Kind {
 	return KindSecurityRequirement
 }
@@ -62,6 +64,7 @@ func (ss SecuritySchemeType) String() string {
 // SecuritySchemes is a map of SecurityScheme
 type SecuritySchemes map[string]SecurityScheme
 
+// Kind returns KindSecuritySchemes
 func (SecuritySchemes) Kind() Kind {
 	return KindSecuritySchemes
 }
@@ -180,7 +183,7 @@ func (sso *SecuritySchemeObj) ResolveSecurityScheme(func(ref string) (*SecurityS
 }
 
 // Kind returns KindSecurityScheme
-func (sso *SecuritySchemeObj) Kind() Kind {
+func (*SecuritySchemeObj) Kind() Kind {
 	return KindSecurityScheme
 }
 
@@ -190,11 +193,12 @@ type SecurityScheme interface {
 	Kind() Kind
 }
 
-// SecuritySchemes is a map of SecurityScheme
+// ResolvedSecuritySchemes is a map of *ResolvedSecurityScheme
 type ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
 
-func (rss ResolvedSecuritySchemes) Kind() Kind {
-	return KindSecuritySchemes
+// Kind returns KindKindResolvedSecuritySchemes
+func (ResolvedSecuritySchemes) Kind() Kind {
+	return KindResolvedSecuritySchemes
 }
 
 // ResolvedSecurityScheme lists the required security schemes to execute this
@@ -266,6 +270,7 @@ type ResolvedSecurityScheme struct {
 	Extensions       `json:"-"`
 }
 
+// Kind returns KindResolvedSecurityScheme
 func (*ResolvedSecurityScheme) Kind() Kind {
 	return KindResolvedSecurityScheme
 }

@@ -134,8 +134,8 @@ type PathObj struct {
 	Extensions `json:"-"`
 }
 
-// KindPath returns KindPath
-func (p *PathObj) Kind() Kind {
+// Kind returns KindPath
+func (*PathObj) Kind() Kind {
 	return KindPath
 }
 
@@ -176,12 +176,12 @@ func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type PathItems map[string]Path
 
 // Kind returns PathKindPaths
-func (pi PathItems) Kind() Kind {
+func (PathItems) Kind() Kind {
 	return KindPathItems
 }
 
-// UnmarshalJSON unmarshals JSON data into rp
-func (rp *PathItems) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON unmarshals JSON data into pi
+func (pi *PathItems) UnmarshalJSON(data []byte) error {
 	var rd map[string]json.RawMessage
 	err := json.Unmarshal(data, &rd)
 	if err != nil {
@@ -203,19 +203,18 @@ func (rp *PathItems) UnmarshalJSON(data []byte) error {
 			res[k] = &v
 		}
 	}
-	*rp = res
+	*pi = res
 	return nil
-
 }
 
-// UnmarshalYAML unmarshals YAML data into rp
-func (rp *PathItems) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, rp)
+// UnmarshalYAML unmarshals YAML data into pi
+func (pi *PathItems) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, pi)
 }
 
-// MarshalYAML marshals rp into YAML
-func (rp PathItems) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(rp)
+// MarshalYAML marshals pi into YAML
+func (pi PathItems) MarshalYAML() (interface{}, error) {
+	b, err := json.Marshal(pi)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +278,7 @@ type ResolvedPath struct {
 }
 
 // Kind returns KindResolvedPath
-func (rp *ResolvedPath) Kind() Kind {
+func (*ResolvedPath) Kind() Kind {
 	return KindResolvedPath
 }
 
@@ -287,11 +286,11 @@ func (rp *ResolvedPath) Kind() Kind {
 type ResolvedPathItems map[string]*ResolvedPath
 
 // Kind returns KindResolvedPathItems
-func (rpi ResolvedPathItems) Kind() Kind {
+func (ResolvedPathItems) Kind() Kind {
 	return KindResolvedPathItems
 }
 
-// Paths holds the relative paths to the individual endpoints and their
+// ResolvedPaths holds the relative paths to the individual endpoints and their
 // operations. The path is appended to the URL from the Server Object in order
 // to construct the full URL. The Paths MAY be empty, due to Access Control List
 // (ACL) constraints.
@@ -300,25 +299,28 @@ type ResolvedPaths struct {
 	Extensions `json:"-"`
 }
 
-func (rp *ResolvedPaths) Kind() Kind {
+// Kind returns KindResolvedPaths
+func (*ResolvedPaths) Kind() Kind {
 	return KindResolvedPaths
 }
 
 // MarshalJSON marshals JSON
-func (p ResolvedPaths) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{}, len(p.Items)+len(p.Extensions))
-	for k, v := range p.Items {
+func (rp ResolvedPaths) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{}, len(rp.Items)+len(rp.Extensions))
+	for k, v := range rp.Items {
 		m[k.String()] = v
 	}
-	for k, v := range p.Extensions {
+	for k, v := range rp.Extensions {
 		m[k] = v
 	}
 	return json.Marshal(m)
 }
 
-var _ Node = (*PathObj)(nil)
-var _ Node = (*PathItems)(nil)
-var _ Node = (PathItems)(nil)
-var _ Node = (*ResolvedPath)(nil)
-var _ Node = (*ResolvedPaths)(nil)
-var _ Node = (ResolvedPathItems)(nil)
+var (
+	_ Node = (*PathObj)(nil)
+	_ Node = (*PathItems)(nil)
+	_ Node = (PathItems)(nil)
+	_ Node = (*ResolvedPath)(nil)
+	_ Node = (*ResolvedPaths)(nil)
+	_ Node = (ResolvedPathItems)(nil)
+)

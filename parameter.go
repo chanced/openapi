@@ -209,7 +209,7 @@ type ParameterObj struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples map[string]Example `json:"examples,omitempty"`
+	Examples Examples `json:"examples,omitempty"`
 
 	// For more complex scenarios, the content property can define the media
 	// type and schema of the parameter. A parameter MUST contain either a
@@ -222,7 +222,7 @@ type ParameterObj struct {
 }
 
 // ResolveParameter resolves p by returning itself
-func (p *ParameterObj) ResolveParameter(resolve func(ref string) (*ParameterObj, error)) (*ParameterObj, error) {
+func (p *ParameterObj) ResolveParameter(_ func(ref string) (*ParameterObj, error)) (*ParameterObj, error) {
 	return p, nil
 }
 
@@ -238,18 +238,18 @@ func (p ParameterObj) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals json into p
 func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 	type parameter struct {
-		Name            string             `json:"name"`
-		In              In                 `json:"in"`
-		Description     string             `json:"description,omitempty"`
-		Required        *bool              `json:"required,omitempty"`
-		Deprecated      bool               `json:"deprecated,omitempty"`
-		AllowEmptyValue bool               `json:"allowEmptyValue,omitempty"`
-		Style           string             `json:"style,omitempty"`
-		Explode         bool               `json:"explode,omitempty"`
-		AllowReserved   bool               `json:"allowReserved,omitempty"`
-		Schema          *SchemaObj         `json:"-"`
-		Examples        map[string]Example `json:"examples,omitempty"`
-		Content         Content            `json:"content,omitempty"`
+		Name            string     `json:"name"`
+		In              In         `json:"in"`
+		Description     string     `json:"description,omitempty"`
+		Required        *bool      `json:"required,omitempty"`
+		Deprecated      bool       `json:"deprecated,omitempty"`
+		AllowEmptyValue bool       `json:"allowEmptyValue,omitempty"`
+		Style           string     `json:"style,omitempty"`
+		Explode         bool       `json:"explode,omitempty"`
+		AllowReserved   bool       `json:"allowReserved,omitempty"`
+		Schema          *SchemaObj `json:"-"`
+		Examples        Examples   `json:"examples,omitempty"`
+		Content         Content    `json:"content,omitempty"`
 		Extensions      `json:"-"`
 	}
 	v := parameter{}
@@ -295,20 +295,21 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 // Can either be a Parameter or a Reference
 type ParameterSet []Parameter
 
-func (ps ParameterSet) Kind() Kind {
+// Kind returns KindParameterSet
+func (ParameterSet) Kind() Kind {
 	return KindParameterSet
 }
 
 // MarshalJSON marshals JSON
-func (p ParameterSet) MarshalJSON() ([]byte, error) {
-	if p != nil {
-		return json.Marshal([]Parameter(p))
+func (ps ParameterSet) MarshalJSON() ([]byte, error) {
+	if ps != nil {
+		return json.Marshal([]Parameter(ps))
 	}
 	return json.Marshal(make([]Parameter, 0))
 }
 
 // UnmarshalJSON unmarshals JSON data into p
-func (p *ParameterSet) UnmarshalJSON(data []byte) error {
+func (ps *ParameterSet) UnmarshalJSON(data []byte) error {
 	var rd []json.RawMessage
 	var err error
 	if err = json.Unmarshal(data, &rd); err != nil {
@@ -323,9 +324,8 @@ func (p *ParameterSet) UnmarshalJSON(data []byte) error {
 		}
 		items[i] = p
 	}
-	*p = items
+	*ps = items
 	return nil
-
 }
 
 func unmarshalParameterJSON(data []byte, dst *Parameter) error {
@@ -343,13 +343,13 @@ func unmarshalParameterJSON(data []byte, dst *Parameter) error {
 }
 
 // UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterSet) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
+func (ps *ParameterSet) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, ps)
 }
 
 // MarshalYAML marshals p into YAML
-func (p ParameterSet) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(p)
+func (ps ParameterSet) MarshalYAML() (interface{}, error) {
+	b, err := json.Marshal(ps)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,8 @@ func (p ParameterSet) MarshalYAML() (interface{}, error) {
 // Parameters is a map of Parameter
 type Parameters map[string]Parameter
 
-func (ps Parameters) Kind() Kind {
+// Kind returns KindParameters
+func (Parameters) Kind() Kind {
 	return KindParameters
 }
 
@@ -402,11 +403,12 @@ func (p *Parameters) UnmarshalJSON(data []byte) error {
 // Can either be a Parameter or a Reference
 type ResolvedParameterSet []*ResolvedParameter
 
-func (rpl ResolvedParameterSet) Kind() Kind {
+// Kind returns KindResolvedParameterSet
+func (ResolvedParameterSet) Kind() Kind {
 	return KindResolvedParameterSet
 }
 
-// Parameters is a map of Parameter
+// ResolvedParameters is a map of *ResolvedParameter
 type ResolvedParameters map[string]*ResolvedParameter
 
 // Kind returns KindResolvedParameters
@@ -481,7 +483,7 @@ type ResolvedParameter struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples map[string]*ResolvedExample `json:"examples,omitempty"`
+	Examples ResolvedExamples `json:"examples,omitempty"`
 
 	// For more complex scenarios, the content property can define the media
 	// type and schema of the parameter. A parameter MUST contain either a
@@ -498,9 +500,11 @@ func (*ResolvedParameter) Kind() Kind {
 	return KindResolvedParameter
 }
 
-var _ Node = (*ParameterObj)(nil)
-var _ Node = (*ResolvedParameter)(nil)
-var _ Node = (Parameters)(nil)
-var _ Node = (ResolvedParameters)(nil)
-var _ Node = (ParameterSet)(nil)
-var _ Node = (ResolvedParameterSet)(nil)
+var (
+	_ Node = (*ParameterObj)(nil)
+	_ Node = (*ResolvedParameter)(nil)
+	_ Node = (Parameters)(nil)
+	_ Node = (ResolvedParameters)(nil)
+	_ Node = (ParameterSet)(nil)
+	_ Node = (ResolvedParameterSet)(nil)
+)

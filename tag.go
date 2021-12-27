@@ -34,15 +34,6 @@ func (t Tag) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(tag(t))
 }
 
-func (t *Tag) Nodes() map[string][]Node {
-	if t.ExternalDocs != nil {
-		return map[string][]Node{
-			"externalDocs": {t.ExternalDocs},
-		}
-	}
-	return nil
-}
-
 // UnmarshalJSON unmarshals json into t
 func (t *Tag) UnmarshalJSON(data []byte) error {
 	v := tag{}
@@ -68,7 +59,8 @@ func (t *Tag) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, t)
 }
 
-func (t *Tag) Kind() Kind {
+// Kind returns KindTag
+func (*Tag) Kind() Kind {
 	return KindTag
 }
 

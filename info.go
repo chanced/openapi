@@ -29,6 +29,7 @@ type Info struct {
 	Extensions `json:"-"`
 }
 
+// Kind returns KindInfo
 func (*Info) Kind() Kind {
 	return KindInfo
 }

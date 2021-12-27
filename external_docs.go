@@ -20,10 +20,6 @@ func (*ExternalDocs) Kind() Kind {
 	return KindExternalDocs
 }
 
-func (*ExternalDocs) Nodes() map[string][]Node {
-	return nil
-}
-
 // MarshalJSON marshals JSON
 func (ed ExternalDocs) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(externaldocs(ed))

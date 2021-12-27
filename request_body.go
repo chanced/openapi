@@ -30,7 +30,7 @@ type RequestBodyObj struct {
 type requestbody RequestBodyObj
 
 // Kind returns KindRequestBody
-func (rb *RequestBodyObj) Kind() Kind { return KindRequestBody }
+func (*RequestBodyObj) Kind() Kind { return KindRequestBody }
 
 // ResolveRequestBody resolves RequestBodyObj by returning itself. resolve is  not called.
 func (rb *RequestBodyObj) ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error) {
@@ -82,7 +82,7 @@ func unmarshalRequestBody(data []byte, rb *RequestBody) error {
 type RequestBodies map[string]RequestBody
 
 // Kind returns KindRequestBodies
-func (rb RequestBodies) Kind() Kind {
+func (RequestBodies) Kind() Kind {
 	return KindRequestBodies
 }
 
@@ -122,19 +122,21 @@ type ResolvedRequestBody struct {
 }
 
 // Kind returns KindRequestBody
-func (rrb *ResolvedRequestBody) Kind() Kind {
+func (*ResolvedRequestBody) Kind() Kind {
 	return KindRequestBody
 }
 
-// RequestBodies is a map of RequestBody
+// ResolvedRequestBodies is a map of *ResolvedRequestBody
 type ResolvedRequestBodies map[string]*ResolvedRequestBody
 
 // Kind returns KindResolvedRequestBodies
-func (rrb ResolvedRequestBodies) Kind() Kind {
+func (ResolvedRequestBodies) Kind() Kind {
 	return KindResolvedRequestBodies
 }
 
-var _ Node = (*RequestBodyObj)(nil)
-var _ Node = (RequestBodies)(nil)
-var _ Node = (*ResolvedRequestBody)(nil)
-var _ Node = (ResolvedRequestBodies)(nil)
+var (
+	_ Node = (*RequestBodyObj)(nil)
+	_ Node = (RequestBodies)(nil)
+	_ Node = (*ResolvedRequestBody)(nil)
+	_ Node = (ResolvedRequestBodies)(nil)
+)

@@ -15,6 +15,7 @@ type Example interface {
 // Examples is an object to hold reusable Examples.
 type Examples map[string]Example
 
+// Kind returns KindExample
 func (Examples) Kind() Kind {
 	return KindExamples
 }
@@ -75,9 +76,6 @@ func (e ExampleObj) MarshalYAML() (interface{}, error) {
 func (e *ExampleObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, e)
 }
-
-// Kind returns KindExample
-func (e *ExampleObj) ExampleKind() Kind { return KindExample }
 
 // ResolveExample resolves ExampleObj by returning itself. resolve is  not called.
 func (e *ExampleObj) ResolveExample(func(ref string) (*ExampleObj, error)) (*ExampleObj, error) {
@@ -153,7 +151,9 @@ func (*ResolvedExample) Kind() Kind {
 	return KindResolvedExample
 }
 
-var _ Node = (*ExampleObj)(nil)
-var _ Node = (Examples)(nil)
-var _ Node = (ResolvedExamples)(nil)
-var _ Node = (*ResolvedExample)(nil)
+var (
+	_ Node = (*ExampleObj)(nil)
+	_ Node = (Examples)(nil)
+	_ Node = (ResolvedExamples)(nil)
+	_ Node = (*ResolvedExample)(nil)
+)

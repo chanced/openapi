@@ -47,7 +47,7 @@ func (r *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // Kind returns KindReference
-func (r *Reference) Kind() Kind {
+func (*Reference) Kind() Kind {
 	return KindReference
 }
 
@@ -100,6 +100,7 @@ func (r *Reference) ResolveWebhook(resolve func(ref string) (*WebhookObj, error)
 func (r *Reference) ResolveLink(resolve func(ref string) (*LinkObj, error)) (*LinkObj, error) {
 	return resolve(r.Ref)
 }
+
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")
 	return r.Str != ""
@@ -113,9 +114,11 @@ func unmarshalReferenceJSON(data []byte) (*Reference, error) {
 	return &r, json.Unmarshal(data, &r)
 }
 
-var _ SecurityScheme = (*Reference)(nil)
-var _ Path = (*Reference)(nil)
-var _ Response = (*Reference)(nil)
-var _ Example = (*Reference)(nil)
-var _ Parameter = (*Reference)(nil)
-var _ Header = (*Reference)(nil)
+var (
+	_ SecurityScheme = (*Reference)(nil)
+	_ Path           = (*Reference)(nil)
+	_ Response       = (*Reference)(nil)
+	_ Example        = (*Reference)(nil)
+	_ Parameter      = (*Reference)(nil)
+	_ Header         = (*Reference)(nil)
+)

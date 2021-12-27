@@ -93,7 +93,7 @@ func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, e)
 }
 
-// Resolvedncodings is a map between a property name and its encoding
+// ResolvedEncodings is a map between a property name and its encoding
 // information. The key, being the property name, MUST exist in the schema as a
 // property. The encoding object SHALL only apply to requestBody objects when
 // the media type is multipart or application/x-www-form-urlencoded.
@@ -104,15 +104,17 @@ func (ResolvedEncodings) Kind() Kind {
 	return KindResolvedEncodings
 }
 
-func (re ResolvedEncodings) Get(name string) *ResolvedEncoding {
-	return re[name]
+// Get returns the *ResolvedEncoding with the given key
+func (re ResolvedEncodings) Get(key string) *ResolvedEncoding {
+	return re[key]
 }
 
-func (re *ResolvedEncodings) Set(name string, value *ResolvedEncoding) {
+// Set sets key to value
+func (re *ResolvedEncodings) Set(key string, value *ResolvedEncoding) {
 	if (*re) == nil {
-		*re = ResolvedEncodings{name: value}
+		*re = ResolvedEncodings{key: value}
 	} else {
-		(*re)[name] = value
+		(*re)[key] = value
 	}
 }
 
@@ -162,6 +164,7 @@ type ResolvedEncoding struct {
 	Extensions `json:"-"`
 }
 
+// Kind returns KindResolvedEncodings
 func (*ResolvedEncoding) Kind() Kind {
 	return KindResolvedEncodings
 }

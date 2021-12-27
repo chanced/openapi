@@ -18,7 +18,7 @@ type webhook pathobj
 type WebhookObj PathObj
 
 // KindPath returns KindWebhook
-func (p *WebhookObj) Kind() Kind {
+func (*WebhookObj) Kind() Kind {
 	return KindWebhook
 }
 
@@ -119,7 +119,7 @@ func (ResolvedWebhooks) Kind() Kind {
 }
 
 // // Kind returns KindResolvedPath
-// func (rp *ResolvedPath) Kind() Kind {
+// func (*ResolvedPath) Kind() Kind {
 // 	return KindResolvedPath
 // }
 
@@ -127,7 +127,7 @@ func (ResolvedWebhooks) Kind() Kind {
 // type ResolvedPathItems map[string]*ResolvedPath
 
 // // Kind returns KindResolvedPathItems
-// func (rpi ResolvedPathItems) Kind() Kind {
+// func (ResolvedPathItems) Kind() Kind {
 // 	return KindResolvedPathItems
 // }
 
@@ -140,7 +140,7 @@ func (ResolvedWebhooks) Kind() Kind {
 // 	Extensions `json:"-"`
 // }
 
-// func (rp *ResolvedPaths) Kind() Kind {
+// func (*ResolvedPaths) Kind() Kind {
 // 	return KindResolvedPaths
 // }
 

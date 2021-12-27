@@ -286,7 +286,7 @@ func (s SchemaObj) MarshalJSON() ([]byte, error) {
 }
 
 // Kind returns KindSchema
-func (s *SchemaObj) Kind() Kind { return KindSchema }
+func (*SchemaObj) Kind() Kind { return KindSchema }
 
 // ResolveSchema resolves *SchemaObj by returning s
 func (s *SchemaObj) ResolveSchema(func(ref string) (*SchemaObj, error)) (*SchemaObj, error) {
@@ -404,12 +404,13 @@ func (s *SchemaObj) DecodeKeywords(dst interface{}) error {
 // SchemaSet is a slice of **SchemaObj
 type SchemaSet []*SchemaObj
 
+// Len returns the length of s
 func (s SchemaSet) Len() int {
 	return len(s)
 }
 
 // Kind returns KindSchemaSet
-func (s SchemaSet) Kind() Kind {
+func (SchemaSet) Kind() Kind {
 	return KindSchemaSet
 }
 
@@ -548,12 +549,15 @@ type partialschema struct {
 	Keywords              map[string]json.RawMessage `json:"-"`
 }
 
+// ResolvedSchemas is a map of *ResolvedScehma
 type ResolvedSchemas map[string]*ResolvedSchema
 
-func (rs ResolvedSchemas) Kind() Kind {
-	return KindSchema
+// Kind returns KindSchemas
+func (ResolvedSchemas) Kind() Kind {
+	return KindSchemas
 }
 
+// Set sets val to key
 func (rs *ResolvedSchemas) Set(key string, val *ResolvedSchema) {
 	if *rs == nil {
 		*rs = ResolvedSchemas{key: val}
@@ -562,8 +566,9 @@ func (rs *ResolvedSchemas) Set(key string, val *ResolvedSchema) {
 	}
 }
 
-func (rs ResolvedSchemas) Get(name string) *ResolvedSchema {
-	if v, ok := rs[name]; ok {
+// Get returns the ResolvedSchema for the given key
+func (rs ResolvedSchemas) Get(key string) *ResolvedSchema {
+	if v, ok := rs[key]; ok {
 		return v
 	}
 	return nil
@@ -577,6 +582,7 @@ func (ResolvedSchemaSet) Kind() Kind {
 	return KindResolvedSchemaSet
 }
 
+// ResolvedSchema is a resolved SchemaObj
 type ResolvedSchema struct {
 	Always                *bool               `json:"-"`
 	Schema                string              `json:"$schema,omitempty"`
@@ -643,6 +649,7 @@ type ResolvedSchema struct {
 	Keywords              map[string]json.RawMessage `json:"-"`
 }
 
+// Kind returns KindResolvedSchema
 func (*ResolvedSchema) Kind() Kind {
 	return KindResolvedSchema
 }
@@ -786,6 +793,8 @@ var resolvedSchemafields = map[string]func(s *ResolvedSchema) interface{}{
 	"discriminator":         func(s *ResolvedSchema) interface{} { return s.Discriminator },
 	"xml":                   func(s *ResolvedSchema) interface{} { return s.XML },
 }
+
+var _ = resolvedSchemafields
 
 var (
 	_ Node             = (*SchemaObj)(nil)

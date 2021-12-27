@@ -166,7 +166,7 @@ func (ResolvedResponses) Kind() Kind {
 	return KindResolvedResponses
 }
 
-// ResponseObj describes a single response from an API Operation, including
+// ResolvedResponse describes a single response from an API Operation, including
 // design-time, static links to operations based on the response.
 type ResolvedResponse struct {
 	// A description of the response. CommonMark syntax MAY be used for rich
@@ -195,7 +195,9 @@ func (*ResolvedResponse) Kind() Kind {
 	return KindResolvedResponse
 }
 
-var _ Node = (*ResolvedResponses)(nil)
-var _ Node = (*ResolvedResponse)(nil)
-var _ Node = (*ResponseObj)(nil)
-var _ Node = (Responses)(nil)
+var (
+	_ Node = (*ResolvedResponses)(nil)
+	_ Node = (*ResolvedResponse)(nil)
+	_ Node = (*ResponseObj)(nil)
+	_ Node = (Responses)(nil)
+)

@@ -4,152 +4,237 @@ package openapi
 type Kind uint16
 
 const (
-	KindNil                     Kind = iota
-	KindOpenAPI                      // KindOpenAPI represents *OpenAPI
-	KindCallback                     // KindCallback represents *CallbackObj
-	KindComponents                   // KindComponents represents *Components
-	KindContact                      // KindContact represents *Contact
-	KindDiscriminator                // KindDiscriminator represents *Discriminator
-	KindEncoding                     // KindEncoding represents *Encoding
-	KindEncodings                    // KindEncoding represents Encodings
-	KindExample                      // KindExample represents *ExampleObj
-	KindExamples                     // KindExamples represents Examples
-	KindExternalDocs                 // KindExternalDocs represents *ExternalDocs
-	KindHeader                       // KindHeader represents *HeaderObj
-	KindHeaders                      // KindHeaders represents Headers
-	KindInfo                         // KindInfo represents *Info
-	KindLicense                      // KindLicense represents *License
-	KindLink                         // KindLink represents *LinkObj
-	KindLinks                        // KindLinks represents Links
-	KindMediaType                    // KindMediaType represents *MediaType
-	KindOAuthFlow                    // KindOAuthFlow represents *OAuthFlow
-	KindOAuthFlows                   // KindOAuthFlows represents *OAuthFlows
-	KindOperation                    // KindOperation represents *Operation
-	KindParameter                    // KindParameter represents *ParameterObj
-	KindParameterSet                 // KindParameterSet represents ParameterSet
-	KindParameters                   // KindParameters represents Parameters
-	KindPath                         // KindPath represents *PathObj
-	KindPaths                        // KindPaths represents Paths
-	KindPathItems                    // KindPathItems represents PathItems
-	KindReference                    // KindReference represents *Reference
-	KindRequestBodies                // KindRequestBodies represents RequestBodies
-	KindRequestBody                  // KindRequestBody represents *RequestBodyObj
-	KindResponse                     // KindResponse represents *ResponseObj
-	KindResponses                    // KindResponses represents Responses
-	KindSchema                       // KindSchema represents *SchemaObj
-	KindSchemaSet                    // KindSchemaSet represents SchemaSet
-	KindSchemas                      // KindSchemas represents Schemas
-	KindSecurityRequirement          // KindSecurityRequirement represents *SecurityRequirementObj
-	KindSecurityRequirements         // KindSecurityRequirements represents SecurityRquirements
-	KindSecurityScheme               // KindSecurityScheme represents *SecuritySchemeObj
-	KindSecuritySchemes              // KindSecuritySchemes represents SecuritySchemes
-	KindServer                       // KindServer represents *Server
-	KindTag                          // KindTag represents *Tag
-	KindWebhook                      // KindWebhook represents *WebhookObj
-	KindWebhooks                     // KindWebhooks represents Webhooks
-	KindXML                          // KindXML represents *XML
-	KindResolvedCallback             // KindResolvedCallback represents *ResolvedCallback
-	KindResolvedComponents           // KindResolvedComponents resolved Components
-	KindResolvedEncoding             // KindResolvedEncoding represents *ResolvedEncoding
-	KindResolvedEncodings            // KindResolvedEncoding represents ResolvedEncodings
-	KindResolvedExample              // KindResolvedExample represents *ResolvedExample
-	KindResolvedExamples             // KindResolvedExamples represents ResolvedExamples
-	KindResolvedHeader               // KindResolvedHeader represents *ResolvedHeader
-	KindResolvedHeaders              // KindResolvedHeaders represents ResolvedHeaders
-	KindResolvedLink                 // KindLink represents *ResolvedLink
-	KindResolvedLinks                // KindLinks represents ResolvedLinks
-	KindResolvedMediaType            // KindResolvedMediaType represents *ResolvedMediaType
-	KindResolvedOpenAPI              // KindResolvedOpenAPI represents *ResolvedOpenAPI
-	KindResolvedOperation            // KindResolvedOperation represents *ResolvedOperation
-	KindResolvedParameter            // KindResolvedParameter represents *ResolvedParameter
-	KindResolvedParameterSet         // KindResolvedParameterSet represents ParameterSet
-	KindResolvedParameters           // KindResolvedParameters represents Parameters
-	KindResolvedPath                 // KindResolvedPath represents *ResolvedPath
-	KindResolvedPathItems            // KindResolvedPathItems represents ResolvedPathItems
-	KindResolvedPaths                // KindResolvedPaths represents ResolvedPaths
-	KindResolvedRequestBodies        // KindRequestBodies represents ResolvedRequestBodies
-	KindResolvedRequestBody          // KindRequestBody represents *ResolvedRequestBody
-	KindResolvedResponse             // KindResolvedResponse represents *ResolvedResponse
-	KindResolvedResponses            // KindResolvedResponses represents ResolvedResponses
-	KindResolvedSchema               // KindResolvedSchema represents *ResolvedSchema
-	KindResolvedSchemaSet            // KindResolvedSchemaSet represents ResolvedSchemaSet
-	KindResolvedSchemas              // KindResolvedSchemas represents ResolvedSchemas
-	KindResolvedSecurityScheme       // KindResolvedSecurityScheme resolved SecurityScheme
-	KindResolvedSecuritySchemes      // KindResolvedSecuritySchemes resolved SecuritySchemes
-	KindResolvedWebhook              // KindResolvedWebhook represents *ResolvedWebhook
-	KindResolvedWebhooks             // KindResolvedWebhooks represents ResolvedWebhooks
-
+	// KindNil is the zero value of Kind
+	KindNil Kind = iota
+	// KindOpenAPI represents *OpenAPI
+	KindOpenAPI
+	// KindCallback represents *CallbackObj
+	KindCallback
+	// KindComponents represents *Components
+	KindComponents
+	// KindContact represents *Contact
+	KindContact
+	// KindContent represents Content
+	KindContent
+	// KindDiscriminator represents *Discriminator
+	KindDiscriminator
+	// KindEncoding represents *Encoding
+	KindEncoding
+	// KindEncodings represents Encodings
+	KindEncodings
+	// KindExample represents *ExampleObj
+	KindExample
+	// KindExamples represents Examples
+	KindExamples
+	// KindExternalDocs represents *ExternalDocs
+	KindExternalDocs
+	// KindHeader represents *HeaderObj
+	KindHeader
+	// KindHeaders represents Headers
+	KindHeaders
+	// KindInfo represents *Info
+	KindInfo
+	// KindLicense represents *License
+	KindLicense
+	// KindLink represents *LinkObj
+	KindLink
+	// KindLinks represents Links
+	KindLinks
+	// KindMediaType represents *MediaType
+	KindMediaType
+	// KindOAuthFlow represents *OAuthFlow
+	KindOAuthFlow
+	// KindOAuthFlows represents *OAuthFlows
+	KindOAuthFlows
+	// KindOperation represents *Operation
+	KindOperation
+	// KindParameter represents *ParameterObj
+	KindParameter
+	// KindParameterSet represents ParameterSet
+	KindParameterSet
+	// KindParameters represents Parameters
+	KindParameters
+	// KindPath represents *PathObj
+	KindPath
+	// KindPaths represents Paths
+	KindPaths
+	// KindPathItems represents PathItems
+	KindPathItems
+	// KindReference represents *Reference
+	KindReference
+	// KindRequestBodies represents RequestBodies
+	KindRequestBodies
+	// KindRequestBody represents *RequestBodyObj
+	KindRequestBody
+	// KindResponse represents *ResponseObj
+	KindResponse
+	// KindResponses represents Responses
+	KindResponses
+	// KindSchema represents *SchemaObj
+	KindSchema
+	// KindSchemaSet represents SchemaSet
+	KindSchemaSet
+	// KindSchemas represents Schemas
+	KindSchemas
+	// KindSecurityRequirement represents *SecurityRequirementObj
+	KindSecurityRequirement
+	// KindSecurityRequirements represents SecurityRquirements
+	KindSecurityRequirements
+	// KindSecurityScheme represents *SecuritySchemeObj
+	KindSecurityScheme
+	// KindSecuritySchemes represents SecuritySchemes
+	KindSecuritySchemes
+	// KindServer represents *Server
+	KindServer
+	// KindTag represents *Tag
+	KindTag
+	// KindWebhook represents *WebhookObj
+	KindWebhook
+	// KindWebhooks represents Webhooks
+	KindWebhooks
+	// KindXML represents *XML
+	KindXML
+	// KindResolvedCallback represents *ResolvedCallback
+	KindResolvedCallback
+	// KindResolvedComponents represents ResolvedComponents
+	KindResolvedComponents
+	// KindResolvedContent represents ResolvedContent
+	KindResolvedContent
+	// KindResolvedEncoding represents *ResolvedEncoding
+	KindResolvedEncoding
+	// KindResolvedEncodings represents ResolvedEncodings
+	KindResolvedEncodings
+	// KindResolvedExample represents *ResolvedExample
+	KindResolvedExample
+	// KindResolvedExamples represents ResolvedExamples
+	KindResolvedExamples
+	// KindResolvedHeader represents *ResolvedHeader
+	KindResolvedHeader
+	// KindResolvedHeaders represents ResolvedHeaders
+	KindResolvedHeaders
+	// KindResolvedLink represents *ResolvedLink
+	KindResolvedLink
+	// KindResolvedLinks represents ResolvedLinks
+	KindResolvedLinks
+	// KindResolvedMediaType represents *ResolvedMediaType
+	KindResolvedMediaType
+	// KindResolvedOpenAPI represents *ResolvedOpenAPI
+	KindResolvedOpenAPI
+	// KindResolvedOperation represents *ResolvedOperation
+	KindResolvedOperation
+	// KindResolvedParameter represents *ResolvedParameter
+	KindResolvedParameter
+	// KindResolvedParameterSet represents ParameterSet
+	KindResolvedParameterSet
+	// KindResolvedParameters represents Parameters
+	KindResolvedParameters
+	// KindResolvedPath represents *ResolvedPath
+	KindResolvedPath
+	// KindResolvedPathItems represents ResolvedPathItems
+	KindResolvedPathItems
+	// KindResolvedPaths represents ResolvedPaths
+	KindResolvedPaths
+	// KindResolvedRequestBodies represents ResolvedRequestBodies
+	KindResolvedRequestBodies
+	// KindResolvedRequestBody represents *ResolvedRequestBody
+	KindResolvedRequestBody
+	// KindResolvedResponse represents *ResolvedResponse
+	KindResolvedResponse
+	// KindResolvedResponses represents ResolvedResponses
+	KindResolvedResponses
+	// KindResolvedSchema represents *ResolvedSchema
+	KindResolvedSchema
+	// KindResolvedSchemaSet represents ResolvedSchemaSet
+	KindResolvedSchemaSet
+	// KindResolvedSchemas represents ResolvedSchemas
+	KindResolvedSchemas
+	// KindResolvedSecurityScheme resolved SecurityScheme
+	KindResolvedSecurityScheme
+	// KindResolvedSecuritySchemes resolved SecuritySchemes
+	KindResolvedSecuritySchemes
+	// KindResolvedWebhook represents *ResolvedWebhook
+	KindResolvedWebhook
+	// KindResolvedWebhooks represents ResolvedWebhooks
+	KindResolvedWebhooks
 )
 
 var kindNames = map[Kind]string{
+	KindNil:                     "nil",
 	KindOpenAPI:                 "OpenAPI",
-	KindExternalDocs:            "ExternalDocs",
-	KindTag:                     "Tag",
 	KindCallback:                "Callback",
 	KindComponents:              "Components",
+	KindContact:                 "Contact",
+	KindContent:                 "Content",
+	KindDiscriminator:           "Discriminator",
+	KindEncoding:                "Encoding",
+	KindEncodings:               "Encodings",
 	KindExample:                 "Example",
 	KindExamples:                "Examples",
+	KindExternalDocs:            "ExternalDocs",
+	KindHeader:                  "Header",
+	KindHeaders:                 "Headers",
+	KindInfo:                    "Info",
+	KindLicense:                 "License",
 	KindLink:                    "Link",
 	KindLinks:                   "Links",
-	KindParameters:              "Parameters",
+	KindMediaType:               "MediaType",
+	KindOAuthFlow:               "OAuthFlow",
+	KindOAuthFlows:              "OAuthFlows",
+	KindOperation:               "Operation",
 	KindParameter:               "Parameter",
 	KindParameterSet:            "ParameterSet",
-	KindInfo:                    "Info",
+	KindParameters:              "Parameters",
 	KindPath:                    "Path",
+	KindPaths:                   "Paths",
 	KindPathItems:               "PathItems",
 	KindReference:               "Reference",
-	KindRequestBody:             "RequestBody",
 	KindRequestBodies:           "RequestBodies",
+	KindRequestBody:             "RequestBody",
+	KindResponse:                "Response",
+	KindResponses:               "Responses",
+	KindSchema:                  "Schema",
+	KindSchemaSet:               "SchemaSet",
+	KindSchemas:                 "Schemas",
 	KindSecurityRequirement:     "SecurityRequirement",
 	KindSecurityRequirements:    "SecurityRequirements",
 	KindSecurityScheme:          "SecurityScheme",
 	KindSecuritySchemes:         "SecuritySchemes",
-	KindSchema:                  "Schema",
-	KindSchemaSet:               "SchemaSet",
-	KindSchemas:                 "Schemas",
 	KindServer:                  "Server",
+	KindTag:                     "Tag",
 	KindWebhook:                 "Webhook",
 	KindWebhooks:                "Webhooks",
-	KindResponse:                "Response",
-	KindResponses:               "Responses",
-	KindOperation:               "Operation",
-	KindHeader:                  "Header",
-	KindHeaders:                 "Headers",
-	KindLicense:                 "License",
-	KindContact:                 "Contact",
-	KindEncoding:                "Encoding",
-	KindMediaType:               "MediaType",
-	KindOAuthFlow:               "OAuthFlow",
-	KindOAuthFlows:              "OAuthFlows",
-	KindDiscriminator:           "Discriminator",
 	KindXML:                     "XML",
-	KindResolvedEncoding:        "ResolvedEncoding",
-	KindResolvedMediaType:       "ResolvedMediaType",
-	KindResolvedHeader:          "ResolvedHeader",
-	KindResolvedHeaders:         "ResolvedHeaders",
-	KindResolvedOperation:       "ResolvedOperation",
-	KindResolvedOpenAPI:         "ResolvedOpenAPI",
-	KindResolvedResponse:        "ResolvedResponse",
-	KindResolvedResponses:       "ResolvedResponses",
-	KindResolvedRequestBody:     "ResolvedRequestBody",
-	KindResolvedRequestBodies:   "ResolvedRequestBodies",
-	KindResolvedParameters:      "ResolvedParameters",
-	KindResolvedParameterSet:    "ResolvedParameterSet",
-	KindResolvedParameter:       "ResolvedParameter",
-	KindResolvedLink:            "ResolvedLink",
-	KindResolvedLinks:           "ResolvedLinks",
 	KindResolvedCallback:        "ResolvedCallback",
 	KindResolvedComponents:      "ResolvedComponents",
+	KindResolvedContent:         "ResolvedContent",
+	KindResolvedEncoding:        "ResolvedEncoding",
+	KindResolvedEncodings:       "ResolvedEncodings",
 	KindResolvedExample:         "ResolvedExample",
 	KindResolvedExamples:        "ResolvedExamples",
+	KindResolvedHeader:          "ResolvedHeader",
+	KindResolvedHeaders:         "ResolvedHeaders",
+	KindResolvedLink:            "ResolvedLink",
+	KindResolvedLinks:           "ResolvedLinks",
+	KindResolvedMediaType:       "ResolvedMediaType",
+	KindResolvedOpenAPI:         "ResolvedOpenAPI",
+	KindResolvedOperation:       "ResolvedOperation",
+	KindResolvedParameter:       "ResolvedParameter",
+	KindResolvedParameterSet:    "ResolvedParameterSet",
+	KindResolvedParameters:      "ResolvedParameters",
 	KindResolvedPath:            "ResolvedPath",
 	KindResolvedPathItems:       "ResolvedPathItems",
 	KindResolvedPaths:           "ResolvedPaths",
-	KindResolvedSecurityScheme:  "ResolvedSecurityScheme",
-	KindResolvedSecuritySchemes: "ResolvedSecuritySchemes",
+	KindResolvedRequestBodies:   "ResolvedRequestBodies",
+	KindResolvedRequestBody:     "ResolvedRequestBody",
+	KindResolvedResponse:        "ResolvedResponse",
+	KindResolvedResponses:       "ResolvedResponses",
 	KindResolvedSchema:          "ResolvedSchema",
 	KindResolvedSchemaSet:       "ResolvedSchemaSet",
 	KindResolvedSchemas:         "ResolvedSchemas",
+	KindResolvedSecurityScheme:  "ResolvedSecurityScheme",
+	KindResolvedSecuritySchemes: "ResolvedSecuritySchemes",
+	KindResolvedWebhook:         "ResolvedWebhook",
+	KindResolvedWebhooks:        "ResolvedWebhooks",
 }
 
 func (k Kind) String() string {

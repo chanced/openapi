@@ -16,6 +16,7 @@ type OAuthFlows struct {
 	Extensions        `json:"-"`
 }
 
+// Kind returns KindOAuthFlows
 func (*OAuthFlows) Kind() Kind {
 	return KindOAuthFlows
 }
@@ -106,5 +107,7 @@ func (o *OAuthFlow) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, o)
 }
 
-var _ Node = (*OAuthFlows)(nil)
-var _ Node = (*OAuthFlow)(nil)
+var (
+	_ Node = (*OAuthFlows)(nil)
+	_ Node = (*OAuthFlow)(nil)
+)

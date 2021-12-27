@@ -65,12 +65,11 @@ type OpenAPI struct {
 	// externalDocs	Additional external documentation.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 
-	buffer     io.ReadSeeker
 	Extensions `json:"-"`
 }
 
 // Kind returns KindOpenAPI
-func (OpenAPI) Kind() Kind {
+func (*OpenAPI) Kind() Kind {
 	return KindOpenAPI
 }
 
@@ -119,13 +118,12 @@ func (o *OpenAPI) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // 	panic("not implemented")
 // }
 
+// EncodeJSON encodes OpenAPI to JSON
 func (o *OpenAPI) EncodeJSON() (io.Reader, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(o)
 	return buf, err
 }
-
-type OpenAPIs []*OpenAPI
 
 // ResolvedOpenAPI is an OpenAPI 3.1 specification with resolved references
 type ResolvedOpenAPI struct {
@@ -184,7 +182,8 @@ type ResolvedOpenAPI struct {
 	Extensions   `json:"-"`
 }
 
-func (ResolvedOpenAPI) Kind() Kind {
+// Kind returns KindResolvedOpenAPI
+func (*ResolvedOpenAPI) Kind() Kind {
 	return KindResolvedOpenAPI
 }
 
