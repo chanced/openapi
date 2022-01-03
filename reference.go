@@ -36,6 +36,10 @@ type Reference struct {
 	Description string `yaml:"description" json:"description,omitempty"`
 }
 
+func (r *Reference) Nodes() map[string]*NodeDetail {
+	return nil
+}
+
 // MarshalYAML marshals YAML
 func (r Reference) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(r)

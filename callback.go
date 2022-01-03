@@ -7,6 +7,67 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// Callbacks is a map of reusable Callback Objects.
+type Callbacks map[string]Callback
+
+// Kind returns KindCallbacks
+func (Callbacks) Kind() Kind {
+	return KindCallbacks
+}
+
+func (cbs Callbacks) Nodes() map[string]*NodeDetail {
+	if len(cbs) == 0 {
+		return nil
+	}
+	m := make(map[string]*NodeDetail, len(cbs))
+	for k, v := range cbs {
+		m[k] = &NodeDetail{
+			Node:         v,
+			TargetKind:   KindCallback,
+			RelativePath: k,
+		}
+	}
+}
+
+// UnmarshalJSON unmarshals JSON
+func (c *Callbacks) UnmarshalJSON(data []byte) error {
+	var o map[string]json.RawMessage
+	res := make(Callbacks, len(o))
+	err := json.Unmarshal(data, &o)
+	if err != nil {
+		return err
+	}
+	for k, d := range o {
+		if isRefJSON(d) {
+			v, err := unmarshalReferenceJSON(d)
+			if err != nil {
+				return err
+			}
+			res[k] = v
+		} else {
+			var v CallbackObj
+			if err := json.Unmarshal(d, &v); err != nil {
+				return err
+			}
+			res[k] = &v
+		}
+	}
+	*c = res
+	return nil
+}
+
+// MarshalYAML marshals YAML
+func (c Callbacks) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(c)
+}
+
+// UnmarshalYAML unmarshals YAML
+func (c *Callbacks) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, c)
+}
+
+type callback CallbackObj
+
 // CallbackObj is map of possible out-of band callbacks related to the parent
 // operation. Each value in the map is a Path Item Object that describes a set
 // of requests that may be initiated by the API provider and the expected
@@ -21,7 +82,19 @@ type CallbackObj struct {
 	Extensions `json:"-"`
 }
 
-type callback CallbackObj
+// Nodes returns
+func (c *CallbackObj) Nodes() map[string]*NodeDetail {
+	if len(c.Paths) == 0 {
+		return nil
+	}
+	m := make(map[string]*NodeDetail, len(c.Paths))
+	for k, v := range c.Paths {
+		m[k] = &NodeDetail{
+			Node: v,
+		}
+	}
+	return m
+}
 
 // MarshalJSON marshals JSON
 func (c CallbackObj) MarshalJSON() ([]byte, error) {
@@ -82,46 +155,6 @@ type Callback interface {
 	ResolveCallback(func(ref string) (*CallbackObj, error)) (*CallbackObj, error)
 }
 
-// Callbacks is a map of reusable Callback Objects.
-type Callbacks map[string]Callback
-
-// UnmarshalJSON unmarshals JSON
-func (c *Callbacks) UnmarshalJSON(data []byte) error {
-	var o map[string]json.RawMessage
-	res := make(Callbacks, len(o))
-	err := json.Unmarshal(data, &o)
-	if err != nil {
-		return err
-	}
-	for k, d := range o {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-		} else {
-			var v CallbackObj
-			if err := json.Unmarshal(d, &v); err != nil {
-				return err
-			}
-			res[k] = &v
-		}
-	}
-	*c = res
-	return nil
-}
-
-// MarshalYAML marshals YAML
-func (c Callbacks) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(c)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (c *Callbacks) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, c)
-}
-
 // ResolvedCallback is map of possible out-of band callbacks related to the parent
 // operation. Each value in the map is a Path Item Object that describes a set
 // of requests that may be initiated by the API provider and the expected
@@ -136,5 +169,33 @@ type ResolvedCallback struct {
 	Extensions `json:"-"`
 }
 
+func (rc *ResolvedCallback) Nodes() map[string]*NodeDetail {
+	if len(rc.Paths) == 0 {
+		return nil
+	}
+	m := make(map[string]*NodeDetail, len(rc.Paths))
+	for k, v := range rc.Paths {
+		m[k] = &NodeDetail{
+			Node: v,
+		}
+	}
+	return m
+}
+
+func (*ResolvedCallback) Kind() Kind {
+	return KindResolvedCallback
+}
+
 // ResolvedCallbacks is a map of resolved Callback Objects.
 type ResolvedCallbacks map[string]*ResolvedCallback
+
+func (ResolvedCallbacks) Kind() Kind {
+	return KindResolvedCallbacks
+}
+
+var (
+	_ Node = (*CallbackObj)(nil)
+	_ Node = (*ResolvedCallback)(nil)
+	_ Node = (Callbacks)(nil)
+	_ Node = (ResolvedCallbacks)(nil)
+)

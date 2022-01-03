@@ -66,6 +66,32 @@ type Operation struct {
 	Extensions `json:"-"`
 }
 
+func (o *Operation) Nodes() map[string]*NodeDetail {
+	m := make(map[string]*NodeDetail)
+	if o.Responses != nil {
+		m["responses"] = o.Responses
+	}
+	if o.RequestBody != nil {
+		m["requestBody"] = o.RequestBody
+	}
+	if o.Parameters != nil {
+		m["parameters"] = o.Parameters
+	}
+	if o.Callbacks != nil {
+		m["callbacks"] = o.Callbacks
+	}
+	if o.Servers != nil {
+		m["servers"] = o.Servers
+	}
+	if o.ExternalDocs != nil {
+		m["externalDocs"] = o.ExternalDocs
+	}
+	if len(m) == 0 {
+		return nil
+	}
+	return m
+}
+
 // Kind returns KindOperation
 func (*Operation) Kind() Kind {
 	return KindOperation

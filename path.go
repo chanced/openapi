@@ -90,88 +90,6 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// PathObj describes the operations available on a single path. A PathObj Item MAY
-// be empty, due to ACL constraints. The path itself is still exposed to the
-// documentation viewer but they will not know which operations and parameters
-// are available.
-type PathObj struct {
-	// Allows for a referenced definition of this path item. The referenced
-	// structure MUST be in the form of a Path Item Object. In case a Path Item
-	// Object field appears both in the defined object and the referenced
-	// object, the behavior is undefined. See the rules for resolving Relative
-	// References.
-	Ref string `json:"$ref,omitempty"`
-	// An optional, string summary, intended to apply to all operations in this path.
-	Summary string `json:"summary,omitempty"`
-	// An optional, string description, intended to apply to all operations in
-	// this path. CommonMark syntax MAY be used for rich text representation.
-	Description string `json:"description,omitempty"`
-	// A definition of a GET operation on this path.
-	Get *Operation `json:"get,omitempty"`
-	// A definition of a PUT operation on this path.
-	Put *Operation `json:"put,omitempty"`
-	// A definition of a POST operation on this path.
-	Post *Operation `json:"post,omitempty"`
-	// A definition of a DELETE operation on this path.
-	Delete *Operation `json:"delete,omitempty"`
-	// A definition of a OPTIONS operation on this path.
-	Options *Operation `json:"options,omitempty"`
-	// A definition of a HEAD operation on this path.
-	Head *Operation `json:"head,omitempty"`
-	// A definition of a PATCH operation on this path.
-	Patch *Operation `json:"patch,omitempty"`
-	// A definition of a TRACE operation on this path.
-	Trace *Operation `json:"trace,omitempty"`
-	// An alternative server array to service all operations in this path.
-	Servers []*Server `json:"servers,omitempty"`
-	// A list of parameters that are applicable for all the operations described
-	// under this path. These parameters can be overridden at the operation
-	// level, but cannot be removed there. The list MUST NOT include duplicated
-	// parameters. A unique parameter is defined by a combination of a name and
-	// location. The list can use the Reference Object to link to parameters
-	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters *ParameterSet `json:"parameters,omitempty"`
-	Extensions `json:"-"`
-}
-
-// Kind returns KindPath
-func (*PathObj) Kind() Kind {
-	return KindPath
-}
-
-type pathobj PathObj
-
-// ResolvePath resolves PathObj by returning itself. resolve is  not called.
-func (p *PathObj) ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error) {
-	return p, nil
-}
-
-// MarshalJSON marshals p into JSON
-func (p PathObj) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(pathobj(p))
-}
-
-// UnmarshalJSON unmarshals json into p
-func (p *PathObj) UnmarshalJSON(data []byte) error {
-	var v pathobj
-	if err := unmarshalExtendedJSON(data, &v); err != nil {
-		return err
-	}
-	*p = PathObj(v)
-	return nil
-}
-
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (p PathObj) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(p)
-}
-
-// UnmarshalYAML unmarshals yaml into s
-func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
-}
-
 // PathItems is a map of Paths that can either be a Path or a Reference
 type PathItems map[string]Path
 
@@ -221,6 +139,146 @@ func (pi PathItems) MarshalYAML() (interface{}, error) {
 	var v interface{}
 	err = json.Unmarshal(b, &v)
 	return v, err
+}
+
+// PathObj describes the operations available on a single path. A PathObj Item MAY
+// be empty, due to ACL constraints. The path itself is still exposed to the
+// documentation viewer but they will not know which operations and parameters
+// are available.
+type PathObj struct {
+	// Allows for a referenced definition of this path item. The referenced
+	// structure MUST be in the form of a Path Item Object. In case a Path Item
+	// Object field appears both in the defined object and the referenced
+	// object, the behavior is undefined. See the rules for resolving Relative
+	// References.
+	Ref string `json:"$ref,omitempty"`
+	// An optional, string summary, intended to apply to all operations in this path.
+	Summary string `json:"summary,omitempty"`
+	// An optional, string description, intended to apply to all operations in
+	// this path. CommonMark syntax MAY be used for rich text representation.
+	Description string `json:"description,omitempty"`
+	// A definition of a GET operation on this path.
+	Get *Operation `json:"get,omitempty"`
+	// A definition of a PUT operation on this path.
+	Put *Operation `json:"put,omitempty"`
+	// A definition of a POST operation on this path.
+	Post *Operation `json:"post,omitempty"`
+	// A definition of a DELETE operation on this path.
+	Delete *Operation `json:"delete,omitempty"`
+	// A definition of a OPTIONS operation on this path.
+	Options *Operation `json:"options,omitempty"`
+	// A definition of a HEAD operation on this path.
+	Head *Operation `json:"head,omitempty"`
+	// A definition of a PATCH operation on this path.
+	Patch *Operation `json:"patch,omitempty"`
+	// A definition of a TRACE operation on this path.
+	Trace *Operation `json:"trace,omitempty"`
+	// An alternative server array to service all operations in this path.
+	Servers []*Server `json:"servers,omitempty"`
+	// A list of parameters that are applicable for all the operations described
+	// under this path. These parameters can be overridden at the operation
+	// level, but cannot be removed there. The list MUST NOT include duplicated
+	// parameters. A unique parameter is defined by a combination of a name and
+	// location. The list can use the Reference Object to link to parameters
+	// that are defined at the OpenAPI Object's components/parameters.
+	Parameters *ParameterSet `json:"parameters,omitempty"`
+	Extensions `json:"-"`
+}
+
+func (p *PathObj) Nodes() map[string]*NodeDetail {
+	m := make(map[string]*NodeDetail)
+	if p.Get != nil {
+		m["get"] = &NodeDetail{
+			Node: p.Get,
+		}
+	}
+	if p.Put != nil {
+		m["put"] = &NodeDetail{
+			Node:       p.Put,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Post != nil {
+		m["post"] = &NodeDetail{
+			Node:       p.Post,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Delete != nil {
+		m["delete"] = &NodeDetail{
+			Node:       p.Delete,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Options != nil {
+		m["options"] = &NodeDetail{
+			Node:       p.Options,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Head != nil {
+		m["head"] = &NodeDetail{
+			Node:       p.Head,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Patch != nil {
+		m["patch"] = &NodeDetail{
+			Node:       p.Patch,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Trace != nil {
+		m["trace"] = &NodeDetail{
+			Node:       p.Trace,
+			TargetKind: KindOperation,
+		}
+	}
+	if p.Parameters != nil {
+		m["parameters"] = &NodeDetail{
+			Node:       p.Parameters,
+			TargetKind: KindParameterSet,
+		}
+	}
+	return m
+}
+
+// Kind returns KindPath
+func (*PathObj) Kind() Kind {
+	return KindPath
+}
+
+type pathobj PathObj
+
+// ResolvePath resolves PathObj by returning itself. resolve is  not called.
+func (p *PathObj) ResolvePath(func(ref string) (*PathObj, error)) (*PathObj, error) {
+	return p, nil
+}
+
+// MarshalJSON marshals p into JSON
+func (p PathObj) MarshalJSON() ([]byte, error) {
+	return marshalExtendedJSON(pathobj(p))
+}
+
+// UnmarshalJSON unmarshals json into p
+func (p *PathObj) UnmarshalJSON(data []byte) error {
+	var v pathobj
+	if err := unmarshalExtendedJSON(data, &v); err != nil {
+		return err
+	}
+	*p = PathObj(v)
+	return nil
+}
+
+// MarshalYAML first marshals and unmarshals into JSON and then marshals into
+// YAML
+func (p PathObj) MarshalYAML() (interface{}, error) {
+	return yamlutil.Marshal(p)
+}
+
+// UnmarshalYAML unmarshals yaml into s
+func (p *PathObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, p)
 }
 
 func unmarshalPathJSON(data []byte) (Path, error) {

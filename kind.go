@@ -10,6 +10,8 @@ const (
 	KindOpenAPI
 	// KindCallback represents *CallbackObj
 	KindCallback
+	// KindCallback represents Callbacks
+	KindCallbacks
 	// KindComponents represents *Components
 	KindComponents
 	// KindContact represents *Contact
@@ -96,6 +98,8 @@ const (
 	KindXML
 	// KindResolvedCallback represents *ResolvedCallback
 	KindResolvedCallback
+	// KindResolvedCallbacks represents ResolvedCallbacks
+	KindResolvedCallbacks
 	// KindResolvedComponents represents ResolvedComponents
 	KindResolvedComponents
 	// KindResolvedContent represents ResolvedContent
@@ -162,6 +166,7 @@ var kindNames = map[Kind]string{
 	KindNil:                     "nil",
 	KindOpenAPI:                 "OpenAPI",
 	KindCallback:                "Callback",
+	KindCallbacks:               "Callbacks",
 	KindComponents:              "Components",
 	KindContact:                 "Contact",
 	KindContent:                 "Content",
@@ -205,6 +210,7 @@ var kindNames = map[Kind]string{
 	KindWebhooks:                "Webhooks",
 	KindXML:                     "XML",
 	KindResolvedCallback:        "ResolvedCallback",
+	KindResolvedCallbacks:       "ResolvedCallbacks",
 	KindResolvedComponents:      "ResolvedComponents",
 	KindResolvedContent:         "ResolvedContent",
 	KindResolvedEncoding:        "ResolvedEncoding",

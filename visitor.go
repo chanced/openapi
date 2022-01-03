@@ -2,19 +2,12 @@ package openapi
 
 type NodeDetail struct {
 	Node
-	// Kind is the Kind of the Node as it currently exists
-	// which can potentially be a Reference or the target
-	// if resolved or inline
-	Kind Kind
-	// TargetKind is Kind of the Node as if it were resolved/expanded inline
 	TargetKind Kind
-	// RelativePath is the relative path to the Node from the calling Node
-	RelativePath string
 }
 
 type Node interface {
 	Kind() Kind
-	NodeDetail(nodepath string) NodeDetail
+	Nodes() map[string]*NodeDetail
 }
 
 type Visitor interface {

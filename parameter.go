@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
@@ -221,6 +222,32 @@ type ParameterObj struct {
 	Extensions `json:"-"`
 }
 
+func (p *ParameterObj) Nodes() map[string]*NodeDetail {
+	nodes := make(map[string]*NodeDetail)
+	if p.Schema != nil {
+		nodes["schema"] = &NodeDetail{
+			Node:       p.Schema,
+			TargetKind: KindSchema,
+		}
+	}
+	if p.Content != nil {
+		nodes["content"] = &NodeDetail{
+			Node:       p.Content,
+			TargetKind: KindContent,
+		}
+	}
+	if p.Examples != nil {
+		nodes["examples"] = &NodeDetail{
+			Node:       p.Examples,
+			TargetKind: KindExamples,
+		}
+	}
+	if len(nodes) == 0 {
+		return nil
+	}
+	return nodes
+}
+
 // ResolveParameter resolves p by returning itself
 func (p *ParameterObj) ResolveParameter(_ func(ref string) (*ParameterObj, error)) (*ParameterObj, error) {
 	return p, nil
@@ -297,6 +324,20 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 // Can either be a Parameter or a Reference
 type ParameterSet []Parameter
 
+func (ps ParameterSet) Nodes() map[string]*NodeDetail {
+	if len(ps) == 0 {
+		return nil
+	}
+	nodes := make(map[string]*NodeDetail, len(ps))
+	for k, v := range ps {
+		nodes[strconv.FormatInt(int64(k), 10)] = &NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindParameterSet
 func (ParameterSet) Kind() Kind {
 	return KindParameterSet
@@ -363,13 +404,27 @@ func (ps ParameterSet) MarshalYAML() (interface{}, error) {
 // Parameters is a map of Parameter
 type Parameters map[string]Parameter
 
+func (ps Parameters) Nodes() map[string]*NodeDetail {
+	if len(ps) == 0 {
+		return nil
+	}
+	nodes := make(map[string]*NodeDetail, len(ps))
+	for k, v := range ps {
+		nodes[k] = &NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindParameters
 func (Parameters) Kind() Kind {
 	return KindParameters
 }
 
 // UnmarshalJSON unmarshals JSON
-func (p *Parameters) UnmarshalJSON(data []byte) error {
+func (ps *Parameters) UnmarshalJSON(data []byte) error {
 	var dm map[string]json.RawMessage
 	if err := json.Unmarshal(data, &dm); err != nil {
 		return err
@@ -405,6 +460,20 @@ func (p *Parameters) UnmarshalJSON(data []byte) error {
 // Can either be a Parameter or a Reference
 type ResolvedParameterSet []*ResolvedParameter
 
+func (rps ResolvedParameterSet) Nodes() map[string]*NodeDetail {
+	if len(rps) == 0 {
+		return nil
+	}
+	nodes := make(map[string]*NodeDetail, len(rps))
+	for k, v := range rps {
+		nodes[strconv.FormatInt(int64(k), 10)] = &NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindResolvedParameterSet
 func (ResolvedParameterSet) Kind() Kind {
 	return KindResolvedParameterSet
@@ -412,6 +481,20 @@ func (ResolvedParameterSet) Kind() Kind {
 
 // ResolvedParameters is a map of *ResolvedParameter
 type ResolvedParameters map[string]*ResolvedParameter
+
+func (rps ResolvedParameters) Nodes() map[string]*NodeDetail {
+	if len(rps) == 0 {
+		return nil
+	}
+	nodes := make(map[string]*NodeDetail, len(rps))
+	for k, v := range rps {
+		nodes[k] = &NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
 
 // Kind returns KindResolvedParameters
 func (ResolvedParameters) Kind() Kind {
@@ -493,13 +576,39 @@ type ResolvedParameter struct {
 	// examples are provided in conjunction with the schema object, the example
 	// MUST follow the prescribed serialization strategy for the parameter.
 
-	Content    Content `json:"content,omitempty"`
+	Content    ResolvedContent `json:"content,omitempty"`
 	Extensions `json:"-"`
 }
 
 // Kind returns KindResolvedParameter
 func (*ResolvedParameter) Kind() Kind {
 	return KindResolvedParameter
+}
+
+func (rp *ResolvedParameter) Nodes() map[string]*NodeDetail {
+	nodes := make(map[string]*NodeDetail)
+	if rp.Schema != nil {
+		nodes["schema"] = &NodeDetail{
+			Node:       rp.Schema,
+			TargetKind: KindSchema,
+		}
+	}
+	if rp.Content != nil {
+		nodes["content"] = &NodeDetail{
+			Node:       rp.Content,
+			TargetKind: KindContent,
+		}
+	}
+	if rp.Examples != nil {
+		nodes["examples"] = &NodeDetail{
+			Node:       rp.Examples,
+			TargetKind: KindExamples,
+		}
+	}
+	if len(nodes) == 0 {
+		return nil
+	}
+	return nodes
 }
 
 var (
