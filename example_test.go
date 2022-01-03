@@ -13,6 +13,7 @@ import (
 )
 
 func TestIssue5(t *testing.T) {
+	assert := require.New(t)
 	data := `{
 	  "openapi": "3.1.0",
 	  "info": {
@@ -58,10 +59,17 @@ func TestIssue5(t *testing.T) {
 
 	var oas openapi.OpenAPI
 	err := json.Unmarshal([]byte(data), &oas)
-	if err != nil {
-		t.Errorf("Failed: %s", err)
-		t.FailNow()
-	}
+	assert.NoError(err)
+	pi := oas.Paths.Items["/catalogue/{id}"]
+	assert.NotNil(pi)
+	assert.NotNil(pi.Parameters)
+	assert.Len(*pi.Parameters, 1)
+	params := *pi.Parameters
+	param := params[0]
+	paramobj := param.(*openapi.ParameterObj)
+	assert.Contains(paramobj.Examples, "an example")
+	ex := paramobj.Examples["an example"].(*openapi.ExampleObj)
+	assert.Equal(json.RawMessage(`"someval"`), ex.Value)
 }
 
 func TestExample(t *testing.T) {
