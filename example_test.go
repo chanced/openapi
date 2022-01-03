@@ -12,6 +12,58 @@ import (
 	yaml "sigs.k8s.io/yaml"
 )
 
+func TestIssue5(t *testing.T) {
+	data := `{
+	  "openapi": "3.1.0",
+	  "info": {
+		"title": "",
+		"version": "",
+		"description": "Test file for loading pre-existing OAS"
+	  },
+	  "paths": {
+		"/catalogue/{id}": {
+		  "parameters": [
+			{
+			  "name": "id",
+			  "in": "path",
+			  "required": true,
+			  "style": "simple",
+			  "schema": {
+				"type": "string"
+			  },
+			  "examples": {
+				"an example": {
+				  "value": "someval"
+				}
+			  }
+			}
+		  ]
+		},
+		"/catalogue/{id}/details": {
+		  "parameters": [
+			{
+			  "name": "id",
+			  "in": "path",
+			  "style": "simple",
+			  "required": true,
+			  "schema": {
+				"type": "string"
+			  },
+			  "example": "some-uuid-maybe"
+			}
+		  ]
+		}
+	  }
+	}`
+
+	var oas openapi.OpenAPI
+	err := json.Unmarshal([]byte(data), &oas)
+	if err != nil {
+		t.Errorf("Failed: %s", err)
+		t.FailNow()
+	}
+}
+
 func TestExample(t *testing.T) {
 	assert := require.New(t)
 	j := []string{

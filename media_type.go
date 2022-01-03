@@ -41,7 +41,6 @@ type MediaType struct {
 func (mt MediaType) MarshalJSON() ([]byte, error) {
 	type mediatype MediaType
 	return marshalExtendedJSON(mediatype(mt))
-
 }
 
 // UnmarshalJSON unmarshals json into mt
