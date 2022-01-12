@@ -49,6 +49,15 @@ func (pv PathValue) MarshalYAML() ([]byte, error) {
 	return yaml.Marshal(pv.String())
 }
 
+func (pv PathValue) MarshalText() ([]byte, error) {
+	return []byte(pv), nil
+}
+
+func (pv *PathValue) UnmarshalText(txt []byte) error {
+	*pv = PathValue(txt)
+	return nil
+}
+
 // Paths holds the relative paths to the individual endpoints and their
 // operations. The path is appended to the URL from the Server Object in order
 // to construct the full URL. The Paths MAY be empty, due to Access Control List
@@ -56,6 +65,48 @@ func (pv PathValue) MarshalYAML() ([]byte, error) {
 type Paths struct {
 	Items      map[PathValue]*PathObj `json:"-"`
 	Extensions `json:"-"`
+}
+
+func (ps *Paths) Len() int {
+	if ps == nil || ps.Items == nil {
+		return 0
+	}
+	return len(ps.Items)
+}
+
+func (ps *Paths) Get(key string) (*PathObj, bool) {
+	if ps == nil || ps.Items == nil {
+		return nil, false
+	}
+	v, ok := ps.Items[PathValue(key)]
+	return v, ok
+}
+
+func (ps *Paths) Set(key string, val *PathObj) {
+	if ps == nil || ps.Items == nil {
+		*ps = Paths{
+			Items: map[PathValue]*PathObj{
+				PathValue(key): val,
+			},
+		}
+		return
+	}
+	ps.Items[PathValue(key)] = val
+}
+
+func (ps *Paths) Nodes() Nodes {
+	if ps.Len() == 0 {
+		return nil
+	}
+	m := make(Nodes, ps.Len())
+
+	for k, v := range ps.Items {
+		m[k.String()] = NodeDetail{
+			Node:       v,
+			TargetKind: KindCallback,
+		}
+	}
+	return m
 }
 
 // MarshalJSON marshals JSON
@@ -92,6 +143,52 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 
 // PathItems is a map of Paths that can either be a Path or a Reference
 type PathItems map[string]Path
+
+func (pi *PathItems) Len() int {
+	if pi == nil || *pi == nil {
+		return 0
+	}
+	return len(*pi)
+}
+
+func (pi *PathItems) Get(key string) (Path, bool) {
+	if pi.Len() == 0 {
+		return nil, false
+	}
+	v, ok := (*pi)[key]
+	return v, ok
+}
+
+func (pi *PathItems) Set(key string, val Path) {
+	if *pi == nil {
+		*pi = PathItems{
+			key: val,
+		}
+		return
+	}
+	(*pi)[key] = val
+}
+
+func (pi *PathItems) Delete(key string) {
+	if pi == nil || *pi == nil {
+		return
+	}
+	delete(*pi, key)
+}
+
+func (pi PathItems) Nodes() Nodes {
+	if pi.Len() == 0 {
+		return nil
+	}
+	nodes := make(Nodes, pi.Len())
+	for k, v := range pi {
+		nodes[k] = NodeDetail{
+			TargetKind: KindPath,
+			Node:       v,
+		}
+	}
+	return nodes
+}
 
 // Kind returns KindPathItems
 func (PathItems) Kind() Kind {
@@ -185,57 +282,57 @@ type PathObj struct {
 	Extensions `json:"-"`
 }
 
-func (p *PathObj) Nodes() map[string]*NodeDetail {
-	m := make(map[string]*NodeDetail)
+func (p *PathObj) Nodes() Nodes {
+	m := make(Nodes)
 	if p.Get != nil {
-		m["get"] = &NodeDetail{
+		m["get"] = NodeDetail{
 			Node: p.Get,
 		}
 	}
 	if p.Put != nil {
-		m["put"] = &NodeDetail{
+		m["put"] = NodeDetail{
 			Node:       p.Put,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Post != nil {
-		m["post"] = &NodeDetail{
+		m["post"] = NodeDetail{
 			Node:       p.Post,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Delete != nil {
-		m["delete"] = &NodeDetail{
+		m["delete"] = NodeDetail{
 			Node:       p.Delete,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Options != nil {
-		m["options"] = &NodeDetail{
+		m["options"] = NodeDetail{
 			Node:       p.Options,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Head != nil {
-		m["head"] = &NodeDetail{
+		m["head"] = NodeDetail{
 			Node:       p.Head,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Patch != nil {
-		m["patch"] = &NodeDetail{
+		m["patch"] = NodeDetail{
 			Node:       p.Patch,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Trace != nil {
-		m["trace"] = &NodeDetail{
+		m["trace"] = NodeDetail{
 			Node:       p.Trace,
 			TargetKind: KindOperation,
 		}
 	}
 	if p.Parameters != nil {
-		m["parameters"] = &NodeDetail{
+		m["parameters"] = NodeDetail{
 			Node:       p.Parameters,
 			TargetKind: KindParameterSet,
 		}
@@ -342,6 +439,13 @@ func (*ResolvedPath) Kind() Kind {
 
 // ResolvedPathItems is a map of resolved Path objects
 type ResolvedPathItems map[string]*ResolvedPath
+
+func (rpi *ResolvedPathItems) Len() int {
+	if rpi == nil || *rpi == nil {
+		return 0
+	}
+	return len(*rpi)
+}
 
 // Kind returns KindResolvedPathItems
 func (ResolvedPathItems) Kind() Kind {

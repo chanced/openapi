@@ -28,6 +28,45 @@ type Response interface {
 // operation call.
 type Responses map[string]Response
 
+func (rs *Responses) Get(key string) (Response, bool) {
+	if rs.Len() == 0 {
+		return nil, false
+	}
+	v, ok := (*rs)[key]
+	return v, ok
+}
+
+func (rs *Responses) Len() int {
+	if rs == nil || *rs == nil {
+		return 0
+	}
+	return len(*rs)
+}
+
+func (rs *Responses) Set(key string, val Response) {
+	if *rs == nil {
+		*rs = Responses{
+			key: val,
+		}
+		return
+	}
+	(*rs)[key] = val
+}
+
+func (rs Responses) Nodes() Nodes {
+	if rs.Len() == 0 {
+		return nil
+	}
+	res := make(Nodes, rs.Len())
+	for k, v := range rs {
+		res[k] = NodeDetail{
+			Node:       v,
+			TargetKind: KindResponse,
+		}
+	}
+	return res
+}
+
 // Kind returns KindResponses
 func (Responses) Kind() Kind {
 	return KindResponses

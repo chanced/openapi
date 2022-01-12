@@ -24,7 +24,7 @@ type Components struct {
 	// An object to hold reusable Security Scheme Objects.
 	SecuritySchemes SecuritySchemes `json:"securitySchemes,omitempty"`
 	// An object to hold reusable Link Objects.
-	Links Links `json:"links,omitempty"`
+	Links *Links `json:"links,omitempty"`
 	// An object to hold reusable Callback Objects.
 	Callbacks Callbacks `json:"callbacks,omitempty"`
 	// An object to hold reusable Path Item Object.

@@ -2,12 +2,15 @@ package openapi
 
 type NodeDetail struct {
 	Node
+	// TargetKind is the Kind regardless of the Node, which could be the
+	// TargetKind or a Reference
 	TargetKind Kind
 }
+type Nodes map[string]NodeDetail
 
 type Node interface {
 	Kind() Kind
-	Nodes() map[string]*NodeDetail
+	Nodes() Nodes
 }
 
 type Visitor interface {

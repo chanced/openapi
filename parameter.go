@@ -210,12 +210,8 @@ type ParameterObj struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-<<<<<<< HEAD
-	Examples Examples `json:"examples,omitempty"`
-=======
 	Examples Examples        `json:"examples,omitempty"`
 	Example  json.RawMessage `json:"example,omitempty"`
->>>>>>> 6e98a8e50c1fab8943b64de7eac690cabc77b99e
 
 	// For more complex scenarios, the content property can define the media
 	// type and schema of the parameter. A parameter MUST contain either a
@@ -227,10 +223,10 @@ type ParameterObj struct {
 	Extensions `json:"-"`
 }
 
-func (p *ParameterObj) Nodes() map[string]*NodeDetail {
-	nodes := make(map[string]*NodeDetail)
+func (p *ParameterObj) Nodes() Nodes {
+	nodes := make(Nodes)
 	if p.Schema != nil {
-		nodes["schema"] = &NodeDetail{
+		nodes["schema"] = NodeDetail{
 			Node:       p.Schema,
 			TargetKind: KindSchema,
 		}
@@ -272,20 +268,6 @@ func (p ParameterObj) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals json into p
 func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 	type parameter struct {
-<<<<<<< HEAD
-		Name            string     `json:"name"`
-		In              In         `json:"in"`
-		Description     string     `json:"description,omitempty"`
-		Required        *bool      `json:"required,omitempty"`
-		Deprecated      bool       `json:"deprecated,omitempty"`
-		AllowEmptyValue bool       `json:"allowEmptyValue,omitempty"`
-		Style           string     `json:"style,omitempty"`
-		Explode         bool       `json:"explode,omitempty"`
-		AllowReserved   bool       `json:"allowReserved,omitempty"`
-		Schema          *SchemaObj `json:"-"`
-		Examples        Examples   `json:"examples,omitempty"`
-		Content         Content    `json:"content,omitempty"`
-=======
 		Name            string          `json:"name"`
 		In              In              `json:"in"`
 		Description     string          `json:"description,omitempty"`
@@ -299,7 +281,6 @@ func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 		Examples        Examples        `json:"examples,omitempty"`
 		Example         json.RawMessage `json:"example,omitempty"`
 		Content         Content         `json:"content,omitempty"`
->>>>>>> 6e98a8e50c1fab8943b64de7eac690cabc77b99e
 		Extensions      `json:"-"`
 	}
 	v := parameter{}
@@ -345,18 +326,68 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 // Can either be a Parameter or a Reference
 type ParameterSet []Parameter
 
-func (ps ParameterSet) Nodes() map[string]*NodeDetail {
+func (ps ParameterSet) Nodes() Nodes {
 	if len(ps) == 0 {
 		return nil
 	}
-	nodes := make(map[string]*NodeDetail, len(ps))
-	for k, v := range ps {
-		nodes[strconv.FormatInt(int64(k), 10)] = &NodeDetail{
+	nodes := make(Nodes, ps.Len())
+	for i, v := range ps {
+		nodes[strconv.Itoa(i)] = NodeDetail{
 			TargetKind: KindParameter,
 			Node:       v,
 		}
 	}
 	return nodes
+}
+
+func (ps *ParameterSet) Len() int {
+	if ps == nil || *ps == nil {
+		return 0
+	}
+	return len(*ps)
+}
+
+func (ps *ParameterSet) Get(idx int) (Parameter, bool) {
+	if ps.Len() == 0 {
+		return nil, false
+	}
+	if idx < 0 || idx >= len(*ps) {
+		return nil, false
+	}
+	return (*ps)[idx], true
+}
+
+func (ps *ParameterSet) Append(val Parameter) {
+	if *ps == nil {
+		*ps = ParameterSet{val}
+		return
+	}
+	(*ps) = append(*ps, val)
+}
+
+func (ps *ParameterSet) Remove(p Parameter) {
+	if ps.Len() == 0 {
+		return ErrNotFound
+	}
+	for k, v := range *ps {
+		if v == s {
+			return ps.RemoveIndex(k)
+		}
+	}
+	return ErrNotFound
+}
+
+func (ss *ParameterSet) RemoveIndex(i int) {
+	if ss.Len() == 0 {
+		return // nothing to do
+	}
+	if i < 0 || i >= len(*ss) {
+		return
+	}
+	copy((*ss)[i:], (*ss)[i+1:])
+	(*ss)[len(*ss)-1] = nil
+	(*ss) = (*ss)[:ss.Len()-1]
+	return
 }
 
 // Kind returns KindParameterSet
@@ -425,13 +456,31 @@ func (ps ParameterSet) MarshalYAML() (interface{}, error) {
 // Parameters is a map of Parameter
 type Parameters map[string]Parameter
 
-func (ps Parameters) Nodes() map[string]*NodeDetail {
+func (ps *Parameters) Get(key string) (Parameter, bool) {
+	if ps == nil || *ps == nil {
+		return nil, false
+	}
+	v, ok := (*ps)[key]
+	return v, ok
+}
+
+func (ps *Parameters) Set(key string, val Parameter) {
+	if *ps == nil {
+		*ps = Responses{
+			key: val,
+		}
+		return
+	}
+	(*ps)[key] = val
+}
+
+func (ps Parameters) Nodes() Nodes {
 	if len(ps) == 0 {
 		return nil
 	}
-	nodes := make(map[string]*NodeDetail, len(ps))
+	nodes := make(Nodes, len(ps))
 	for k, v := range ps {
-		nodes[k] = &NodeDetail{
+		nodes[k] = NodeDetail{
 			TargetKind: KindParameter,
 			Node:       v,
 		}
@@ -481,13 +530,13 @@ func (ps *Parameters) UnmarshalJSON(data []byte) error {
 // Can either be a Parameter or a Reference
 type ResolvedParameterSet []*ResolvedParameter
 
-func (rps ResolvedParameterSet) Nodes() map[string]*NodeDetail {
+func (rps ResolvedParameterSet) Nodes() Nodes {
 	if len(rps) == 0 {
 		return nil
 	}
-	nodes := make(map[string]*NodeDetail, len(rps))
-	for k, v := range rps {
-		nodes[strconv.FormatInt(int64(k), 10)] = &NodeDetail{
+	nodes := make(Nodes, len(rps))
+	for i, v := range rps {
+		nodes[strconv.Itoa(i)] = NodeDetail{
 			TargetKind: KindParameter,
 			Node:       v,
 		}
@@ -503,13 +552,13 @@ func (ResolvedParameterSet) Kind() Kind {
 // ResolvedParameters is a map of *ResolvedParameter
 type ResolvedParameters map[string]*ResolvedParameter
 
-func (rps ResolvedParameters) Nodes() map[string]*NodeDetail {
+func (rps ResolvedParameters) Nodes() Nodes {
 	if len(rps) == 0 {
 		return nil
 	}
-	nodes := make(map[string]*NodeDetail, len(rps))
+	nodes := make(Nodes, len(rps))
 	for k, v := range rps {
-		nodes[k] = &NodeDetail{
+		nodes[k] = NodeDetail{
 			TargetKind: KindParameter,
 			Node:       v,
 		}
@@ -606,22 +655,22 @@ func (*ResolvedParameter) Kind() Kind {
 	return KindResolvedParameter
 }
 
-func (rp *ResolvedParameter) Nodes() map[string]*NodeDetail {
-	nodes := make(map[string]*NodeDetail)
+func (rp *ResolvedParameter) Nodes() Nodes {
+	nodes := make(Nodes)
 	if rp.Schema != nil {
-		nodes["schema"] = &NodeDetail{
+		nodes["schema"] = NodeDetail{
 			Node:       rp.Schema,
 			TargetKind: KindSchema,
 		}
 	}
 	if rp.Content != nil {
-		nodes["content"] = &NodeDetail{
+		nodes["content"] = NodeDetail{
 			Node:       rp.Content,
 			TargetKind: KindContent,
 		}
 	}
 	if rp.Examples != nil {
-		nodes["examples"] = &NodeDetail{
+		nodes["examples"] = NodeDetail{
 			Node:       rp.Examples,
 			TargetKind: KindExamples,
 		}

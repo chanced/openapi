@@ -62,34 +62,49 @@ type Operation struct {
 	// An alternative server array to service this operation. If an alternative
 	// server object is specified at the Path Item Object or Root level, it will
 	// be overridden by this value.
-	Servers    []*Server `json:"servers,omitempty"`
+	Servers    Servers `json:"servers,omitempty"`
 	Extensions `json:"-"`
 }
 
-func (o *Operation) Nodes() map[string]*NodeDetail {
-	m := make(map[string]*NodeDetail)
-	if o.Responses != nil {
-		m["responses"] = o.Responses
+func (o *Operation) Nodes() Nodes {
+	nodes := make(Nodes)
+	if o.Responses.Len() > 0 {
+		nodes["responses"] = NodeDetail{
+			Node:       &o.Responses,
+			TargetKind: KindResponses,
+		}
 	}
 	if o.RequestBody != nil {
-		m["requestBody"] = o.RequestBody
+		nodes["requestBody"] = NodeDetail{
+			Node:       o.RequestBody,
+			TargetKind: KindRequestBody,
+		}
 	}
-	if o.Parameters != nil {
-		m["parameters"] = o.Parameters
+	if o.Parameters.Len() > 0 {
+		nodes["parameters"] = NodeDetail{
+			Node:       &o.Parameters,
+			TargetKind: KindParameterSet,
+		}
 	}
 	if o.Callbacks != nil {
-		m["callbacks"] = o.Callbacks
+		nodes["callbacks"] = NodeDetail{
+			Node:       &o.Callbacks,
+			TargetKind: KindCallbacks,
+		}
 	}
 	if o.Servers != nil {
-		m["servers"] = o.Servers
+		nodes["servers"] = NodeDetail{
+			Node:       &o.Servers,
+			TargetKind: KindServers,
+		}
 	}
 	if o.ExternalDocs != nil {
-		m["externalDocs"] = o.ExternalDocs
+		nodes["externalDocs"] = o.ExternalDocs
 	}
-	if len(m) == 0 {
+	if len(nodes) == 0 {
 		return nil
 	}
-	return m
+	return nodes
 }
 
 // Kind returns KindOperation

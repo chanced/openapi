@@ -36,7 +36,7 @@ type Reference struct {
 	Description string `yaml:"description" json:"description,omitempty"`
 }
 
-func (r *Reference) Nodes() map[string]*NodeDetail {
+func (r *Reference) Nodes() Nodes {
 	return nil
 }
 

@@ -21,6 +21,24 @@ type Link interface {
 // Links is a map to hold reusable LinkObjs.
 type Links map[string]Link
 
+func (l *Links) Get(key string) (Link, bool) {
+	if *l == nil {
+		return nil, false
+	}
+	v, ok := (*l)[key]
+	return v, ok
+}
+
+func (l *Links) Set(key string, val Link) {
+	if *l == nil {
+		*l = Links{
+			key: val,
+		}
+		return
+	}
+	(*l)[key] = val
+}
+
 // Kind returns KindLinks
 func (Links) Kind() Kind {
 	return KindLinks

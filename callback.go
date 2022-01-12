@@ -15,18 +15,43 @@ func (Callbacks) Kind() Kind {
 	return KindCallbacks
 }
 
-func (cbs Callbacks) Nodes() map[string]*NodeDetail {
-	if len(cbs) == 0 {
+func (cs *Callbacks) Len() int {
+	if cs == nil || *cs == nil {
+		return 0
+	}
+	return len(*cs)
+}
+
+func (cs *Callbacks) Get(key string) (Callback, bool) {
+	if cs == nil || *cs == nil {
+		return nil, false
+	}
+	v, ok := (*cs)[key]
+	return v, ok
+}
+
+func (cs *Callbacks) Set(key string, val Callback) {
+	if *cs == nil {
+		*cs = Callbacks{
+			key: val,
+		}
+		return
+	}
+	(*cs)[key] = val
+}
+
+func (cs Callbacks) Nodes() Nodes {
+	if cs.Len() == 0 {
 		return nil
 	}
-	m := make(map[string]*NodeDetail, len(cbs))
-	for k, v := range cbs {
-		m[k] = &NodeDetail{
-			Node:         v,
-			TargetKind:   KindCallback,
-			RelativePath: k,
+	m := make(Nodes, cs.Len())
+	for k, v := range cs {
+		m[k] = NodeDetail{
+			Node:       v,
+			TargetKind: KindCallback,
 		}
 	}
+	return m
 }
 
 // UnmarshalJSON unmarshals JSON
@@ -83,13 +108,13 @@ type CallbackObj struct {
 }
 
 // Nodes returns
-func (c *CallbackObj) Nodes() map[string]*NodeDetail {
-	if len(c.Paths) == 0 {
+func (c *CallbackObj) Nodes() Nodes {
+	if c.Paths.Len() == 0 {
 		return nil
 	}
-	m := make(map[string]*NodeDetail, len(c.Paths))
+	m := make(Nodes, len(c.Paths))
 	for k, v := range c.Paths {
-		m[k] = &NodeDetail{
+		m[k] = NodeDetail{
 			Node: v,
 		}
 	}
@@ -169,17 +194,20 @@ type ResolvedCallback struct {
 	Extensions `json:"-"`
 }
 
-func (rc *ResolvedCallback) Nodes() map[string]*NodeDetail {
-	if len(rc.Paths) == 0 {
+func (rc *ResolvedCallback) Nodes() Nodes {
+	if rc == nil {
 		return nil
 	}
-	m := make(map[string]*NodeDetail, len(rc.Paths))
+	if rc.Paths.Len() == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rc.Paths))
 	for k, v := range rc.Paths {
-		m[k] = &NodeDetail{
+		nodes[k] = NodeDetail{
 			Node: v,
 		}
 	}
-	return m
+	return nodes
 }
 
 func (*ResolvedCallback) Kind() Kind {

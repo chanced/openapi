@@ -1,6 +1,81 @@
 package openapi
 
-import "github.com/chanced/openapi/yamlutil"
+import (
+	"strconv"
+
+	"github.com/chanced/openapi/yamlutil"
+)
+
+type Servers []*Server
+
+func (ss *Servers) Kind() Kind {
+	return KindServers
+}
+
+func (ss *Servers) Get(idx int) (*Server, bool) {
+	if *ss == nil {
+		return nil, false
+	}
+	if idx < 0 || idx >= len(*ss) {
+		return nil, false
+	}
+	return (*ss)[idx], true
+}
+
+func (ss *Servers) Append(val *Server) {
+	if *ss == nil {
+		*ss = Servers{val}
+		return
+	}
+	(*ss) = append(*ss, val)
+}
+
+func (ss *Servers) Remove(s *Server) {
+	if *ss == nil {
+		return
+	}
+	for k, v := range *ss {
+		if v == s {
+			ss.RemoveIndex(k)
+			return
+		}
+	}
+	return
+}
+
+func (ss *Servers) RemoveIndex(i int) {
+	if *ss == nil {
+		return // nothing to do
+	}
+	if i < 0 || i >= len(*ss) {
+		return
+	}
+	copy((*ss)[i:], (*ss)[i+1:])
+	(*ss)[len(*ss)-1] = nil
+	(*ss) = (*ss)[:ss.Len()-1]
+	return
+}
+
+// Len returns the length of ss
+func (ss *Servers) Len() int {
+	if ss == nil || *ss == nil {
+		return 0
+	}
+	return len(*ss)
+}
+
+func (ss Servers) Nodes() Nodes {
+	if ss.Len() == 0 {
+		return nil
+	}
+	nodes := make(Nodes, ss.Len())
+	for i, s := range ss {
+		nodes[strconv.Itoa(i)] = NodeDetail{
+			Node:       s,
+			TargetKind: KindServer,
+		}
+	}
+}
 
 type server Server
 

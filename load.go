@@ -10,8 +10,6 @@ import (
 	"strings"
 	"unicode"
 
-	jsonptr "github.com/xeipuuv/gojsonpointer"
-
 	"github.com/chanced/openapi/yamlutil"
 )
 
@@ -41,7 +39,6 @@ func Load(openapi io.Reader, resolver Resolver) (*ResolvedOpenAPI, error) {
 		return nil, err
 	}
 	return loader{cache: newCache(), resolver: resolver, openapi: o}.load()
-
 }
 
 type loader struct {
@@ -128,6 +125,7 @@ func detectEncoding(r io.Reader) (io.Reader, uint8, error) {
 		}
 	}
 }
+
 func removeURI(r string, u string) string {
 	r = strings.TrimPrefix(r, u)
 	if r[0] == '/' {

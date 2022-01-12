@@ -88,6 +88,12 @@ const (
 	KindSecuritySchemes
 	// KindServer represents *Server
 	KindServer
+	// KindServers represents []*Server
+	KindServers
+	// KindServerVariable represents *ServerVariable
+	KindServerVariable
+	// KindServerVariables represents *ServerVariable
+	KindServerVariables
 	// KindTag represents *Tag
 	KindTag
 	// KindWebhook represents *WebhookObj
@@ -205,6 +211,7 @@ var kindNames = map[Kind]string{
 	KindSecurityScheme:          "SecurityScheme",
 	KindSecuritySchemes:         "SecuritySchemes",
 	KindServer:                  "Server",
+	KindServers:                 "Servers",
 	KindTag:                     "Tag",
 	KindWebhook:                 "Webhook",
 	KindWebhooks:                "Webhooks",

@@ -14,6 +14,45 @@ import (
 // Schemas is a map of Schemas
 type Schemas map[string]*SchemaObj
 
+func (s *Schemas) Get(key string) (*SchemaObj, bool) {
+	if s == nil || *s == nil {
+		return nil, false
+	}
+	v, ok := (*s)[key]
+	return v, ok
+}
+
+func (s *Schemas) Set(key string, val *SchemaObj) {
+	if *s == nil {
+		*s = Schemas{
+			key: val,
+		}
+		return
+	}
+	(*s)[key] = val
+}
+
+func (ss *Schemas) Len() int {
+	if ss == nil || *ss == nil {
+		return 0
+	}
+	return len(*ss)
+}
+
+func (ss Schemas) Nodes() Nodes {
+	if ss.Len() == 0 {
+		return nil
+	}
+	nodes := make(Nodes, ss.Len())
+	for k, v := range ss {
+		nodes[k] = NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindSchemas
 func (Schemas) Kind() Kind {
 	return KindSchemas
@@ -406,9 +445,56 @@ func (s *SchemaObj) DecodeKeywords(dst interface{}) error {
 // SchemaSet is a slice of **SchemaObj
 type SchemaSet []*SchemaObj
 
+func (ss *SchemaSet) Get(idx int) (*SchemaObj, bool) {
+	if *ss == nil {
+		return nil, false
+	}
+	if idx < 0 || idx >= len(*ss) {
+		return nil, false
+	}
+	return (*ss)[idx], true
+}
+
+func (ss *SchemaSet) Append(val *SchemaObj) {
+	if *ss == nil {
+		*ss = SchemaSet{val}
+		return
+	}
+	(*ss) = append(*ss, val)
+}
+
+func (ss *SchemaSet) Remove(s *SchemaObj) {
+	if *ss == nil {
+		return
+	}
+	for k, v := range *ss {
+		if v == s {
+			ss.RemoveIndex(k)
+			return
+		}
+	}
+	return
+}
+
+func (ss *SchemaSet) RemoveIndex(i int) {
+	if *ss == nil {
+		return // nothing to do
+	}
+	if i < 0 || i >= len(*ss) {
+		return
+	}
+	copy((*ss)[i:], (*ss)[i+1:])
+	(*ss)[len(*ss)-1] = nil
+	(*ss) = (*ss)[:ss.Len()-1]
+	return
+}
+
 // Len returns the length of s
-func (s SchemaSet) Len() int {
-	return len(s)
+func (ss *SchemaSet) Len() int {
+	if ss == nil || *ss == nil {
+		return 0
+	}
+	return len(*ss)
 }
 
 // Kind returns KindSchemaSet
