@@ -12,6 +12,66 @@ import (
 	yaml "sigs.k8s.io/yaml"
 )
 
+func TestIssue5(t *testing.T) {
+	assert := require.New(t)
+	data := `{
+	  "openapi": "3.1.0",
+	  "info": {
+		"title": "",
+		"version": "",
+		"description": "Test file for loading pre-existing OAS"
+	  },
+	  "paths": {
+		"/catalogue/{id}": {
+		  "parameters": [
+			{
+			  "name": "id",
+			  "in": "path",
+			  "required": true,
+			  "style": "simple",
+			  "schema": {
+				"type": "string"
+			  },
+			  "examples": {
+				"an example": {
+				  "value": "someval"
+				}
+			  }
+			}
+		  ]
+		},
+		"/catalogue/{id}/details": {
+		  "parameters": [
+			{
+			  "name": "id",
+			  "in": "path",
+			  "style": "simple",
+			  "required": true,
+			  "schema": {
+				"type": "string"
+			  },
+			  "example": "some-uuid-maybe"
+			}
+		  ]
+		}
+	  }
+	}`
+
+	var oas openapi.OpenAPI
+	err := json.Unmarshal([]byte(data), &oas)
+	assert.NoError(err)
+	pi := oas.Paths.Items["/catalogue/{id}"]
+	assert.NotNil(pi)
+	assert.NotNil(pi.Parameters)
+	assert.Len(*pi.Parameters, 1)
+	params := *pi.Parameters
+	param := params[0]
+	paramobj := param.(*openapi.ParameterObj)
+	assert.Contains(paramobj.Examples, "an example")
+	ex := paramobj.Examples["an example"].(*openapi.ExampleObj)
+	assert.Equal(json.RawMessage(`"someval"`), ex.Value)
+}
+
 func TestExample(t *testing.T) {
 	assert := require.New(t)
 	j := []string{

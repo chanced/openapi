@@ -210,7 +210,12 @@ type ParameterObj struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
+<<<<<<< HEAD
 	Examples Examples `json:"examples,omitempty"`
+=======
+	Examples Examples        `json:"examples,omitempty"`
+	Example  json.RawMessage `json:"example,omitempty"`
+>>>>>>> 6e98a8e50c1fab8943b64de7eac690cabc77b99e
 
 	// For more complex scenarios, the content property can define the media
 	// type and schema of the parameter. A parameter MUST contain either a
@@ -267,6 +272,7 @@ func (p ParameterObj) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals json into p
 func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 	type parameter struct {
+<<<<<<< HEAD
 		Name            string     `json:"name"`
 		In              In         `json:"in"`
 		Description     string     `json:"description,omitempty"`
@@ -279,6 +285,21 @@ func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 		Schema          *SchemaObj `json:"-"`
 		Examples        Examples   `json:"examples,omitempty"`
 		Content         Content    `json:"content,omitempty"`
+=======
+		Name            string          `json:"name"`
+		In              In              `json:"in"`
+		Description     string          `json:"description,omitempty"`
+		Required        *bool           `json:"required,omitempty"`
+		Deprecated      bool            `json:"deprecated,omitempty"`
+		AllowEmptyValue bool            `json:"allowEmptyValue,omitempty"`
+		Style           string          `json:"style,omitempty"`
+		Explode         bool            `json:"explode,omitempty"`
+		AllowReserved   bool            `json:"allowReserved,omitempty"`
+		Schema          *SchemaObj      `json:"-"`
+		Examples        Examples        `json:"examples,omitempty"`
+		Example         json.RawMessage `json:"example,omitempty"`
+		Content         Content         `json:"content,omitempty"`
+>>>>>>> 6e98a8e50c1fab8943b64de7eac690cabc77b99e
 		Extensions      `json:"-"`
 	}
 	v := parameter{}
