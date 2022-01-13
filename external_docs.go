@@ -43,4 +43,6 @@ func (ed *ExternalDocs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, ed)
 }
 
+func (ExternalDocs) Nodes() Nodes { return nil }
+
 var _ Node = (*ExternalDocs)(nil)

@@ -57,14 +57,11 @@ func (rs Responses) Nodes() Nodes {
 	if rs.Len() == 0 {
 		return nil
 	}
-	res := make(Nodes, rs.Len())
+	nl := make(Nodes, rs.Len())
 	for k, v := range rs {
-		res[k] = NodeDetail{
-			Node:       v,
-			TargetKind: KindResponse,
-		}
+		nl.maybeAdd(k, v, KindResponse)
 	}
-	return res
+	return nl
 }
 
 // Kind returns KindResponses
@@ -109,6 +106,8 @@ func (r Responses) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
+type response ResponseObj
+
 // ResponseObj describes a single response from an API Operation, including
 // design-time, static links to operations based on the response.
 type ResponseObj struct {
@@ -133,7 +132,13 @@ type ResponseObj struct {
 	Extensions `json:"-"`
 }
 
-type response ResponseObj
+func (r *ResponseObj) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"headers", r.Headers, KindHeaders},
+		{"content", r.Content, KindContent},
+		{"links", r.Links, KindLinks},
+	})
+}
 
 // Kind returns KindResponse
 func (*ResponseObj) Kind() Kind {
@@ -200,6 +205,42 @@ func unmarshalResponse(data []byte) (Response, error) {
 // operation call.
 type ResolvedResponses map[string]*ResolvedResponse
 
+func (rrs *ResolvedResponses) Get(key string) (*ResolvedResponse, bool) {
+	if rrs.Len() == 0 {
+		return nil, false
+	}
+	v, ok := (*rrs)[key]
+	return v, ok
+}
+
+func (rrs *ResolvedResponses) Len() int {
+	if rrs == nil || *rrs == nil {
+		return 0
+	}
+	return len(*rrs)
+}
+
+func (rrs *ResolvedResponses) Set(key string, val *ResolvedResponse) {
+	if *rrs == nil {
+		*rrs = ResolvedResponses{
+			key: val,
+		}
+		return
+	}
+	(*rrs)[key] = val
+}
+
+func (rrs ResolvedResponses) Nodes() Nodes {
+	if rrs.Len() == 0 {
+		return nil
+	}
+	nl := make(Nodes, rrs.Len())
+	for k, v := range rrs {
+		nl.maybeAdd(k, v, KindResolvedResponse)
+	}
+	return nl
+}
+
 // Kind returns KindResolvedResponses
 func (ResolvedResponses) Kind() Kind {
 	return KindResolvedResponses
@@ -232,6 +273,14 @@ type ResolvedResponse struct {
 // Kind returns KindResolvedResponse
 func (*ResolvedResponse) Kind() Kind {
 	return KindResolvedResponse
+}
+
+func (rr *ResolvedResponse) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"headers", rr.Headers, KindResolvedHeaders},
+		{"content", rr.Content, KindResolvedContent},
+		{"links", rr.Links, KindResolvedLinks},
+	})
 }
 
 var (

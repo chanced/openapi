@@ -147,6 +147,73 @@ const (
 	StylePipeDelimited Style = "pipeDelimited"
 )
 
+// Parameters is a map of Parameter
+type Parameters map[string]Parameter
+
+func (ps *Parameters) Get(key string) (Parameter, bool) {
+	if ps == nil || *ps == nil {
+		return nil, false
+	}
+	v, ok := (*ps)[key]
+	return v, ok
+}
+
+func (ps *Parameters) Set(key string, val Parameter) {
+	if *ps == nil {
+		*ps = Parameters{
+			key: val,
+		}
+		return
+	}
+	(*ps)[key] = val
+}
+
+func (ps Parameters) Nodes() Nodes {
+	if len(ps) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(ps))
+	for k, v := range ps {
+		nodes[k] = NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
+// Kind returns KindParameters
+func (Parameters) Kind() Kind {
+	return KindParameters
+}
+
+// UnmarshalJSON unmarshals JSON
+func (ps *Parameters) UnmarshalJSON(data []byte) error {
+	var dm map[string]json.RawMessage
+	if err := json.Unmarshal(data, &dm); err != nil {
+		return err
+	}
+	res := make(Parameters, len(dm))
+	for k, d := range dm {
+		if isRefJSON(d) {
+			v, err := unmarshalReferenceJSON(d)
+			if err != nil {
+				return err
+			}
+			res[k] = v
+			continue
+		}
+		var v ParameterObj
+		if err := unmarshalExtendedJSON(d, &v); err != nil {
+			return err
+		}
+
+		res[k] = &v
+	}
+	*p = res
+	return nil
+}
+
 // ParameterObj describes a single operation parameter.
 //
 // A unique parameter is defined by a combination of a name and location.
@@ -232,13 +299,13 @@ func (p *ParameterObj) Nodes() Nodes {
 		}
 	}
 	if p.Content != nil {
-		nodes["content"] = &NodeDetail{
+		nodes["content"] = NodeDetail{
 			Node:       p.Content,
 			TargetKind: KindContent,
 		}
 	}
 	if p.Examples != nil {
-		nodes["examples"] = &NodeDetail{
+		nodes["examples"] = NodeDetail{
 			Node:       p.Examples,
 			TargetKind: KindExamples,
 		}
@@ -367,14 +434,14 @@ func (ps *ParameterSet) Append(val Parameter) {
 
 func (ps *ParameterSet) Remove(p Parameter) {
 	if ps.Len() == 0 {
-		return ErrNotFound
+		return
 	}
 	for k, v := range *ps {
 		if v == s {
-			return ps.RemoveIndex(k)
+			ps.RemoveIndex(k)
+			return
 		}
 	}
-	return ErrNotFound
 }
 
 func (ss *ParameterSet) RemoveIndex(i int) {
@@ -451,73 +518,6 @@ func (ps ParameterSet) MarshalYAML() (interface{}, error) {
 	var v interface{}
 	err = json.Unmarshal(b, &v)
 	return v, err
-}
-
-// Parameters is a map of Parameter
-type Parameters map[string]Parameter
-
-func (ps *Parameters) Get(key string) (Parameter, bool) {
-	if ps == nil || *ps == nil {
-		return nil, false
-	}
-	v, ok := (*ps)[key]
-	return v, ok
-}
-
-func (ps *Parameters) Set(key string, val Parameter) {
-	if *ps == nil {
-		*ps = Responses{
-			key: val,
-		}
-		return
-	}
-	(*ps)[key] = val
-}
-
-func (ps Parameters) Nodes() Nodes {
-	if len(ps) == 0 {
-		return nil
-	}
-	nodes := make(Nodes, len(ps))
-	for k, v := range ps {
-		nodes[k] = NodeDetail{
-			TargetKind: KindParameter,
-			Node:       v,
-		}
-	}
-	return nodes
-}
-
-// Kind returns KindParameters
-func (Parameters) Kind() Kind {
-	return KindParameters
-}
-
-// UnmarshalJSON unmarshals JSON
-func (ps *Parameters) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(Parameters, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v ParameterObj
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
-
-		res[k] = &v
-	}
-	*p = res
-	return nil
 }
 
 // ResolvedParameterSet is list of resolved parameters that are applicable for

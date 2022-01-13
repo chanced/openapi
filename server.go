@@ -8,7 +8,7 @@ import (
 
 type Servers []*Server
 
-func (ss *Servers) Kind() Kind {
+func (Servers) Kind() Kind {
 	return KindServers
 }
 
@@ -75,6 +75,7 @@ func (ss Servers) Nodes() Nodes {
 			TargetKind: KindServer,
 		}
 	}
+	return nodes
 }
 
 type server Server

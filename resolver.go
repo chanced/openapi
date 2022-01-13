@@ -23,6 +23,7 @@ type Resolver interface {
 	ResolveSecuritySchemeResolver(string) (*SecuritySchemeObj, error)
 	ResolveLinkResolver(string) (*LinkObj, error)
 	ResolveSchemaResolver(string) (*SchemaObj, error)
+	Resolve(src Node, dst *Node) error
 }
 
 type OpenAPIResolver struct {
@@ -48,6 +49,10 @@ func NewResolver(openers Openers) *OpenAPIResolver {
 type readercloser struct {
 	io.Reader
 	io.Closer
+}
+
+func (oar *OpenAPIResolver) Resolve(src Node, dst *Node) error {
+	panic("not implemented") // TODO: Implement
 }
 
 func (oar *OpenAPIResolver) ResolveParameterResolver(ref string) (*ParameterObj, error) {

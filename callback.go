@@ -198,14 +198,13 @@ func (rc *ResolvedCallback) Nodes() Nodes {
 	if rc == nil {
 		return nil
 	}
-	if rc.Paths.Len() == 0 {
+	if rc.Paths == nil {
 		return nil
 	}
-	nodes := make(Nodes, len(rc.Paths))
-	for k, v := range rc.Paths {
-		nodes[k] = NodeDetail{
-			Node: v,
-		}
+	nodes := make(Nodes, 1)
+	nodes["paths"] = NodeDetail{
+		Node:       rc.Paths,
+		TargetKind: KindResolvedCallbacks,
 	}
 	return nodes
 }
@@ -216,6 +215,45 @@ func (*ResolvedCallback) Kind() Kind {
 
 // ResolvedCallbacks is a map of resolved Callback Objects.
 type ResolvedCallbacks map[string]*ResolvedCallback
+
+func (rcs *ResolvedCallbacks) Len() int {
+	if rcs == nil || *rcs == nil {
+		return 0
+	}
+	return len(*rcs)
+}
+
+func (rcs *ResolvedCallbacks) Get(key string) (*ResolvedCallback, bool) {
+	if rcs == nil || *rcs == nil {
+		return nil, false
+	}
+	v, ok := (*rcs)[key]
+	return v, ok
+}
+
+func (rcs *ResolvedCallbacks) Set(key string, val *ResolvedCallback) {
+	if *rcs == nil {
+		*rcs = ResolvedCallbacks{
+			key: val,
+		}
+		return
+	}
+	(*rcs)[key] = val
+}
+
+func (rcs ResolvedCallbacks) Nodes() Nodes {
+	if rcs.Len() == 0 {
+		return nil
+	}
+	m := make(Nodes, rcs.Len())
+	for k, v := range rcs {
+		m[k] = NodeDetail{
+			Node:       v,
+			TargetKind: KindResolvedCallback,
+		}
+	}
+	return m
+}
 
 func (ResolvedCallbacks) Kind() Kind {
 	return KindResolvedCallbacks

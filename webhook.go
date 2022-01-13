@@ -6,6 +6,21 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
+// Webhooks is a map of Webhooks that can either be a Webhook or a Reference
+type Webhooks map[string]Webhook
+
+// Kind returns KindWebhooks
+func (Webhooks) Kind() Kind {
+	return KindWebhooks
+}
+
+func (ws *Webhooks) Len() int {
+	if ws == nil || *ws == nil {
+		return 0
+	}
+	return len(*ws)
+}
+
 // Webhook can either be a WebhookObj or a Reference
 type Webhook interface {
 	Node
@@ -53,14 +68,6 @@ func (w *WebhookObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, w)
 }
 
-// Webhooks is a map of Webhooks that can either be a Webhook or a Reference
-type Webhooks map[string]Webhook
-
-// Kind returns KindWebhooks
-func (Webhooks) Kind() Kind {
-	return KindWebhooks
-}
-
 // UnmarshalJSON unmarshals JSON data into rp
 func (ws *Webhooks) UnmarshalJSON(data []byte) error {
 	var rd map[string]json.RawMessage
@@ -106,6 +113,13 @@ func (ws Webhooks) MarshalYAML() (interface{}, error) {
 
 // ResolvedWebhook is a Webhook that has been fully resolved
 type ResolvedWebhook ResolvedPath
+
+func (ws *ResolvedWebhooks) Len() int {
+	if ws == nil || *ws == nil {
+		return 0
+	}
+	return len(*ws)
+}
 
 // Kind returns KindResolvedWebhook
 func (*ResolvedWebhook) Kind() Kind {

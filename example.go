@@ -15,6 +15,38 @@ type Example interface {
 // Examples is an object to hold reusable Examples.
 type Examples map[string]Example
 
+func (es *Examples) Get(key string) (Example, bool) {
+	if es == nil || *es == nil {
+		return nil, false
+	}
+	v, ok := (*es)[key]
+	return v, ok
+}
+
+func (es *Examples) Set(key string, val Example) {
+	if *es == nil {
+		*es = Examples{
+			key: val,
+		}
+		return
+	}
+	(*es)[key] = val
+}
+
+func (es Examples) Nodes() Nodes {
+	if len(es) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(es))
+	for k, v := range es {
+		nodes[k] = NodeDetail{
+			TargetKind: KindExample,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindExamples
 func (Examples) Kind() Kind {
 	return KindExamples
@@ -50,6 +82,10 @@ type ExampleObj struct {
 // Kind returns KindExample
 func (*ExampleObj) Kind() Kind {
 	return KindExample
+}
+
+func (e *ExampleObj) Nodes() Nodes {
+	return nil
 }
 
 // MarshalJSON marshals JSON
@@ -112,6 +148,38 @@ func (e *Examples) UnmarshalJSON(data []byte) error {
 // ResolvedExamples is a map of *ResolvedExamples
 type ResolvedExamples map[string]*ResolvedExample
 
+func (res *ResolvedExamples) Get(key string) (*ResolvedExample, bool) {
+	if res == nil || *res == nil {
+		return nil, false
+	}
+	v, ok := (*res)[key]
+	return v, ok
+}
+
+func (res *ResolvedExamples) Set(key string, val *ResolvedExample) {
+	if *res == nil {
+		*res = ResolvedExamples{
+			key: val,
+		}
+		return
+	}
+	(*res)[key] = val
+}
+
+func (res ResolvedExamples) Nodes() Nodes {
+	if len(res) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(res))
+	for k, v := range res {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedExample,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindResolvedExamples
 func (ResolvedExamples) Kind() Kind {
 	return KindResolvedExamples
@@ -144,6 +212,10 @@ type ResolvedExample struct {
 	// exclusive. See the rules for resolving Relative References.
 	ExternalValue string `json:"externalValue,omitempty"`
 	Extensions    `json:"-"`
+}
+
+func (*ResolvedExample) Nodes() Nodes {
+	return nil
 }
 
 // Kind returns KindResolvedExample

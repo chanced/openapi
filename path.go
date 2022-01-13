@@ -98,15 +98,11 @@ func (ps *Paths) Nodes() Nodes {
 	if ps.Len() == 0 {
 		return nil
 	}
-	m := make(Nodes, ps.Len())
-
-	for k, v := range ps.Items {
-		m[k.String()] = NodeDetail{
-			Node:       v,
-			TargetKind: KindCallback,
-		}
+	nl := make(Nodes, ps.Len())
+	for i, v := range ps.Items {
+		nl.maybeAdd(i, v, KindCallback)
 	}
-	return m
+	return nl
 }
 
 // MarshalJSON marshals JSON
@@ -271,7 +267,7 @@ type PathObj struct {
 	// A definition of a TRACE operation on this path.
 	Trace *Operation `json:"trace,omitempty"`
 	// An alternative server array to service all operations in this path.
-	Servers []*Server `json:"servers,omitempty"`
+	Servers Servers `json:"servers,omitempty"`
 	// A list of parameters that are applicable for all the operations described
 	// under this path. These parameters can be overridden at the operation
 	// level, but cannot be removed there. The list MUST NOT include duplicated
@@ -283,61 +279,18 @@ type PathObj struct {
 }
 
 func (p *PathObj) Nodes() Nodes {
-	m := make(Nodes)
-	if p.Get != nil {
-		m["get"] = NodeDetail{
-			Node: p.Get,
-		}
-	}
-	if p.Put != nil {
-		m["put"] = NodeDetail{
-			Node:       p.Put,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Post != nil {
-		m["post"] = NodeDetail{
-			Node:       p.Post,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Delete != nil {
-		m["delete"] = NodeDetail{
-			Node:       p.Delete,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Options != nil {
-		m["options"] = NodeDetail{
-			Node:       p.Options,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Head != nil {
-		m["head"] = NodeDetail{
-			Node:       p.Head,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Patch != nil {
-		m["patch"] = NodeDetail{
-			Node:       p.Patch,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Trace != nil {
-		m["trace"] = NodeDetail{
-			Node:       p.Trace,
-			TargetKind: KindOperation,
-		}
-	}
-	if p.Parameters != nil {
-		m["parameters"] = NodeDetail{
-			Node:       p.Parameters,
-			TargetKind: KindParameterSet,
-		}
-	}
-	return m
+	return makeNodes(nodes{
+		{"get", p.Get, KindOperation},
+		{"put", p.Put, KindOperation},
+		{"post", p.Post, KindOperation},
+		{"delete", p.Delete, KindOperation},
+		{"options", p.Options, KindOperation},
+		{"head", p.Head, KindOperation},
+		{"patch", p.Patch, KindOperation},
+		{"trace", p.Trace, KindOperation},
+		{"servers", p.Servers, KindServers},
+		{"parameters", p.Parameters, KindParameterSet},
+	})
 }
 
 // Kind returns KindPath
@@ -445,6 +398,42 @@ func (rpi *ResolvedPathItems) Len() int {
 		return 0
 	}
 	return len(*rpi)
+}
+
+func (rpi *ResolvedPathItems) Get(key string) (*ResolvedPath, bool) {
+	if rpi.Len() == 0 {
+		return nil, false
+	}
+	v, ok := (*rpi)[key]
+	return v, ok
+}
+
+func (rpi *ResolvedPathItems) Set(key string, val *ResolvedPath) {
+	if *rpi == nil {
+		*rpi = ResolvedPathItems{
+			key: val,
+		}
+		return
+	}
+	(*rpi)[key] = val
+}
+
+func (rpi *ResolvedPathItems) Delete(key string) {
+	if rpi == nil || *rpi == nil {
+		return
+	}
+	delete(*rpi, key)
+}
+
+func (rpi ResolvedPathItems) Nodes() Nodes {
+	if rpi.Len() == 0 {
+		return nil
+	}
+	nl := make(Nodes, rpi.Len())
+	for k, v := range rpi {
+		nl.maybeAdd(k, v, KindResolvedPath)
+	}
+	return nodes
 }
 
 // Kind returns KindResolvedPathItems

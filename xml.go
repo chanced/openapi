@@ -34,4 +34,8 @@ func (*XML) Kind() Kind {
 	return KindXML
 }
 
+func (x XML) Nodes() Nodes {
+	return nil
+}
+
 var _ Node = (*XML)(nil)

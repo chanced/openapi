@@ -44,4 +44,8 @@ func (*Contact) Kind() Kind {
 	return KindContact
 }
 
+func (*Contact) Nodes() Nodes {
+	return nil
+}
+
 var _ Node = (*Contact)(nil)
