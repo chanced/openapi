@@ -6,6 +6,71 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
+// RequestBodies is a map of RequestBody
+type RequestBodies map[string]RequestBody
+
+// Kind returns KindRequestBodies
+func (RequestBodies) Kind() Kind {
+	return KindRequestBodies
+}
+
+// UnmarshalJSON unmarshals JSON
+func (rbs *RequestBodies) UnmarshalJSON(data []byte) error {
+	var dm map[string]json.RawMessage
+	if err := json.Unmarshal(data, &dm); err != nil {
+		return err
+	}
+	rv := make(map[string]RequestBody, len(dm))
+	for k, d := range dm {
+		var v RequestBody
+		if err := unmarshalRequestBody(d, &v); err != nil {
+			return err
+		}
+		rv[k] = v
+	}
+	*rbs = rv
+	return nil
+}
+
+func (rbs *RequestBodies) Get(key string) (RequestBody, bool) {
+	if rbs == nil || *rbs == nil {
+		return nil, false
+	}
+	v, ok := (*rbs)[key]
+	return v, ok
+}
+
+func (rbs *RequestBodies) Set(key string, val RequestBody) {
+	if *rbs == nil {
+		*rbs = RequestBodies{
+			key: val,
+		}
+		return
+	}
+	(*rbs)[key] = val
+}
+
+func (rbs RequestBodies) Nodes() Nodes {
+	if len(rbs) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rbs))
+	for k, v := range rbs {
+		nodes[k] = NodeDetail{
+			TargetKind: KindRequestBody,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
+func (rbs *RequestBodies) Len() int {
+	if rbs == nil || *rbs == nil {
+		return 0
+	}
+	return len(*rbs)
+}
+
 // RequestBody can either be a RequestBody or a Reference
 type RequestBody interface {
 	ResolveRequestBody(func(ref string) (*RequestBodyObj, error)) (*RequestBodyObj, error)
@@ -25,6 +90,10 @@ type RequestBodyObj struct {
 	Required bool `json:"required,omitempty"`
 
 	Extensions `json:"-"`
+}
+
+func (rb *RequestBodyObj) Nodes() Nodes {
+	return makeNodes(nodes{{"content", rb.Content, KindContent}})
 }
 
 type requestbody RequestBodyObj
@@ -78,32 +147,6 @@ func unmarshalRequestBody(data []byte, rb *RequestBody) error {
 	err := json.Unmarshal(data, &v)
 	*rb = &v
 	return err
-}
-
-// RequestBodies is a map of RequestBody
-type RequestBodies map[string]RequestBody
-
-// Kind returns KindRequestBodies
-func (RequestBodies) Kind() Kind {
-	return KindRequestBodies
-}
-
-// UnmarshalJSON unmarshals JSON
-func (rb *RequestBodies) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	rv := make(map[string]RequestBody, len(dm))
-	for k, d := range dm {
-		var v RequestBody
-		if err := unmarshalRequestBody(d, &v); err != nil {
-			return err
-		}
-		rv[k] = v
-	}
-	*rb = rv
-	return nil
 }
 
 // ResolvedRequestBody describes a single request body.

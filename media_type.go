@@ -13,6 +13,45 @@ import (
 // applicable. e.g. text/plain overrides text/*
 type Content map[string]*MediaType
 
+func (c *Content) Get(key string) (*MediaType, bool) {
+	if c == nil || *c == nil {
+		return nil, false
+	}
+	v, ok := (*c)[key]
+	return v, ok
+}
+
+func (c *Content) Set(key string, val *MediaType) {
+	if *c == nil {
+		*c = Content{
+			key: val,
+		}
+		return
+	}
+	(*c)[key] = val
+}
+
+func (c Content) Nodes() Nodes {
+	if len(c) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(c))
+	for k, v := range c {
+		nodes[k] = NodeDetail{
+			TargetKind: KindMediaType,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
+func (c *Content) Len() int {
+	if c == nil || *c == nil {
+		return 0
+	}
+	return len(*c)
+}
+
 // Kind returns KindContent
 func (Content) Kind() Kind {
 	return KindContent
@@ -40,6 +79,13 @@ type MediaType struct {
 	// type is multipart or application/x-www-form-urlencoded.
 	Encoding   Encodings `json:"encoding,omitempty"`
 	Extensions `json:"-"`
+}
+
+func (mt *MediaType) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"schema", mt.Schema, KindSchema},
+		{"examples", mt.Examples, KindExamples},
+	})
 }
 
 // Kind returns KindMediaType
@@ -101,11 +147,50 @@ func (mt *MediaType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // a media type or media type range and the value describes it. For
 // responses that match multiple keys, only the most specific key is
 // applicable. e.g. text/plain overrides text/*
-type ResolvedContent map[string]*MediaType
+type ResolvedContent map[string]*ResolvedMediaType
 
 // Kind returns KindResolvedContent
 func (ResolvedContent) Kind() Kind {
 	return KindResolvedContent
+}
+
+func (c *ResolvedContent) Get(key string) (*ResolvedMediaType, bool) {
+	if c == nil || *c == nil {
+		return nil, false
+	}
+	v, ok := (*c)[key]
+	return v, ok
+}
+
+func (c *ResolvedContent) Set(key string, val *ResolvedMediaType) {
+	if *c == nil {
+		*c = ResolvedContent{
+			key: val,
+		}
+		return
+	}
+	(*c)[key] = val
+}
+
+func (c ResolvedContent) Nodes() Nodes {
+	if len(c) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(c))
+	for k, v := range c {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedMediaType,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
+func (c *ResolvedContent) Len() int {
+	if c == nil || *c == nil {
+		return 0
+	}
+	return len(*c)
 }
 
 // ResolvedMediaType provides schema and examples for the media type identified by its key.
@@ -135,6 +220,13 @@ type ResolvedMediaType struct {
 // Kind returns KindResolvedMediaType
 func (*ResolvedMediaType) Kind() Kind {
 	return KindResolvedMediaType
+}
+
+func (rmt *ResolvedMediaType) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"schema", rmt.Schema, KindResolvedSchema},
+		{"examples", rmt.Examples, KindResolvedExamples},
+	})
 }
 
 var (

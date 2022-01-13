@@ -15,6 +15,13 @@ type Example interface {
 // Examples is an object to hold reusable Examples.
 type Examples map[string]Example
 
+func (es *Examples) Len() int {
+	if es == nil || *es == nil {
+		return 0
+	}
+	return len(*es)
+}
+
 func (es *Examples) Get(key string) (Example, bool) {
 	if es == nil || *es == nil {
 		return nil, false

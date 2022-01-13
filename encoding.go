@@ -15,8 +15,6 @@ func (Encodings) Kind() Kind {
 	return KindEncodings
 }
 
-type encoding Encoding
-
 // Encoding definition applied to a single schema property.
 type Encoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -62,6 +60,7 @@ type Encoding struct {
 
 	Extensions `json:"-"`
 }
+type encodingobj Encoding
 
 // Kind returns KindEncoding
 func (*Encoding) Kind() Kind {
@@ -70,12 +69,12 @@ func (*Encoding) Kind() Kind {
 
 // MarshalJSON marshals e into JSON
 func (e Encoding) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(encoding(e))
+	return marshalExtendedJSON(encodingobj(e))
 }
 
 // UnmarshalJSON unmarshals json into e
 func (e *Encoding) UnmarshalJSON(data []byte) error {
-	v := encoding{}
+	v := encodingobj{}
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
