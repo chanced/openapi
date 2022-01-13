@@ -21,22 +21,43 @@ type Link interface {
 // Links is a map to hold reusable LinkObjs.
 type Links map[string]Link
 
-func (l *Links) Get(key string) (Link, bool) {
-	if *l == nil {
+func (ls *Links) Len() int {
+	if ls == nil || *ls == nil {
+		return 0
+	}
+	return len(*ls)
+}
+
+func (ls *Links) Get(key string) (Link, bool) {
+	if ls == nil || *ls == nil {
 		return nil, false
 	}
-	v, ok := (*l)[key]
+	v, ok := (*ls)[key]
 	return v, ok
 }
 
-func (l *Links) Set(key string, val Link) {
-	if *l == nil {
-		*l = Links{
+func (ls *Links) Set(key string, val Link) {
+	if *ls == nil {
+		*ls = Links{
 			key: val,
 		}
 		return
 	}
-	(*l)[key] = val
+	(*ls)[key] = val
+}
+
+func (ls Links) Nodes() Nodes {
+	if len(ls) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(ls))
+	for k, v := range ls {
+		nodes[k] = NodeDetail{
+			TargetKind: KindLink,
+			Node:       v,
+		}
+	}
+	return nodes
 }
 
 // Kind returns KindLinks
@@ -109,6 +130,8 @@ type LinkObj struct {
 	Extensions  `json:"-"`
 }
 type link LinkObj
+
+func (LinkObj) Nodes() Nodes { return nil }
 
 // MarshalJSON marshals JSON
 func (l LinkObj) MarshalJSON() ([]byte, error) {
@@ -208,6 +231,45 @@ func (lp *LinkParameters) SetEncoded(key string, value []byte) {
 // ResolvedLinks is a map to hold reusable LinkObjs.
 type ResolvedLinks map[string]*ResolvedLink
 
+func (rls *ResolvedLinks) Len() int {
+	if rls == nil || *rls == nil {
+		return 0
+	}
+	return len(*rls)
+}
+
+func (rls *ResolvedLinks) Get(key string) (*ResolvedLink, bool) {
+	if rls == nil || *rls == nil {
+		return nil, false
+	}
+	v, ok := (*rls)[key]
+	return v, ok
+}
+
+func (rls *ResolvedLinks) Set(key string, val *ResolvedLink) {
+	if *rls == nil {
+		*rls = ResolvedLinks{
+			key: val,
+		}
+		return
+	}
+	(*rls)[key] = val
+}
+
+func (rls ResolvedLinks) Nodes() Nodes {
+	if len(rls) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rls))
+	for k, v := range rls {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedLink,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindResolvedLinks
 func (ResolvedLinks) Kind() Kind {
 	return KindResolvedLinks
@@ -253,6 +315,8 @@ type ResolvedLink struct {
 	Description string `json:"description,omitempty"`
 	Extensions  `json:"-"`
 }
+
+func (ResolvedLink) Nodes() Nodes { return nil }
 
 // Kind returns KindResolvedLink
 func (*ResolvedLink) Kind() Kind {

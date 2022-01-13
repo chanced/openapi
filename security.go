@@ -64,6 +64,45 @@ func (ss SecuritySchemeType) String() string {
 // SecuritySchemes is a map of SecurityScheme
 type SecuritySchemes map[string]SecurityScheme
 
+func (ss *SecuritySchemes) Len() int {
+	if ss == nil || *ss == nil {
+		return 0
+	}
+	return len(*ss)
+}
+
+func (ss *SecuritySchemes) Get(key string) (SecurityScheme, bool) {
+	if ss == nil || *ss == nil {
+		return nil, false
+	}
+	v, ok := (*ss)[key]
+	return v, ok
+}
+
+func (ss *SecuritySchemes) Set(key string, val SecurityScheme) {
+	if *ss == nil {
+		*ss = SecuritySchemes{
+			key: val,
+		}
+		return
+	}
+	(*ss)[key] = val
+}
+
+func (ss SecuritySchemes) Nodes() Nodes {
+	if len(ss) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(ss))
+	for k, v := range ss {
+		nodes[k] = NodeDetail{
+			TargetKind: KindSecurityScheme,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindSecuritySchemes
 func (SecuritySchemes) Kind() Kind {
 	return KindSecuritySchemes
@@ -152,6 +191,12 @@ type SecuritySchemeObj struct {
 	Extensions       `json:"-"`
 }
 
+func (ss *SecuritySchemeObj) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"flows", ss.Flows, KindOAuthFlows},
+	})
+}
+
 type securityscheme SecuritySchemeObj
 
 // UnmarshalJSON unmarshals JSON
@@ -199,6 +244,45 @@ type ResolvedSecuritySchemes map[string]*ResolvedSecurityScheme
 // Kind returns KindResolvedSecuritySchemes
 func (ResolvedSecuritySchemes) Kind() Kind {
 	return KindResolvedSecuritySchemes
+}
+
+func (rss *ResolvedSecuritySchemes) Len() int {
+	if rss == nil || *rss == nil {
+		return 0
+	}
+	return len(*rss)
+}
+
+func (rss *ResolvedSecuritySchemes) Get(key string) (*ResolvedSecurityScheme, bool) {
+	if rss == nil || *rss == nil {
+		return nil, false
+	}
+	v, ok := (*rss)[key]
+	return v, ok
+}
+
+func (rss *ResolvedSecuritySchemes) Set(key string, val *ResolvedSecurityScheme) {
+	if *rss == nil {
+		*rss = ResolvedSecuritySchemes{
+			key: val,
+		}
+		return
+	}
+	(*rss)[key] = val
+}
+
+func (rss ResolvedSecuritySchemes) Nodes() Nodes {
+	if len(rss) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rss))
+	for k, v := range rss {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedSecurityScheme,
+			Node:       v,
+		}
+	}
+	return nodes
 }
 
 // ResolvedSecurityScheme lists the required security schemes to execute this
@@ -276,11 +360,11 @@ func (*ResolvedSecurityScheme) Kind() Kind {
 }
 
 var (
-	_ Node = (ResolvedSecuritySchemes)(nil)
-	_ Node = (*ResolvedSecurityScheme)(nil)
 	_ Node = (SecuritySchemes)(nil)
 	_ Node = (*SecuritySchemeObj)(nil)
 	_ Node = (SecurityRequirements)(nil)
-	_ Node = (SecurityRequirements)(nil)
 	_ Node = (SecurityRequirement)(nil)
+
+	_ Node = (ResolvedSecuritySchemes)(nil)
+	_ Node = (*ResolvedSecurityScheme)(nil)
 )

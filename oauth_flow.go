@@ -16,6 +16,15 @@ type OAuthFlows struct {
 	Extensions        `json:"-"`
 }
 
+func (oafs *OAuthFlows) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"implicit", oafs.Implicit, KindOAuthFlow},
+		{"password", oafs.Password, KindOAuthFlow},
+		{"clientCredentials", oafs.ClientCredentials, KindOAuthFlow},
+		{"authorizationCode", oafs.AuthorizationCode, KindOAuthFlow},
+	})
+}
+
 // Kind returns KindOAuthFlows
 func (*OAuthFlows) Kind() Kind {
 	return KindOAuthFlows
@@ -76,6 +85,8 @@ type OAuthFlow struct {
 	Scopes     map[string]string `json:"scopes"`
 	Extensions `json:"-"`
 }
+
+func (OAuthFlow) Nodes() Nodes { return nil }
 
 // Kind returns KindOAuthFlow
 func (*OAuthFlow) Kind() Kind {

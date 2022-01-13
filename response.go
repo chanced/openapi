@@ -262,11 +262,11 @@ type ResolvedResponse struct {
 	// a media type or media type range and the value describes it. For
 	// responses that match multiple keys, only the most specific key is
 	// applicable. e.g. text/plain overrides text/*
-	Content Content `json:"content,omitempty"`
+	Content ResolvedContent `json:"content,omitempty"`
 	// A map of operations links that can be followed from the response. The key
 	// of the map is a short name for the link, following the naming constraints
 	// of the names for Component Objects.
-	Links      Links `json:"links,omitempty"`
+	Links      ResolvedLinks `json:"links,omitempty"`
 	Extensions `json:"-"`
 }
 

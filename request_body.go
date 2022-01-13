@@ -166,6 +166,10 @@ type ResolvedRequestBody struct {
 	Extensions `json:"-"`
 }
 
+func (rrb *ResolvedRequestBody) Nodes() Nodes {
+	return makeNodes(nodes{{"content", rrb.Content, KindResolvedContent}})
+}
+
 // Kind returns KindResolvedRequestBody
 func (*ResolvedRequestBody) Kind() Kind {
 	return KindResolvedRequestBody
@@ -173,6 +177,45 @@ func (*ResolvedRequestBody) Kind() Kind {
 
 // ResolvedRequestBodies is a map of *ResolvedRequestBody
 type ResolvedRequestBodies map[string]*ResolvedRequestBody
+
+func (rrbs *ResolvedRequestBodies) Get(key string) (*ResolvedRequestBody, bool) {
+	if rrbs == nil || *rrbs == nil {
+		return nil, false
+	}
+	v, ok := (*rrbs)[key]
+	return v, ok
+}
+
+func (rrbs *ResolvedRequestBodies) Set(key string, val *ResolvedRequestBody) {
+	if *rrbs == nil {
+		*rrbs = ResolvedRequestBodies{
+			key: val,
+		}
+		return
+	}
+	(*rrbs)[key] = val
+}
+
+func (rrbs ResolvedRequestBodies) Nodes() Nodes {
+	if len(rrbs) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rrbs))
+	for k, v := range rrbs {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedRequestBody,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
+func (rrbs *ResolvedRequestBodies) Len() int {
+	if rrbs == nil || *rrbs == nil {
+		return 0
+	}
+	return len(*rrbs)
+}
 
 // Kind returns KindResolvedRequestBodies
 func (ResolvedRequestBodies) Kind() Kind {

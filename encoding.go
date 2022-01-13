@@ -15,6 +15,45 @@ func (Encodings) Kind() Kind {
 	return KindEncodings
 }
 
+func (es *Encodings) Len() int {
+	if es == nil || *es == nil {
+		return 0
+	}
+	return len(*es)
+}
+
+func (es *Encodings) Get(key string) (*Encoding, bool) {
+	if es == nil || *es == nil {
+		return nil, false
+	}
+	v, ok := (*es)[key]
+	return v, ok
+}
+
+func (es *Encodings) Set(key string, val *Encoding) {
+	if *es == nil {
+		*es = Encodings{
+			key: val,
+		}
+		return
+	}
+	(*es)[key] = val
+}
+
+func (es Encodings) Nodes() Nodes {
+	if len(es) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(es))
+	for k, v := range es {
+		nodes[k] = NodeDetail{
+			TargetKind: KindEncoding,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Encoding definition applied to a single schema property.
 type Encoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -62,6 +101,12 @@ type Encoding struct {
 }
 type encodingobj Encoding
 
+func (e *Encoding) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"headers", e.Headers, KindHeaders},
+	})
+}
+
 // Kind returns KindEncoding
 func (*Encoding) Kind() Kind {
 	return KindEncoding
@@ -98,23 +143,48 @@ func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // the media type is multipart or application/x-www-form-urlencoded.
 type ResolvedEncodings map[string]*ResolvedEncoding
 
+func (res *ResolvedEncodings) Len() int {
+	if res == nil || *res == nil {
+		return 0
+	}
+	return len(*res)
+}
+
+func (res *ResolvedEncodings) Get(key string) (*ResolvedEncoding, bool) {
+	if res == nil || *res == nil {
+		return nil, false
+	}
+	v, ok := (*res)[key]
+	return v, ok
+}
+
+func (res *ResolvedEncodings) Set(key string, val *ResolvedEncoding) {
+	if *res == nil {
+		*res = ResolvedEncodings{
+			key: val,
+		}
+		return
+	}
+	(*res)[key] = val
+}
+
+func (res ResolvedEncodings) Nodes() Nodes {
+	if len(res) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(res))
+	for k, v := range res {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedEncoding,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 // Kind returns KindResolvedEncodings
 func (ResolvedEncodings) Kind() Kind {
 	return KindResolvedEncodings
-}
-
-// Get returns the *ResolvedEncoding with the given key
-func (re ResolvedEncodings) Get(key string) *ResolvedEncoding {
-	return re[key]
-}
-
-// Set sets key to value
-func (re *ResolvedEncodings) Set(key string, value *ResolvedEncoding) {
-	if (*re) == nil {
-		*re = ResolvedEncodings{key: value}
-	} else {
-		(*re)[key] = value
-	}
 }
 
 // ResolvedEncoding definition applied to a single schema property.
@@ -166,6 +236,12 @@ type ResolvedEncoding struct {
 // Kind returns KindResolvedEncoding
 func (*ResolvedEncoding) Kind() Kind {
 	return KindResolvedEncoding
+}
+
+func (e *ResolvedEncoding) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"headers", e.Headers, KindResolvedHeaders},
+	})
 }
 
 var (

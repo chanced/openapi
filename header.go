@@ -75,6 +75,17 @@ type HeaderObj struct {
 	Extensions `json:"-"`
 }
 
+func (h *HeaderObj) Nodes() Nodes {
+	n := makeNodes(nodes{
+		{"schema", h.Schema, KindSchema},
+		{"examples", h.Examples, KindExamples},
+	})
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
 type header HeaderObj
 
 // Kind returns KindHeader
@@ -119,6 +130,45 @@ func (h *HeaderObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Headers holds reusable HeaderObjs.
 type Headers map[string]Header
+
+func (es *Headers) Len() int {
+	if es == nil || *es == nil {
+		return 0
+	}
+	return len(*es)
+}
+
+func (es *Headers) Get(key string) (Header, bool) {
+	if es == nil || *es == nil {
+		return nil, false
+	}
+	v, ok := (*es)[key]
+	return v, ok
+}
+
+func (es *Headers) Set(key string, val Header) {
+	if *es == nil {
+		*es = Headers{
+			key: val,
+		}
+		return
+	}
+	(*es)[key] = val
+}
+
+func (es Headers) Nodes() Nodes {
+	if len(es) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(es))
+	for k, v := range es {
+		nodes[k] = NodeDetail{
+			TargetKind: KindHeader,
+			Node:       v,
+		}
+	}
+	return nodes
+}
 
 // Kind returns KindHeaders
 func (Headers) Kind() Kind {
@@ -235,14 +285,64 @@ type ResolvedHeader struct {
 	Extensions `json:"-"`
 }
 
+func (rh *ResolvedHeader) Nodes() Nodes {
+	n := makeNodes(nodes{
+		{"schema", rh.Schema, KindResolvedSchema},
+		{"examples", rh.Examples, KindResolvedExamples},
+	})
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
 // Kind returns KindResolvedHeader
 func (*ResolvedHeader) Kind() Kind {
 	return KindResolvedHeader
 }
 
+func (rhs *ResolvedHeaders) Len() int {
+	if rhs == nil || *rhs == nil {
+		return 0
+	}
+	return len(*rhs)
+}
+
+func (rhs *ResolvedHeaders) Get(key string) (*ResolvedHeader, bool) {
+	if rhs == nil || *rhs == nil {
+		return nil, false
+	}
+	v, ok := (*rhs)[key]
+	return v, ok
+}
+
+func (rhs *ResolvedHeaders) Set(key string, val *ResolvedHeader) {
+	if *rhs == nil {
+		*rhs = ResolvedHeaders{
+			key: val,
+		}
+		return
+	}
+	(*rhs)[key] = val
+}
+
+func (rhs ResolvedHeaders) Nodes() Nodes {
+	if len(rhs) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rhs))
+	for k, v := range rhs {
+		nodes[k] = NodeDetail{
+			TargetKind: KindResolvedHeader,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
 var (
 	_ Node = (*HeaderObj)(nil)
-	_ Node = (*ResolvedHeader)(nil)
 	_ Node = (Headers)(nil)
+	_ Node = (*ResolvedHeader)(nil)
 	_ Node = (ResolvedHeaders)(nil)
 )

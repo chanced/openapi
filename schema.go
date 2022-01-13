@@ -154,14 +154,19 @@ type SchemaObj struct {
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
 	Definitions Schemas `json:"$defs,omitempty"`
-	// The format keyword allows for basic semantic identification of certain kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
+	// The format keyword allows for basic semantic identification of certain
+	// kinds of string values that are commonly used. For example, because JSON
+	// doesn’t have a “DateTime” type, dates need to be encoded as strings.
+	// format allows the schema author to indicate that the string value should
+	// be interpreted as a date. By default, format is just an annotation and
+	// does not effect validation.
 	//
-	// Optionally, validator implementations can provide a configuration option to
-	// enable format to function as an assertion rather than just an annotation.
-	// That means that validation will fail if, for example, a value with a date
-	// format isn’t in a form that can be parsed as a date. This can allow values to
-	// be constrained beyond what the other tools in JSON *SchemaObj, including Regular
-	// Expressions can do.
+	// Optionally, validator implementations can provide a configuration option
+	// to enable format to function as an assertion rather than just an
+	// annotation. That means that validation will fail if, for example, a value
+	// with a date format isn’t in a form that can be parsed as a date. This can
+	// allow values to be constrained beyond what the other tools in JSON
+	// *SchemaObj, including Regular Expressions can do.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/string.html#format
 	Format        string `json:"format,omitempty"`
