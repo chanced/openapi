@@ -38,3 +38,14 @@ func (c Contact) MarshalYAML() (interface{}, error) {
 func (c *Contact) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }
+
+// Kind returns KindContact
+func (*Contact) Kind() Kind {
+	return KindContact
+}
+
+func (*Contact) Nodes() Nodes {
+	return nil
+}
+
+var _ Node = (*Contact)(nil)

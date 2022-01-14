@@ -1,7 +1,9 @@
 package yamlutil
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 
 	"github.com/chanced/dynamic"
 	"sigs.k8s.io/yaml"
@@ -52,6 +54,19 @@ func Marshal(src interface{}) (interface{}, error) {
 // JSONToYAML converts JSON to YAML.
 func JSONToYAML(data []byte) ([]byte, error) {
 	return yaml.JSONToYAML(data)
+}
+
+// EncodeYAMLToJSON encodes YAML as JSON and returns an io.Reader of the JSON
+func EncodeYAMLToJSON(r io.Reader) (io.Reader, error) {
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	b, err = YAMLToJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewBuffer(b), nil
 }
 
 func subset(u interface{}) (interface{}, error) {

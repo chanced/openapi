@@ -101,9 +101,7 @@ func TestOpenAPI(t *testing.T) {
       "title": "API",
       "version": "1.0.0"
     },
-    "components": {
-      "pathItems": {}
-    }
+    "components": {}
   }`,
 		`{
     "openapi": "3.1.0",

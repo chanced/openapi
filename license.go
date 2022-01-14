@@ -14,3 +14,12 @@ type License struct {
 	// The url field is mutually exclusive of the identifier field.
 	URL string `json:"url,omitempty" yaml:"url,omitempty"`
 }
+
+func (*License) Nodes() Nodes { return nil }
+
+// Kind returns KindLicense
+func (*License) Kind() Kind {
+	return KindLicense
+}
+
+var _ Node = (*License)(nil)

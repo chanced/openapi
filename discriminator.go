@@ -4,6 +4,8 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
+type discriminator Discriminator
+
 // Discriminator can be used to aid in serialization, deserialization, and
 // validation of request bodies or response payloads which may be one of a
 // number of different schemas. The discriminator is a specific object in a
@@ -22,7 +24,10 @@ type Discriminator struct {
 	Extensions `json:"-"`
 }
 
-type discriminator Discriminator
+// Kind returns KindDiscriminator
+func (*Discriminator) Kind() Kind {
+	return KindDiscriminator
+}
 
 // MarshalJSON marshals d into JSON
 func (d Discriminator) MarshalJSON() ([]byte, error) {
@@ -49,3 +54,7 @@ func (d Discriminator) MarshalYAML() (interface{}, error) {
 func (d *Discriminator) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, d)
 }
+
+func (*Discriminator) Nodes() Nodes { return nil }
+
+var _ Node = (*Discriminator)(nil)

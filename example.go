@@ -6,21 +6,60 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
-// ExampleKind indicates wheter the ExampleObj is an Example or a Reference
-type ExampleKind uint8
-
-const (
-	// ExampleKindObj indicates an ExampleObj
-	ExampleKindObj ExampleKind = iota
-	// ExampleKindRef indicates a Reference
-	ExampleKindRef
-)
-
 // Example is either an Example or a Reference
 type Example interface {
-	ResolveExample(ExampleResolver) (*ExampleObj, error)
-	ExampleKind() ExampleKind
+	Node
+	ResolveExample(func(ref string) (*ExampleObj, error)) (*ExampleObj, error)
 }
+
+// Examples is an object to hold reusable Examples.
+type Examples map[string]Example
+
+func (es *Examples) Len() int {
+	if es == nil || *es == nil {
+		return 0
+	}
+	return len(*es)
+}
+
+func (es *Examples) Get(key string) (Example, bool) {
+	if es == nil || *es == nil {
+		return nil, false
+	}
+	v, ok := (*es)[key]
+	return v, ok
+}
+
+func (es *Examples) Set(key string, val Example) {
+	if *es == nil {
+		*es = Examples{
+			key: val,
+		}
+		return
+	}
+	(*es)[key] = val
+}
+
+func (es Examples) Nodes() Nodes {
+	if len(es) == 0 {
+		return nil
+	}
+	n := make(Nodes, len(es))
+	for k, v := range es {
+		n.maybeAdd(k, v, KindExample)
+	}
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
+// Kind returns KindExamples
+func (Examples) Kind() Kind {
+	return KindExamples
+}
+
+type example ExampleObj
 
 // ExampleObj is an example for various api interactions such as Responses
 //
@@ -46,7 +85,15 @@ type ExampleObj struct {
 	ExternalValue string `json:"externalValue,omitempty"`
 	Extensions    `json:"-"`
 }
-type example ExampleObj
+
+// Kind returns KindExample
+func (*ExampleObj) Kind() Kind {
+	return KindExample
+}
+
+func (e *ExampleObj) Nodes() Nodes {
+	return nil
+}
 
 // MarshalJSON marshals JSON
 func (e ExampleObj) MarshalJSON() ([]byte, error) {
@@ -73,16 +120,10 @@ func (e *ExampleObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, e)
 }
 
-// ExampleKind returns ExampleKindObj
-func (e *ExampleObj) ExampleKind() ExampleKind { return ExampleKindObj }
-
 // ResolveExample resolves ExampleObj by returning itself. resolve is  not called.
-func (e *ExampleObj) ResolveExample(ExampleResolver) (*ExampleObj, error) {
+func (e *ExampleObj) ResolveExample(func(ref string) (*ExampleObj, error)) (*ExampleObj, error) {
 	return e, nil
 }
-
-// Examples is an object to hold reusable Examples.
-type Examples map[string]Example
 
 // UnmarshalJSON unmarshals JSON
 func (e *Examples) UnmarshalJSON(data []byte) error {
@@ -110,3 +151,88 @@ func (e *Examples) UnmarshalJSON(data []byte) error {
 	*e = res
 	return nil
 }
+
+// ResolvedExamples is a map of *ResolvedExamples
+type ResolvedExamples map[string]*ResolvedExample
+
+func (res *ResolvedExamples) Get(key string) (*ResolvedExample, bool) {
+	if res == nil || *res == nil {
+		return nil, false
+	}
+	v, ok := (*res)[key]
+	return v, ok
+}
+
+func (res *ResolvedExamples) Set(key string, val *ResolvedExample) {
+	if *res == nil {
+		*res = ResolvedExamples{
+			key: val,
+		}
+		return
+	}
+	(*res)[key] = val
+}
+
+func (res ResolvedExamples) Nodes() Nodes {
+	if len(res) == 0 {
+		return nil
+	}
+	n := make(Nodes, len(res))
+	for k, v := range res {
+		n.maybeAdd(k, v, KindResolvedExample)
+	}
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
+// Kind returns KindResolvedExamples
+func (ResolvedExamples) Kind() Kind {
+	return KindResolvedExamples
+}
+
+// ResolvedExample is an example for various api interactions such as Responses
+// that has been resolved.
+//
+// In all cases, the example value is expected to be compatible with the type
+// schema of its associated value. Tooling implementations MAY choose to
+// validate compatibility automatically, and reject the example value(s) if
+// incompatible.
+type ResolvedExample struct {
+
+	// TODO: Add reference
+
+	// Short description for the example.
+	Summary string `json:"summary,omitempty"`
+	// Long description for the example. CommonMark syntax MAY be used for rich
+	// text representation.
+	Description string `json:"description,omitempty"`
+	// Any embedded literal example. The value field and externalValue field are
+	// mutually exclusive. To represent examples of media types that cannot
+	// naturally represented in JSON or YAML, use a string value to contain the
+	// example, escaping where necessary.
+	Value json.RawMessage `json:"value,omitempty"`
+	// A URI that points to the literal example. This provides the capability to
+	// reference examples that cannot easily be included in JSON or YAML
+	// documents. The value field and externalValue field are mutually
+	// exclusive. See the rules for resolving Relative References.
+	ExternalValue string `json:"externalValue,omitempty"`
+	Extensions    `json:"-"`
+}
+
+func (*ResolvedExample) Nodes() Nodes {
+	return nil
+}
+
+// Kind returns KindResolvedExample
+func (*ResolvedExample) Kind() Kind {
+	return KindResolvedExample
+}
+
+var (
+	_ Node = (*ExampleObj)(nil)
+	_ Node = (Examples)(nil)
+	_ Node = (ResolvedExamples)(nil)
+	_ Node = (*ResolvedExample)(nil)
+)

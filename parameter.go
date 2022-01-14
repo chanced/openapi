@@ -2,25 +2,16 @@ package openapi
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
 
-// ParameterKind indicates whether the entry is a ParameterDef or a Reference
-type ParameterKind uint
-
-const (
-	// ParameterKindObj is a ParameterObj
-	ParameterKindObj ParameterKind = iota
-	// ParameterKindReference indicates the Parameter is a Reference
-	ParameterKindReference
-)
-
 // Parameter is either a ParameterObject or a ReferenceObject
 type Parameter interface {
-	ParameterKind() ParameterKind
-	ResolveParameter(ParameterResolver) (*ParameterObj, error)
+	Node
+	ResolveParameter(func(ref string) (*ParameterObj, error)) (*ParameterObj, error)
 }
 
 /*
@@ -156,6 +147,70 @@ const (
 	StylePipeDelimited Style = "pipeDelimited"
 )
 
+// Parameters is a map of Parameter
+type Parameters map[string]Parameter
+
+func (ps *Parameters) Get(key string) (Parameter, bool) {
+	if ps == nil || *ps == nil {
+		return nil, false
+	}
+	v, ok := (*ps)[key]
+	return v, ok
+}
+
+func (ps *Parameters) Set(key string, val Parameter) {
+	if *ps == nil {
+		*ps = Parameters{
+			key: val,
+		}
+		return
+	}
+	(*ps)[key] = val
+}
+
+func (ps Parameters) Nodes() Nodes {
+	if len(ps) == 0 {
+		return nil
+	}
+	n := make(Nodes, len(ps))
+	for k, v := range ps {
+		n.maybeAdd(k, v, KindParameter)
+	}
+	return n
+}
+
+// Kind returns KindParameters
+func (Parameters) Kind() Kind {
+	return KindParameters
+}
+
+// UnmarshalJSON unmarshals JSON
+func (ps *Parameters) UnmarshalJSON(data []byte) error {
+	var dm map[string]json.RawMessage
+	if err := json.Unmarshal(data, &dm); err != nil {
+		return err
+	}
+	res := make(Parameters, len(dm))
+	for k, d := range dm {
+		if isRefJSON(d) {
+			v, err := unmarshalReferenceJSON(d)
+			if err != nil {
+				return err
+			}
+			res[k] = v
+			continue
+		}
+		var v ParameterObj
+		if err := unmarshalExtendedJSON(d, &v); err != nil {
+			return err
+		}
+
+		res[k] = &v
+	}
+	*ps = res
+	return nil
+}
+
 // ParameterObj describes a single operation parameter.
 //
 // A unique parameter is defined by a combination of a name and location.
@@ -232,14 +287,41 @@ type ParameterObj struct {
 	Extensions `json:"-"`
 }
 
+func (p *ParameterObj) Nodes() Nodes {
+	nodes := make(Nodes)
+	if p.Schema != nil {
+		nodes["schema"] = NodeDetail{
+			Node:       p.Schema,
+			TargetKind: KindSchema,
+		}
+	}
+	if p.Content != nil {
+		nodes["content"] = NodeDetail{
+			Node:       p.Content,
+			TargetKind: KindContent,
+		}
+	}
+	if p.Examples != nil {
+		nodes["examples"] = NodeDetail{
+			Node:       p.Examples,
+			TargetKind: KindExamples,
+		}
+	}
+	if len(nodes) == 0 {
+		return nil
+	}
+	return nodes
+}
+
 // ResolveParameter resolves p by returning itself
-func (p *ParameterObj) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
+func (p *ParameterObj) ResolveParameter(_ func(ref string) (*ParameterObj, error)) (*ParameterObj, error) {
 	return p, nil
 }
 
-// ParameterKind indicates that this is a Parameter for unmarshaling
-// ParameterObjs by returning ParameterKindParameter
-func (p *ParameterObj) ParameterKind() ParameterKind { return ParameterKindObj }
+// Kind returns KindParameter
+func (*ParameterObj) Kind() Kind {
+	return KindParameter
+}
 
 // MarshalJSON marshals h into JSON
 func (p ParameterObj) MarshalJSON() ([]byte, error) {
@@ -298,7 +380,7 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
-// ParameterList is list of parameters that are applicable for a given operation.
+// ParameterSet is list of parameters that are applicable for a given operation.
 // If a parameter is already defined at the Path Item, the new definition will
 // override it but can never remove it. The list MUST NOT include duplicated
 // parameters. A unique parameter is defined by a combination of a name and
@@ -306,18 +388,74 @@ func (p ParameterObj) MarshalYAML() (interface{}, error) {
 // are defined at the OpenAPI Object's components/parameters.
 //
 // Can either be a Parameter or a Reference
-type ParameterList []Parameter
+type ParameterSet []Parameter
+
+func (ps ParameterSet) Nodes() Nodes {
+	if len(ps) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, ps.Len())
+	for i, v := range ps {
+		nodes[strconv.Itoa(i)] = NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
+		}
+	}
+	return nodes
+}
+
+func (ps *ParameterSet) Len() int {
+	if ps == nil || *ps == nil {
+		return 0
+	}
+	return len(*ps)
+}
+
+func (ps *ParameterSet) Get(idx int) (Parameter, bool) {
+	if ps.Len() == 0 {
+		return nil, false
+	}
+	if idx < 0 || idx >= len(*ps) {
+		return nil, false
+	}
+	return (*ps)[idx], true
+}
+
+func (ps *ParameterSet) Append(val Parameter) {
+	if *ps == nil {
+		*ps = ParameterSet{val}
+		return
+	}
+	(*ps) = append(*ps, val)
+}
+
+func (ss *ParameterSet) RemoveIndex(i int) {
+	if ss.Len() == 0 {
+		return // nothing to do
+	}
+	if i < 0 || i >= len(*ss) {
+		return
+	}
+	copy((*ss)[i:], (*ss)[i+1:])
+	(*ss)[len(*ss)-1] = nil
+	(*ss) = (*ss)[:ss.Len()-1]
+}
+
+// Kind returns KindParameterSet
+func (ParameterSet) Kind() Kind {
+	return KindParameterSet
+}
 
 // MarshalJSON marshals JSON
-func (p ParameterList) MarshalJSON() ([]byte, error) {
-	if p != nil {
-		return json.Marshal([]Parameter(p))
+func (ps ParameterSet) MarshalJSON() ([]byte, error) {
+	if ps != nil {
+		return json.Marshal([]Parameter(ps))
 	}
 	return json.Marshal(make([]Parameter, 0))
 }
 
 // UnmarshalJSON unmarshals JSON data into p
-func (p *ParameterList) UnmarshalJSON(data []byte) error {
+func (ps *ParameterSet) UnmarshalJSON(data []byte) error {
 	var rd []json.RawMessage
 	var err error
 	if err = json.Unmarshal(data, &rd); err != nil {
@@ -332,7 +470,7 @@ func (p *ParameterList) UnmarshalJSON(data []byte) error {
 		}
 		items[i] = p
 	}
-	*p = items
+	*ps = items
 	return nil
 }
 
@@ -351,13 +489,13 @@ func unmarshalParameterJSON(data []byte, dst *Parameter) error {
 }
 
 // UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterList) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
+func (ps *ParameterSet) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return yamlutil.Unmarshal(unmarshal, ps)
 }
 
 // MarshalYAML marshals p into YAML
-func (p ParameterList) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(p)
+func (ps ParameterSet) MarshalYAML() (interface{}, error) {
+	b, err := json.Marshal(ps)
 	if err != nil {
 		return nil, err
 	}
@@ -366,32 +504,170 @@ func (p ParameterList) MarshalYAML() (interface{}, error) {
 	return v, err
 }
 
-// Parameters is a map of Parameter
-type Parameters map[string]Parameter
+// ResolvedParameterSet is list of resolved parameters that are applicable for
+// a given operation. If a parameter is already defined at the Path Item, the
+// new definition will override it but can never remove it. The list MUST NOT
+// include duplicated parameters. A unique parameter is defined by a combination
+// of a name and location. The list can use the Reference Object to link to
+// parameters that are defined at the OpenAPI Object's components/parameters.
+//
+// Can either be a Parameter or a Reference
+type ResolvedParameterSet []*ResolvedParameter
 
-// UnmarshalJSON unmarshals JSON
-func (p *Parameters) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
+func (rps ResolvedParameterSet) Nodes() Nodes {
+	if len(rps) == 0 {
+		return nil
 	}
-	res := make(Parameters, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
+	nodes := make(Nodes, len(rps))
+	for i, v := range rps {
+		nodes[strconv.Itoa(i)] = NodeDetail{
+			TargetKind: KindParameter,
+			Node:       v,
 		}
-		var v ParameterObj
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
-
-		res[k] = &v
 	}
-	*p = res
-	return nil
+	return nodes
 }
+
+// Kind returns KindResolvedParameterSet
+func (ResolvedParameterSet) Kind() Kind {
+	return KindResolvedParameterSet
+}
+
+// ResolvedParameters is a map of *ResolvedParameter
+type ResolvedParameters map[string]*ResolvedParameter
+
+func (rps ResolvedParameters) Nodes() Nodes {
+	if len(rps) == 0 {
+		return nil
+	}
+	nodes := make(Nodes, len(rps))
+
+	for k, v := range rps {
+		nodes.maybeAdd(k, v, KindParameter)
+	}
+	return nodes
+}
+
+// Kind returns KindResolvedParameters
+func (ResolvedParameters) Kind() Kind {
+	return KindResolvedParameters
+}
+
+// ResolvedParameter describes a single operation parameter that has been
+// fully resolved.
+//
+// A unique parameter is defined by a combination of a name and location.
+type ResolvedParameter struct {
+
+	// TODO: add ref
+
+	// The name of the parameter. Parameter names are case sensitive:
+	//   - If In is "path", the name field MUST correspond to a template
+	//     expression occurring within the path field in the Paths Object.
+	//     See Path Templating for further information.
+	//   - If In is "header" and the name field is "Accept", "Content-Type"
+	//     or "Authorization", the parameter definition SHALL be ignored.
+	//   - For all other cases, the name corresponds to the parameter name
+	//     used by the in property.
+	//
+	//  *required*
+	Name string `json:"name"`
+	// The location of the parameter. Possible values are "query", "header",
+	// "path" or "cookie".
+	//
+	//  *required*
+	In In `json:"in"`
+	// A brief description of the parameter. This could contain examples of use.
+	// CommonMark syntax MAY be used for rich text representation.
+	Description string `json:"description,omitempty"`
+	// Determines whether this parameter is mandatory. If the parameter location
+	// is "path", this property is REQUIRED and its value MUST be true.
+	// Otherwise, the property MAY be included and its default value is false.
+	Required *bool `json:"required,omitempty"`
+	// Specifies that a parameter is deprecated and SHOULD be transitioned out
+	// of usage. Default value is false.
+	Deprecated bool `json:"deprecated,omitempty"`
+	// Sets the ability to pass empty-valued parameters. This is valid only for
+	// query parameters and allows sending a parameter with an empty value.
+	// Default value is false. If style is used, and if behavior is n/a (cannot
+	// be serialized), the value of allowEmptyValue SHALL be ignored. Use of
+	// this property is NOT RECOMMENDED, as it is likely to be removed in a
+	// later revision.
+	AllowEmptyValue bool `json:"allowEmptyValue,omitempty"`
+	// Describes how the parameter value will be serialized depending on the
+	// type of the parameter value.
+	// Default values (based on value of in):
+	// 	- for query - form;
+	// 	- for path - simple;
+	// 	- for header - simple;
+	// 	- for cookie - form.
+	Style string `json:"style,omitempty"`
+	// When this is true, parameter values of type array or object generate
+	// separate parameters for each value of the array or key-value pair of the
+	// map. For other types of parameters this property has no effect. When
+	// style is form, the default value is true. For all other styles, the
+	// default value is false.
+	Explode bool `json:"explode,omitempty"`
+	// Determines whether the parameter value SHOULD allow reserved characters,
+	// as defined by RFC3986 :/?#[]@!$&'()*+,;= to be included without
+	// percent-encoding. This property only applies to parameters with an in
+	// value of query. The default value is false.
+	AllowReserved bool `json:"allowReserved,omitempty"`
+	// The schema defining the type used for the parameter.
+	Schema *ResolvedSchema `json:"schema,omitempty"`
+	// Examples of the parameter's potential value. Each example SHOULD
+	// contain a value in the correct format as specified in the parameter
+	// encoding. The examples field is mutually exclusive of the example
+	// field. Furthermore, if referencing a schema that contains an example,
+	// the examples value SHALL override the example provided by the schema.
+	Examples ResolvedExamples `json:"examples,omitempty"`
+
+	// For more complex scenarios, the content property can define the media
+	// type and schema of the parameter. A parameter MUST contain either a
+	// schema property, or a content property, but not both. When example or
+	// examples are provided in conjunction with the schema object, the example
+	// MUST follow the prescribed serialization strategy for the parameter.
+
+	Content    ResolvedContent `json:"content,omitempty"`
+	Extensions `json:"-"`
+}
+
+// Kind returns KindResolvedParameter
+func (*ResolvedParameter) Kind() Kind {
+	return KindResolvedParameter
+}
+
+func (rp *ResolvedParameter) Nodes() Nodes {
+	nodes := make(Nodes)
+	if rp.Schema != nil {
+		nodes["schema"] = NodeDetail{
+			Node:       rp.Schema,
+			TargetKind: KindSchema,
+		}
+	}
+	if rp.Content != nil {
+		nodes["content"] = NodeDetail{
+			Node:       rp.Content,
+			TargetKind: KindContent,
+		}
+	}
+	if rp.Examples != nil {
+		nodes["examples"] = NodeDetail{
+			Node:       rp.Examples,
+			TargetKind: KindExamples,
+		}
+	}
+	if len(nodes) == 0 {
+		return nil
+	}
+	return nodes
+}
+
+var (
+	_ Node = (*ParameterObj)(nil)
+	_ Node = (*ResolvedParameter)(nil)
+	_ Node = (Parameters)(nil)
+	_ Node = (ResolvedParameters)(nil)
+	_ Node = (ParameterSet)(nil)
+	_ Node = (ResolvedParameterSet)(nil)
+)

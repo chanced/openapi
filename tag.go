@@ -6,6 +6,74 @@ import (
 	"github.com/chanced/openapi/yamlutil"
 )
 
+type Tags []*Tag
+
+func (ts Tags) Kind() Kind { return KindTags }
+
+func (ts Tags) Nodes() Nodes {
+	if ts.Len() == 0 {
+		return nil
+	}
+	n := make(Nodes, len(ts))
+	for i, s := range ts {
+		n.maybeAdd(i, s, KindSchema)
+	}
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
+func (ts *Tags) Get(idx int) (*Tag, bool) {
+	if *ts == nil {
+		return nil, false
+	}
+	if idx < 0 || idx >= len(*ts) {
+		return nil, false
+	}
+	return (*ts)[idx], true
+}
+
+func (ts *Tags) Append(val *Tag) {
+	if *ts == nil {
+		*ts = Tags{val}
+		return
+	}
+	(*ts) = append(*ts, val)
+}
+
+func (ts *Tags) Remove(s *Tag) {
+	if *ts == nil {
+		return
+	}
+	for k, v := range *ts {
+		if v == s {
+			ts.RemoveIndex(k)
+			return
+		}
+	}
+}
+
+func (ts *Tags) RemoveIndex(i int) {
+	if *ts == nil {
+		return // nothing to do
+	}
+	if i < 0 || i >= len(*ts) {
+		return
+	}
+	copy((*ts)[i:], (*ts)[i+1:])
+	(*ts)[len(*ts)-1] = nil
+	(*ts) = (*ts)[:ts.Len()-1]
+}
+
+// Len returns the length of s
+func (ts *Tags) Len() int {
+	if ts == nil || *ts == nil {
+		return 0
+	}
+	return len(*ts)
+}
+
 // Tag adds metadata that is used by the Operation Object.
 //
 // It is not mandatory to have a Tag Object per tag defined in the Operation
@@ -25,6 +93,12 @@ type Tag struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
 
 	Extensions `json:"-"`
+}
+
+func (t *Tag) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"externalDocs", t.ExternalDocs, KindExternalDocs},
+	})
 }
 
 type tag Tag
@@ -58,3 +132,10 @@ func (t Tag) MarshalYAML() (interface{}, error) {
 func (t *Tag) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, t)
 }
+
+// Kind returns KindTag
+func (*Tag) Kind() Kind {
+	return KindTag
+}
+
+var _ Node = (*Tag)(nil)

@@ -15,6 +15,11 @@ type ExternalDocs struct {
 }
 type externaldocs ExternalDocs
 
+// Kind returns KindExternalDocs
+func (*ExternalDocs) Kind() Kind {
+	return KindExternalDocs
+}
+
 // MarshalJSON marshals JSON
 func (ed ExternalDocs) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(externaldocs(ed))
@@ -37,3 +42,7 @@ func (ed ExternalDocs) MarshalYAML() (interface{}, error) {
 func (ed *ExternalDocs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, ed)
 }
+
+func (ExternalDocs) Nodes() Nodes { return nil }
+
+var _ Node = (*ExternalDocs)(nil)

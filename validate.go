@@ -19,10 +19,15 @@ import (
 
 //go:embed schema
 var schemaDir embed.FS
-var schemas = map[string]io.ReadCloser{}
-var jsonschemaval *jsonschema.Schema
-var _ = func() error {
 
+var (
+	schemas       = map[string]io.ReadCloser{}
+	jsonschemaval *jsonschema.Schema
+)
+
+// TODO: refactor this.
+
+var _ = func() error {
 	if err := loadSchemas(); err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +46,6 @@ func loadSchema(url string) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("schema not found: %s", url)
 	}
 	return s, nil
-
 }
 
 func loadSchemas() error {

@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/chanced/cmpjson v0.0.0-20210415035445-da9262c1f20a
 	github.com/chanced/dynamic v0.0.0-20210502140838-c010b5fc3e44
+	github.com/chanced/jsonpointer v0.0.2
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
