@@ -52,7 +52,6 @@ func (ts *Tags) Remove(s *Tag) {
 			return
 		}
 	}
-	return
 }
 
 func (ts *Tags) RemoveIndex(i int) {
@@ -65,7 +64,6 @@ func (ts *Tags) RemoveIndex(i int) {
 	copy((*ts)[i:], (*ts)[i+1:])
 	(*ts)[len(*ts)-1] = nil
 	(*ts) = (*ts)[:ts.Len()-1]
-	return
 }
 
 // Len returns the length of s

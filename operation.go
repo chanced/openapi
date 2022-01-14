@@ -67,44 +67,15 @@ type Operation struct {
 }
 
 func (o *Operation) Nodes() Nodes {
-	nodes := make(Nodes)
-	if o.Responses.Len() > 0 {
-		nodes["responses"] = NodeDetail{
-			Node:       &o.Responses,
-			TargetKind: KindResponses,
-		}
-	}
-	if o.RequestBody != nil {
-		nodes["requestBody"] = NodeDetail{
-			Node:       o.RequestBody,
-			TargetKind: KindRequestBody,
-		}
-	}
-	if o.Parameters.Len() > 0 {
-		nodes["parameters"] = NodeDetail{
-			Node:       &o.Parameters,
-			TargetKind: KindParameterSet,
-		}
-	}
-	if o.Callbacks != nil {
-		nodes["callbacks"] = NodeDetail{
-			Node:       &o.Callbacks,
-			TargetKind: KindCallbacks,
-		}
-	}
-	if o.Servers != nil {
-		nodes["servers"] = NodeDetail{
-			Node:       &o.Servers,
-			TargetKind: KindServers,
-		}
-	}
-	if o.ExternalDocs != nil {
-		nodes["externalDocs"] = o.ExternalDocs
-	}
-	if len(nodes) == 0 {
-		return nil
-	}
-	return nodes
+	return makeNodes(nodes{
+		{"responses", o.Responses, KindResponses},
+		{"requestBody", o.RequestBody, KindRequestBody},
+		{"callbacks", o.Callbacks, KindCallbacks},
+		{"parameters", o.Parameters, KindParameterSet},
+		{"servers", o.Servers, KindServers},
+		{"security", o.Security, KindSecurityRequirements},
+		{"externalDocs", o.ExternalDocs, KindExternalDocs},
+	})
 }
 
 // Kind returns KindOperation
@@ -184,7 +155,7 @@ type ResolvedOperation struct {
 	// HTTP spec is vague (such as GET, HEAD and DELETE), requestBody is
 	// permitted but does not have well-defined semantics and SHOULD be avoided
 	// if possible.
-	RequestBody ResolvedRequestBody `json:"requestBody,omitempty"`
+	RequestBody *ResolvedRequestBody `json:"requestBody,omitempty"`
 	// The list of possible responses as they are returned from executing this
 	// operation.
 	Responses ResolvedResponses `json:"responses,omitempty"`
@@ -208,8 +179,20 @@ type ResolvedOperation struct {
 	// An alternative server array to service this operation. If an alternative
 	// server object is specified at the Path Item Object or Root level, it will
 	// be overridden by this value.
-	Servers    []*Server `json:"servers,omitempty"`
+	Servers    Servers `json:"servers,omitempty"`
 	Extensions `json:"-"`
+}
+
+func (o *ResolvedOperation) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"responses", o.Responses, KindResponses},
+		{"requestBody", o.RequestBody, KindResolvedRequestBody},
+		{"callbacks", o.Callbacks, KindCallbacks},
+		{"parameters", o.Parameters, KindParameterSet},
+		{"servers", o.Servers, KindServers},
+		{"security", o.Security, KindSecurityRequirements},
+		{"externalDocs", o.ExternalDocs, KindExternalDocs},
+	})
 }
 
 // Kind returns KindResolvedOperation
@@ -229,7 +212,7 @@ type operation struct {
 	Callbacks    Callbacks            `json:"callbacks,omitempty"`
 	Deprecated   bool                 `json:"deprecated,omitempty"`
 	Security     SecurityRequirements `json:"security,omitempty"`
-	Servers      []*Server            `json:"servers,omitempty"`
+	Servers      Servers              `json:"servers,omitempty"`
 	Extensions   `json:"-"`
 }
 

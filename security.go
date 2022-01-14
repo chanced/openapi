@@ -64,7 +64,6 @@ func (srs *SecurityRequirements) RemoveIndex(i int) {
 	copy((*srs)[i:], (*srs)[i+1:])
 	(*srs)[len(*srs)-1] = nil
 	(*srs) = (*srs)[:srs.Len()-1]
-	return
 }
 
 // Len returns the length of s

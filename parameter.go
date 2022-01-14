@@ -439,7 +439,6 @@ func (ss *ParameterSet) RemoveIndex(i int) {
 	copy((*ss)[i:], (*ss)[i+1:])
 	(*ss)[len(*ss)-1] = nil
 	(*ss) = (*ss)[:ss.Len()-1]
-	return
 }
 
 // Kind returns KindParameterSet

@@ -94,7 +94,6 @@ func (ss *Servers) Remove(s *Server) {
 			return
 		}
 	}
-	return
 }
 
 func (ss *Servers) RemoveIndex(i int) {
@@ -107,7 +106,6 @@ func (ss *Servers) RemoveIndex(i int) {
 	copy((*ss)[i:], (*ss)[i+1:])
 	(*ss)[len(*ss)-1] = nil
 	(*ss) = (*ss)[:ss.Len()-1]
-	return
 }
 
 // Len returns the length of ss

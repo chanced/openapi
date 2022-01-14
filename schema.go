@@ -494,7 +494,6 @@ func (ss *SchemaSet) Remove(s *SchemaObj) {
 			return
 		}
 	}
-	return
 }
 
 func (ss *SchemaSet) RemoveIndex(i int) {
@@ -507,7 +506,6 @@ func (ss *SchemaSet) RemoveIndex(i int) {
 	copy((*ss)[i:], (*ss)[i+1:])
 	(*ss)[len(*ss)-1] = nil
 	(*ss) = (*ss)[:ss.Len()-1]
-	return
 }
 
 // Len returns the length of s
@@ -733,7 +731,6 @@ func (rss *ResolvedSchemaSet) Remove(s *ResolvedSchema) {
 			return
 		}
 	}
-	return
 }
 
 func (rss *ResolvedSchemaSet) RemoveIndex(i int) {
@@ -746,7 +743,6 @@ func (rss *ResolvedSchemaSet) RemoveIndex(i int) {
 	copy((*rss)[i:], (*rss)[i+1:])
 	(*rss)[len(*rss)-1] = nil
 	(*rss) = (*rss)[:rss.Len()-1]
-	return
 }
 
 // Len returns the length of s

@@ -102,7 +102,7 @@ func (ps *Paths) Nodes() Nodes {
 	}
 	nl := make(Nodes, ps.Len())
 	for i, v := range ps.Items {
-		nl.maybeAdd(i, v, KindCallback)
+		nl.maybeAdd(i, v, KindPath)
 	}
 	return nl
 }
@@ -358,23 +358,23 @@ type ResolvedPath struct {
 	// this path. CommonMark syntax MAY be used for rich text representation.
 	Description string `json:"description,omitempty"`
 	// A definition of a GET operation on this path.
-	Get *Operation `json:"get,omitempty"`
+	Get *ResolvedOperation `json:"get,omitempty"`
 	// A definition of a PUT operation on this path.
-	Put *Operation `json:"put,omitempty"`
+	Put *ResolvedOperation `json:"put,omitempty"`
 	// A definition of a POST operation on this path.
-	Post *Operation `json:"post,omitempty"`
+	Post *ResolvedOperation `json:"post,omitempty"`
 	// A definition of a DELETE operation on this path.
-	Delete *Operation `json:"delete,omitempty"`
+	Delete *ResolvedOperation `json:"delete,omitempty"`
 	// A definition of a OPTIONS operation on this path.
-	Options *Operation `json:"options,omitempty"`
+	Options *ResolvedOperation `json:"options,omitempty"`
 	// A definition of a HEAD operation on this path.
-	Head *Operation `json:"head,omitempty"`
+	Head *ResolvedOperation `json:"head,omitempty"`
 	// A definition of a PATCH operation on this path.
-	Patch *Operation `json:"patch,omitempty"`
+	Patch *ResolvedOperation `json:"patch,omitempty"`
 	// A definition of a TRACE operation on this path.
-	Trace *Operation `json:"trace,omitempty"`
+	Trace *ResolvedOperation `json:"trace,omitempty"`
 	// An alternative server array to service all operations in this path.
-	Servers []*Server `json:"servers,omitempty"`
+	Servers Servers `json:"servers,omitempty"`
 	// A list of parameters that are applicable for all the operations described
 	// under this path. These parameters can be overridden at the operation
 	// level, but cannot be removed there. The list MUST NOT include duplicated
@@ -383,6 +383,21 @@ type ResolvedPath struct {
 	// that are defined at the OpenAPI Object's components/parameters.
 	Parameters *ResolvedParameterSet `json:"parameters,omitempty"`
 	Extensions `json:"-"`
+}
+
+func (rp *ResolvedPath) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"get", rp.Get, KindOperation},
+		{"put", rp.Put, KindOperation},
+		{"post", rp.Post, KindOperation},
+		{"delete", rp.Delete, KindOperation},
+		{"options", rp.Options, KindOperation},
+		{"head", rp.Head, KindOperation},
+		{"patch", rp.Patch, KindOperation},
+		{"trace", rp.Trace, KindOperation},
+		{"servers", rp.Servers, KindServers},
+		{"parameters", rp.Parameters, KindParameterSet},
+	})
 }
 
 // Kind returns KindResolvedPath
@@ -448,6 +463,44 @@ func (ResolvedPathItems) Kind() Kind {
 type ResolvedPaths struct {
 	Items      map[PathValue]*ResolvedPath `json:"-"`
 	Extensions `json:"-"`
+}
+
+func (rps *ResolvedPaths) Len() int {
+	if rps == nil || rps.Items == nil {
+		return 0
+	}
+	return len(rps.Items)
+}
+
+func (rps *ResolvedPaths) Get(key string) (*ResolvedPath, bool) {
+	if rps == nil || rps.Items == nil {
+		return nil, false
+	}
+	v, ok := rps.Items[PathValue(key)]
+	return v, ok
+}
+
+func (rps *ResolvedPaths) Set(key string, val *ResolvedPath) {
+	if rps == nil || rps.Items == nil {
+		*rps = ResolvedPaths{
+			Items: map[PathValue]*ResolvedPath{
+				PathValue(key): val,
+			},
+		}
+		return
+	}
+	rps.Items[PathValue(key)] = val
+}
+
+func (rps *ResolvedPaths) Nodes() Nodes {
+	if rps.Len() == 0 {
+		return nil
+	}
+	nl := make(Nodes, rps.Len())
+	for i, v := range rps.Items {
+		nl.maybeAdd(i, v, KindResolvedPath)
+	}
+	return nl
 }
 
 // Kind returns KindResolvedPaths

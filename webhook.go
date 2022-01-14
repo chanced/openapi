@@ -21,6 +21,38 @@ func (ws *Webhooks) Len() int {
 	return len(*ws)
 }
 
+func (ws *Webhooks) Get(key string) (Webhook, bool) {
+	if ws == nil || *ws == nil {
+		return nil, false
+	}
+	v, ok := (*ws)[key]
+	return v, ok
+}
+
+func (ws *Webhooks) Set(key string, val Webhook) {
+	if *ws == nil {
+		*ws = Webhooks{
+			key: val,
+		}
+		return
+	}
+	(*ws)[key] = val
+}
+
+func (ws Webhooks) Nodes() Nodes {
+	if len(ws) == 0 {
+		return nil
+	}
+	n := make(Nodes, len(ws))
+	for k, v := range ws {
+		n.maybeAdd(k, v, KindWebhook)
+	}
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
 // Webhook can either be a WebhookObj or a Reference
 type Webhook interface {
 	Node
@@ -129,11 +161,19 @@ func (ws Webhooks) MarshalYAML() (interface{}, error) {
 // ResolvedWebhook is a Webhook that has been fully resolved
 type ResolvedWebhook ResolvedPath
 
-func (ws *ResolvedWebhooks) Len() int {
-	if ws == nil || *ws == nil {
-		return 0
-	}
-	return len(*ws)
+func (rw *ResolvedWebhook) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"get", rw.Get, KindResolvedOperation},
+		{"put", rw.Put, KindResolvedOperation},
+		{"post", rw.Post, KindResolvedOperation},
+		{"delete", rw.Delete, KindResolvedOperation},
+		{"options", rw.Options, KindResolvedOperation},
+		{"head", rw.Head, KindResolvedOperation},
+		{"patch", rw.Patch, KindResolvedOperation},
+		{"trace", rw.Trace, KindResolvedOperation},
+		{"servers", rw.Servers, KindServers},
+		{"parameters", rw.Parameters, KindResolvedParameterSet},
+	})
 }
 
 // Kind returns KindResolvedWebhook
@@ -147,6 +187,45 @@ type ResolvedWebhooks map[string]*ResolvedWebhook
 // Kind returns KindResolvedWebhooks
 func (ResolvedWebhooks) Kind() Kind {
 	return KindResolvedWebhooks
+}
+
+func (ws *ResolvedWebhooks) Len() int {
+	if ws == nil || *ws == nil {
+		return 0
+	}
+	return len(*ws)
+}
+
+func (ws *ResolvedWebhooks) Get(key string) (*ResolvedWebhook, bool) {
+	if ws == nil || *ws == nil {
+		return nil, false
+	}
+	v, ok := (*ws)[key]
+	return v, ok
+}
+
+func (ws *ResolvedWebhooks) Set(key string, val *ResolvedWebhook) {
+	if *ws == nil {
+		*ws = ResolvedWebhooks{
+			key: val,
+		}
+		return
+	}
+	(*ws)[key] = val
+}
+
+func (ws ResolvedWebhooks) Nodes() Nodes {
+	if len(ws) == 0 {
+		return nil
+	}
+	n := make(Nodes, len(ws))
+	for k, v := range ws {
+		n.maybeAdd(k, v, KindResolvedWebhook)
+	}
+	if len(n) == 0 {
+		return nil
+	}
+	return n
 }
 
 // // Kind returns KindResolvedPath
