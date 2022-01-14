@@ -134,9 +134,9 @@ type ResponseObj struct {
 
 func (r *ResponseObj) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"headers", r.Headers, KindHeaders},
-		{"content", r.Content, KindContent},
-		{"links", r.Links, KindLinks},
+		"headers": {r.Headers, KindHeaders},
+		"content": {r.Content, KindContent},
+		"links":   {r.Links, KindLinks},
 	})
 }
 
@@ -277,9 +277,9 @@ func (*ResolvedResponse) Kind() Kind {
 
 func (rr *ResolvedResponse) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"headers", rr.Headers, KindResolvedHeaders},
-		{"content", rr.Content, KindResolvedContent},
-		{"links", rr.Links, KindResolvedLinks},
+		"headers": {rr.Headers, KindResolvedHeaders},
+		"content": {rr.Content, KindResolvedContent},
+		"links":   {rr.Links, KindResolvedLinks},
 	})
 }
 

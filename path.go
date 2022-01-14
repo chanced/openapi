@@ -280,16 +280,16 @@ type PathObj struct {
 
 func (p *PathObj) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"get", p.Get, KindOperation},
-		{"put", p.Put, KindOperation},
-		{"post", p.Post, KindOperation},
-		{"delete", p.Delete, KindOperation},
-		{"options", p.Options, KindOperation},
-		{"head", p.Head, KindOperation},
-		{"patch", p.Patch, KindOperation},
-		{"trace", p.Trace, KindOperation},
-		{"servers", p.Servers, KindServers},
-		{"parameters", p.Parameters, KindParameterSet},
+		"get":        {p.Get, KindOperation},
+		"put":        {p.Put, KindOperation},
+		"post":       {p.Post, KindOperation},
+		"delete":     {p.Delete, KindOperation},
+		"options":    {p.Options, KindOperation},
+		"head":       {p.Head, KindOperation},
+		"patch":      {p.Patch, KindOperation},
+		"trace":      {p.Trace, KindOperation},
+		"servers":    {p.Servers, KindServers},
+		"parameters": {p.Parameters, KindParameterSet},
 	})
 }
 
@@ -387,16 +387,16 @@ type ResolvedPath struct {
 
 func (rp *ResolvedPath) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"get", rp.Get, KindOperation},
-		{"put", rp.Put, KindOperation},
-		{"post", rp.Post, KindOperation},
-		{"delete", rp.Delete, KindOperation},
-		{"options", rp.Options, KindOperation},
-		{"head", rp.Head, KindOperation},
-		{"patch", rp.Patch, KindOperation},
-		{"trace", rp.Trace, KindOperation},
-		{"servers", rp.Servers, KindServers},
-		{"parameters", rp.Parameters, KindParameterSet},
+		"get":        {rp.Get, KindResolvedOperation},
+		"put":        {rp.Put, KindResolvedOperation},
+		"post":       {rp.Post, KindResolvedOperation},
+		"delete":     {rp.Delete, KindResolvedOperation},
+		"options":    {rp.Options, KindResolvedOperation},
+		"head":       {rp.Head, KindResolvedOperation},
+		"patch":      {rp.Patch, KindResolvedOperation},
+		"trace":      {rp.Trace, KindResolvedOperation},
+		"servers":    {rp.Servers, KindServers},
+		"parameters": {rp.Parameters, KindResolvedParameterSet},
 	})
 }
 

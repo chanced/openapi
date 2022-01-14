@@ -18,10 +18,10 @@ type OAuthFlows struct {
 
 func (oafs *OAuthFlows) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"implicit", oafs.Implicit, KindOAuthFlow},
-		{"password", oafs.Password, KindOAuthFlow},
-		{"clientCredentials", oafs.ClientCredentials, KindOAuthFlow},
-		{"authorizationCode", oafs.AuthorizationCode, KindOAuthFlow},
+		"implicit":          {oafs.Implicit, KindOAuthFlow},
+		"password":          {oafs.Password, KindOAuthFlow},
+		"clientCredentials": {oafs.ClientCredentials, KindOAuthFlow},
+		"authorizationCode": {oafs.AuthorizationCode, KindOAuthFlow},
 	})
 }
 

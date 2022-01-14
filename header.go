@@ -77,8 +77,8 @@ type HeaderObj struct {
 
 func (h *HeaderObj) Nodes() Nodes {
 	n := makeNodes(nodes{
-		{"schema", h.Schema, KindSchema},
-		{"examples", h.Examples, KindExamples},
+		"schema":   {h.Schema, KindSchema},
+		"examples": {h.Examples, KindExamples},
 	})
 	if len(n) == 0 {
 		return nil
@@ -284,8 +284,8 @@ type ResolvedHeader struct {
 
 func (rh *ResolvedHeader) Nodes() Nodes {
 	n := makeNodes(nodes{
-		{"schema", rh.Schema, KindResolvedSchema},
-		{"examples", rh.Examples, KindResolvedExamples},
+		"schema":   {rh.Schema, KindResolvedSchema},
+		"examples": {rh.Examples, KindResolvedExamples},
 	})
 	if len(n) == 0 {
 		return nil

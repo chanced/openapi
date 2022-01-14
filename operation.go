@@ -68,13 +68,13 @@ type Operation struct {
 
 func (o *Operation) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"responses", o.Responses, KindResponses},
-		{"requestBody", o.RequestBody, KindRequestBody},
-		{"callbacks", o.Callbacks, KindCallbacks},
-		{"parameters", o.Parameters, KindParameterSet},
-		{"servers", o.Servers, KindServers},
-		{"security", o.Security, KindSecurityRequirements},
-		{"externalDocs", o.ExternalDocs, KindExternalDocs},
+		"responses":    {o.Responses, KindResponses},
+		"requestBody":  {o.RequestBody, KindRequestBody},
+		"callbacks":    {o.Callbacks, KindCallbacks},
+		"parameters":   {o.Parameters, KindParameterSet},
+		"servers":      {o.Servers, KindServers},
+		"security":     {o.Security, KindSecurityRequirements},
+		"externalDocs": {o.ExternalDocs, KindExternalDocs},
 	})
 }
 
@@ -185,13 +185,13 @@ type ResolvedOperation struct {
 
 func (o *ResolvedOperation) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"responses", o.Responses, KindResponses},
-		{"requestBody", o.RequestBody, KindResolvedRequestBody},
-		{"callbacks", o.Callbacks, KindCallbacks},
-		{"parameters", o.Parameters, KindParameterSet},
-		{"servers", o.Servers, KindServers},
-		{"security", o.Security, KindSecurityRequirements},
-		{"externalDocs", o.ExternalDocs, KindExternalDocs},
+		"responses":    {o.Responses, KindResolvedResponses},
+		"requestBody":  {o.RequestBody, KindResolvedRequestBody},
+		"callbacks":    {o.Callbacks, KindResolvedCallbacks},
+		"parameters":   {o.Parameters, KindResolvedParameterSet},
+		"servers":      {o.Servers, KindServers},
+		"security":     {o.Security, KindSecurityRequirements},
+		"externalDocs": {o.ExternalDocs, KindExternalDocs},
 	})
 }
 

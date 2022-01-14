@@ -32,18 +32,18 @@ type Components struct {
 	Extensions `json:"-"`
 }
 
-func (c Components) Nodes() Nodes {
+func (c *Components) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"schemas", c.Schemas, KindSchemas},
-		{"responses", c.Responses, KindResponses},
-		{"parameters", c.Parameters, KindParameters},
-		{"examples", c.Examples, KindExamples},
-		{"requestBodies", c.RequestBodies, KindRequestBodies},
-		{"headers", c.Headers, KindHeaders},
-		{"securitySchemes", c.SecuritySchemes, KindSecuritySchemes},
-		{"links", c.Links, KindLinks},
-		{"callbacks", c.Callbacks, KindCallbacks},
-		{"pathItems", c.PathItems, KindPathItems},
+		"schemas":         {c.Schemas, KindSchemas},
+		"responses":       {c.Responses, KindResponses},
+		"parameters":      {c.Parameters, KindParameters},
+		"examples":        {c.Examples, KindExamples},
+		"requestBodies":   {c.RequestBodies, KindRequestBodies},
+		"headers":         {c.Headers, KindHeaders},
+		"securitySchemes": {c.SecuritySchemes, KindSecuritySchemes},
+		"links":           {c.Links, KindLinks},
+		"callbacks":       {c.Callbacks, KindCallbacks},
+		"pathItems":       {c.PathItems, KindPathItems},
 	})
 }
 
@@ -107,16 +107,16 @@ type ResolvedComponents struct {
 
 func (rc *ResolvedComponents) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"schemas", rc.Schemas, KindResolvedSchemas},
-		{"responses", rc.Responses, KindResolvedResponses},
-		{"parameters", rc.Parameters, KindResolvedParameters},
-		{"examples", rc.Examples, KindResolvedExamples},
-		{"requestBodies", rc.RequestBodies, KindResolvedRequestBodies},
-		{"headers", rc.Headers, KindResolvedHeaders},
-		{"securitySchemes", rc.SecuritySchemes, KindResolvedSecuritySchemes},
-		{"links", rc.Links, KindResolvedLinks},
-		{"callbacks", rc.Callbacks, KindResolvedCallbacks},
-		{"pathItems", rc.PathItems, KindResolvedPathItems},
+		"schemas":         {rc.Schemas, KindResolvedSchemas},
+		"responses":       {rc.Responses, KindResolvedResponses},
+		"parameters":      {rc.Parameters, KindResolvedParameters},
+		"examples":        {rc.Examples, KindResolvedExamples},
+		"requestBodies":   {rc.RequestBodies, KindResolvedRequestBodies},
+		"headers":         {rc.Headers, KindResolvedHeaders},
+		"securitySchemes": {rc.SecuritySchemes, KindResolvedSecuritySchemes},
+		"links":           {rc.Links, KindResolvedLinks},
+		"callbacks":       {rc.Callbacks, KindResolvedCallbacks},
+		"pathItems":       {rc.PathItems, KindResolvedPathItems},
 	})
 }
 

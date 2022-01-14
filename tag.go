@@ -97,7 +97,7 @@ type Tag struct {
 
 func (t *Tag) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"externalDocs", t.ExternalDocs, KindExternalDocs},
+		"externalDocs": {t.ExternalDocs, KindExternalDocs},
 	})
 }
 

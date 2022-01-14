@@ -90,7 +90,9 @@ type RequestBodyObj struct {
 }
 
 func (rb *RequestBodyObj) Nodes() Nodes {
-	return makeNodes(nodes{{"content", rb.Content, KindContent}})
+	return makeNodes(nodes{
+		"content": {rb.Content, KindContent},
+	})
 }
 
 type requestbody RequestBodyObj
@@ -164,7 +166,9 @@ type ResolvedRequestBody struct {
 }
 
 func (rrb *ResolvedRequestBody) Nodes() Nodes {
-	return makeNodes(nodes{{"content", rrb.Content, KindResolvedContent}})
+	return makeNodes(nodes{
+		"content": {rrb.Content, KindResolvedContent},
+	})
 }
 
 // Kind returns KindResolvedRequestBody

@@ -103,7 +103,7 @@ type encodingobj Encoding
 
 func (e *Encoding) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"headers", e.Headers, KindHeaders},
+		"headers": {e.Headers, KindHeaders},
 	})
 }
 
@@ -240,7 +240,7 @@ func (*ResolvedEncoding) Kind() Kind {
 
 func (e *ResolvedEncoding) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"headers", e.Headers, KindResolvedHeaders},
+		"headers": {e.Headers, KindResolvedHeaders},
 	})
 }
 

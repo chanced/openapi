@@ -244,7 +244,7 @@ type SecuritySchemeObj struct {
 
 func (ss *SecuritySchemeObj) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"flows", ss.Flows, KindOAuthFlows},
+		"flows": {ss.Flows, KindOAuthFlows},
 	})
 }
 
@@ -404,7 +404,7 @@ type ResolvedSecurityScheme struct {
 
 func (rss *ResolvedSecurityScheme) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"flows", rss.Flows, KindOAuthFlows},
+		"flows": {rss.Flows, KindOAuthFlows},
 	})
 }
 

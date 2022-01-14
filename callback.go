@@ -112,12 +112,10 @@ func (c *CallbackObj) Nodes() Nodes {
 	if c.Paths.Len() == 0 {
 		return nil
 	}
-	m := make(Nodes, len(c.Paths))
-	for k, v := range c.Paths {
-		m[k] = NodeDetail{
-			Node: v,
-		}
-	}
+	m := makeNodes(nodes{
+		"paths": {c.Paths, KindPaths},
+	})
+
 	return m
 }
 
@@ -201,12 +199,10 @@ func (rc *ResolvedCallback) Nodes() Nodes {
 	if rc.Paths == nil {
 		return nil
 	}
-	nodes := make(Nodes, 1)
-	nodes["paths"] = NodeDetail{
-		Node:       rc.Paths,
-		TargetKind: KindResolvedCallbacks,
-	}
-	return nodes
+
+	return makeNodes(nodes{
+		"paths": {rc.Paths, KindResolvedPaths},
+	})
 }
 
 func (*ResolvedCallback) Kind() Kind {
@@ -245,14 +241,11 @@ func (rcs ResolvedCallbacks) Nodes() Nodes {
 	if rcs.Len() == 0 {
 		return nil
 	}
-	m := make(Nodes, rcs.Len())
+	n := make(Nodes, rcs.Len())
 	for k, v := range rcs {
-		m[k] = NodeDetail{
-			Node:       v,
-			TargetKind: KindResolvedCallback,
-		}
+		n.maybeAdd(k, v, KindResolvedCallbacks)
 	}
-	return m
+	return n
 }
 
 func (ResolvedCallbacks) Kind() Kind {

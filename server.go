@@ -135,7 +135,9 @@ type Server struct {
 }
 
 func (s *Server) Nodes() Nodes {
-	return makeNodes(nodes{{"variables", s.Variables, KindServerVariables}})
+	return makeNodes(nodes{
+		"variables": {s.Variables, KindServerVariables},
+	})
 }
 
 // Kind returns KindServer

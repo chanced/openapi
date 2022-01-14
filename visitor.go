@@ -24,8 +24,8 @@ type Nodes map[string]NodeDetail
 
 func makeNodes(nl nodes) Nodes {
 	ns := make(Nodes, len(nl))
-	for _, n := range nl {
-		ns.maybeAdd(n.key, n.node, n.kind)
+	for k, n := range nl {
+		ns.maybeAdd(k, n.Node, n.TargetKind)
 	}
 	if len(ns) == 0 {
 		return nil
@@ -37,13 +37,7 @@ type lengther interface {
 	Len() int
 }
 
-type node struct {
-	key  interface{}
-	node Node
-	kind Kind
-}
-
-type nodes []node
+type nodes map[interface{}]NodeDetail
 
 func (ns *Nodes) maybeAdd(key interface{}, n Node, kind Kind) {
 	var k string

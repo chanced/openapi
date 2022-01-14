@@ -70,13 +70,13 @@ type OpenAPI struct {
 
 func (o *OpenAPI) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"servers", o.Servers, KindServers},
-		{"paths", o.Paths, KindPaths},
-		{"webhooks", o.Webhooks, KindWebhooks},
-		{"components", o.Components, KindComponents},
-		{"tags", o.Tags, KindTags},
-		{"security", o.Security, KindSecurityRequirements},
-		{"externalDocs", o.ExternalDocs, KindExternalDocs},
+		"servers":      {o.Servers, KindServers},
+		"paths":        {o.Paths, KindPaths},
+		"webhooks":     {o.Webhooks, KindWebhooks},
+		"components":   {o.Components, KindComponents},
+		"tags":         {o.Tags, KindTags},
+		"security":     {o.Security, KindSecurityRequirements},
+		"externalDocs": {o.ExternalDocs, KindExternalDocs},
 	})
 }
 
@@ -159,7 +159,7 @@ type ResolvedOpenAPI struct {
 	// array, the default value would be a Server Object with a url value of /.
 	Servers Servers `json:"servers,omitempty" yaml:"servers,omitempty,omtiempty"`
 	// The available paths and operations for the API.
-	Paths *Paths `json:"paths,omitempty" yaml:"paths,omitempty"`
+	Paths *ResolvedPaths `json:"paths,omitempty" yaml:"paths,omitempty"`
 	// The incoming webhooks that MAY be received as part of this API and that
 	// the API consumer MAY choose to implement. Closely related to the
 	// callbacks feature, this section describes requests initiated other than
@@ -167,9 +167,9 @@ type ResolvedOpenAPI struct {
 	// is a unique string to refer to each webhook, while the (optionally
 	// referenced) Path Item Object describes a request that may be initiated by
 	// the API provider and the expected responses. An example is available.
-	Webhooks *PathItems `json:"webhooks,omitempty" yaml:"webhooks,omitempty"`
+	Webhooks *ResolvedWebhooks `json:"webhooks,omitempty" yaml:"webhooks,omitempty"`
 	// An element to hold various schemas for the document.
-	Components *Components `json:"components,omitempty" yaml:"components,omitempty"`
+	Components *ResolvedComponents `json:"components,omitempty" yaml:"components,omitempty"`
 	// A list of tags used by the document with additional metadata. The order
 	// of the tags can be used to reflect on their order by the parsing tools.
 	// Not all tags that are used by the Operation Object must be declared. The
@@ -201,13 +201,13 @@ func (*ResolvedOpenAPI) Kind() Kind {
 
 func (ro *ResolvedOpenAPI) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"servers", ro.Servers, KindServers},
-		{"paths", ro.Paths, KindPaths},
-		{"webhooks", ro.Webhooks, KindWebhooks},
-		{"components", ro.Components, KindComponents},
-		{"tags", ro.Tags, KindTags},
-		{"security", ro.Security, KindSecurityRequirements},
-		{"externalDocs", ro.ExternalDocs, KindExternalDocs},
+		"servers":      {ro.Servers, KindServers},
+		"paths":        {ro.Paths, KindResolvedPaths},
+		"webhooks":     {ro.Webhooks, KindResolvedWebhooks},
+		"components":   {ro.Components, KindResolvedComponents},
+		"tags":         {ro.Tags, KindTags},
+		"security":     {ro.Security, KindSecurityRequirements},
+		"externalDocs": {ro.ExternalDocs, KindExternalDocs},
 	})
 }
 

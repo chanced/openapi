@@ -80,8 +80,8 @@ type MediaType struct {
 
 func (mt *MediaType) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"schema", mt.Schema, KindSchema},
-		{"examples", mt.Examples, KindExamples},
+		"schema":   {mt.Schema, KindSchema},
+		"examples": {mt.Examples, KindExamples},
 	})
 }
 
@@ -218,8 +218,8 @@ func (*ResolvedMediaType) Kind() Kind {
 
 func (rmt *ResolvedMediaType) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"schema", rmt.Schema, KindResolvedSchema},
-		{"examples", rmt.Examples, KindResolvedExamples},
+		"schema":   {rmt.Schema, KindResolvedSchema},
+		"examples": {rmt.Examples, KindResolvedExamples},
 	})
 }
 

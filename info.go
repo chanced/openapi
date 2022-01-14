@@ -31,8 +31,8 @@ type Info struct {
 
 func (i *Info) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"contact", i.Contact, KindContact},
-		{"license", i.License, KindLicense},
+		"contact": {i.Contact, KindContact},
+		"license": {i.License, KindLicense},
 	})
 }
 

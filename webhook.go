@@ -66,16 +66,16 @@ type WebhookObj PathObj
 
 func (w *WebhookObj) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"get", w.Get, KindOperation},
-		{"put", w.Put, KindOperation},
-		{"post", w.Post, KindOperation},
-		{"delete", w.Delete, KindOperation},
-		{"options", w.Options, KindOperation},
-		{"head", w.Head, KindOperation},
-		{"patch", w.Patch, KindOperation},
-		{"trace", w.Trace, KindOperation},
-		{"servers", w.Servers, KindServers},
-		{"parameters", w.Parameters, KindParameterSet},
+		"get":        {w.Get, KindOperation},
+		"put":        {w.Put, KindOperation},
+		"post":       {w.Post, KindOperation},
+		"delete":     {w.Delete, KindOperation},
+		"options":    {w.Options, KindOperation},
+		"head":       {w.Head, KindOperation},
+		"patch":      {w.Patch, KindOperation},
+		"trace":      {w.Trace, KindOperation},
+		"servers":    {w.Servers, KindServers},
+		"parameters": {w.Parameters, KindParameterSet},
 	})
 }
 
@@ -163,16 +163,16 @@ type ResolvedWebhook ResolvedPath
 
 func (rw *ResolvedWebhook) Nodes() Nodes {
 	return makeNodes(nodes{
-		{"get", rw.Get, KindResolvedOperation},
-		{"put", rw.Put, KindResolvedOperation},
-		{"post", rw.Post, KindResolvedOperation},
-		{"delete", rw.Delete, KindResolvedOperation},
-		{"options", rw.Options, KindResolvedOperation},
-		{"head", rw.Head, KindResolvedOperation},
-		{"patch", rw.Patch, KindResolvedOperation},
-		{"trace", rw.Trace, KindResolvedOperation},
-		{"servers", rw.Servers, KindServers},
-		{"parameters", rw.Parameters, KindResolvedParameterSet},
+		"get":        {rw.Get, KindResolvedOperation},
+		"put":        {rw.Put, KindResolvedOperation},
+		"post":       {rw.Post, KindResolvedOperation},
+		"delete":     {rw.Delete, KindResolvedOperation},
+		"options":    {rw.Options, KindResolvedOperation},
+		"head":       {rw.Head, KindResolvedOperation},
+		"patch":      {rw.Patch, KindResolvedOperation},
+		"trace":      {rw.Trace, KindResolvedOperation},
+		"servers":    {rw.Servers, KindServers},
+		"parameters": {rw.Parameters, KindResolvedParameterSet},
 	})
 }
 
