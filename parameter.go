@@ -172,14 +172,11 @@ func (ps Parameters) Nodes() Nodes {
 	if len(ps) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(ps))
+	n := make(Nodes, len(ps))
 	for k, v := range ps {
-		nodes[k] = NodeDetail{
-			TargetKind: KindParameter,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindParameter)
 	}
-	return nodes
+	return n
 }
 
 // Kind returns KindParameters
@@ -210,7 +207,7 @@ func (ps *Parameters) UnmarshalJSON(data []byte) error {
 
 		res[k] = &v
 	}
-	*p = res
+	*ps = res
 	return nil
 }
 
@@ -432,18 +429,6 @@ func (ps *ParameterSet) Append(val Parameter) {
 	(*ps) = append(*ps, val)
 }
 
-func (ps *ParameterSet) Remove(p Parameter) {
-	if ps.Len() == 0 {
-		return
-	}
-	for k, v := range *ps {
-		if v == s {
-			ps.RemoveIndex(k)
-			return
-		}
-	}
-}
-
 func (ss *ParameterSet) RemoveIndex(i int) {
 	if ss.Len() == 0 {
 		return // nothing to do
@@ -557,11 +542,9 @@ func (rps ResolvedParameters) Nodes() Nodes {
 		return nil
 	}
 	nodes := make(Nodes, len(rps))
+
 	for k, v := range rps {
-		nodes[k] = NodeDetail{
-			TargetKind: KindParameter,
-			Node:       v,
-		}
+		nodes.maybeAdd(k, v, KindParameter)
 	}
 	return nodes
 }

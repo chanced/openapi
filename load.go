@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
-	"reflect"
 	"strings"
 	"unicode"
 
@@ -59,27 +57,28 @@ const (
 )
 
 func decodePtr(dec *json.Decoder, ptr string, dst interface{}) error {
-	rv := reflect.ValueOf(dst)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return &json.InvalidUnmarshalError{Type: reflect.TypeOf(dst)}
-	}
-	var v interface{}
-	if err := dec.Decode(&v); err != nil {
-		return err
-	}
-	p, err := jsonptr.NewJsonPointer(ptr)
-	if err != nil {
-		return err
-	}
-	pv, _, err := p.Get(&v)
-	if err != nil {
-		return err
-	}
-	b, err := json.Marshal(pv)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(b, dst)
+	panic("not impl")
+	// rv := reflect.ValueOf(dst)
+	// if rv.Kind() != reflect.Ptr || rv.IsNil() {
+	// 	return &json.InvalidUnmarshalError{Type: reflect.TypeOf(dst)}
+	// }
+	// var v interface{}
+	// if err := dec.Decode(&v); err != nil {
+	// 	return err
+	// }
+	// p, err := jsonptr.NewJsonPointer(ptr)
+	// if err != nil {
+	// 	return err
+	// }
+	// pv, _, err := p.Get(&v)
+	// if err != nil {
+	// 	return err
+	// }
+	// b, err := json.Marshal(pv)
+	// if err != nil {
+	// 	return err
+	// }
+	// return json.Unmarshal(b, dst)
 }
 
 func decode(r io.Reader, ptr string, dst interface{}) error {
@@ -156,43 +155,44 @@ func splitRef(ref string) (string, string) {
 }
 
 func readPtr(rc io.ReadCloser, ptr string) (io.ReadCloser, error) {
-	p, err := jsonptr.NewJsonPointer(ptr)
-	if err != nil {
-		return nil, err
-	}
-	r, e, err := detectEncoding(rc)
-	if err != nil {
-		return nil, err
-	}
-	var b []byte
-	if e == yamlEncoding {
-		b, err = ioutil.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-		b, err = yamlutil.YAMLToJSON(b)
-		if err != nil {
-			return nil, err
-		}
-		r = bytes.NewBuffer(b)
-	}
-	var c interface{}
-	if err = json.NewDecoder(r).Decode(&c); err != nil {
-		return nil, err
-	}
-	v, _, err := p.Get(c)
-	if err != nil {
-		return nil, err
-	}
-	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
-	if err = enc.Encode(v); err != nil {
-		return nil, err
-	}
-	return &readercloser{
-		Reader: buf,
-		Closer: rc,
-	}, nil
+	panic("not impl")
+	// p, err := jsonptr.NewJsonPointer(ptr)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// r, e, err := detectEncoding(rc)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// var b []byte
+	// if e == yamlEncoding {
+	// 	b, err = ioutil.ReadAll(r)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	b, err = yamlutil.YAMLToJSON(b)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	r = bytes.NewBuffer(b)
+	// }
+	// var c interface{}
+	// if err = json.NewDecoder(r).Decode(&c); err != nil {
+	// 	return nil, err
+	// }
+	// v, _, err := p.Get(c)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// buf := &bytes.Buffer{}
+	// enc := json.NewEncoder(buf)
+	// if err = enc.Encode(v); err != nil {
+	// 	return nil, err
+	// }
+	// return &readercloser{
+	// 	Reader: buf,
+	// 	Closer: rc,
+	// }, nil
 }
 
 type cache struct {

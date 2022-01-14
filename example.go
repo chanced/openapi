@@ -44,14 +44,14 @@ func (es Examples) Nodes() Nodes {
 	if len(es) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(es))
+	n := make(Nodes, len(es))
 	for k, v := range es {
-		nodes[k] = NodeDetail{
-			TargetKind: KindExample,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindExample)
 	}
-	return nodes
+	if len(n) == 0 {
+		return nil
+	}
+	return n
 }
 
 // Kind returns KindExamples
@@ -177,14 +177,14 @@ func (res ResolvedExamples) Nodes() Nodes {
 	if len(res) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(res))
+	n := make(Nodes, len(res))
 	for k, v := range res {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedExample,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedExample)
 	}
-	return nodes
+	if len(n) == 0 {
+		return nil
+	}
+	return n
 }
 
 // Kind returns KindResolvedExamples

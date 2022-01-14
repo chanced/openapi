@@ -15,6 +15,8 @@ type License struct {
 	URL string `json:"url,omitempty" yaml:"url,omitempty"`
 }
 
+func (*License) Nodes() Nodes { return nil }
+
 // Kind returns KindLicense
 func (*License) Kind() Kind {
 	return KindLicense

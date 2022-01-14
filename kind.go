@@ -96,6 +96,9 @@ const (
 	KindServerVariables
 	// KindTag represents *Tag
 	KindTag
+	// KindTags represents Tags
+	KindTags
+
 	// KindWebhook represents *WebhookObj
 	KindWebhook
 	// KindWebhooks represents Webhooks
@@ -213,6 +216,7 @@ var kindNames = map[Kind]string{
 	KindServer:                  "Server",
 	KindServers:                 "Servers",
 	KindTag:                     "Tag",
+	KindTags:                    "Tags",
 	KindWebhook:                 "Webhook",
 	KindWebhooks:                "Webhooks",
 	KindXML:                     "XML",

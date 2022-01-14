@@ -32,6 +32,21 @@ type webhook pathobj
 // WebhookObj is a PathObj
 type WebhookObj PathObj
 
+func (w *WebhookObj) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"get", w.Get, KindOperation},
+		{"put", w.Put, KindOperation},
+		{"post", w.Post, KindOperation},
+		{"delete", w.Delete, KindOperation},
+		{"options", w.Options, KindOperation},
+		{"head", w.Head, KindOperation},
+		{"patch", w.Patch, KindOperation},
+		{"trace", w.Trace, KindOperation},
+		{"servers", w.Servers, KindServers},
+		{"parameters", w.Parameters, KindParameterSet},
+	})
+}
+
 // Kind returns KindWebhook
 func (*WebhookObj) Kind() Kind {
 	return KindWebhook

@@ -67,6 +67,8 @@ type Paths struct {
 	Extensions `json:"-"`
 }
 
+func (Paths) Kind() Kind { return KindPaths }
+
 func (ps *Paths) Len() int {
 	if ps == nil || ps.Items == nil {
 		return 0
@@ -177,11 +179,9 @@ func (pi PathItems) Nodes() Nodes {
 		return nil
 	}
 	nodes := make(Nodes, pi.Len())
+
 	for k, v := range pi {
-		nodes[k] = NodeDetail{
-			TargetKind: KindPath,
-			Node:       v,
-		}
+		nodes.maybeAdd(k, v, KindPath)
 	}
 	return nodes
 }
@@ -429,11 +429,11 @@ func (rpi ResolvedPathItems) Nodes() Nodes {
 	if rpi.Len() == 0 {
 		return nil
 	}
-	nl := make(Nodes, rpi.Len())
+	n := make(Nodes, rpi.Len())
 	for k, v := range rpi {
-		nl.maybeAdd(k, v, KindResolvedPath)
+		n.maybeAdd(k, v, KindResolvedPath)
 	}
-	return nodes
+	return n
 }
 
 // Kind returns KindResolvedPathItems
@@ -471,6 +471,7 @@ var (
 	_ Node = (*PathObj)(nil)
 	_ Node = (*PathItems)(nil)
 	_ Node = (PathItems)(nil)
+	_ Node = (*Paths)(nil)
 	_ Node = (*ResolvedPath)(nil)
 	_ Node = (*ResolvedPaths)(nil)
 	_ Node = (ResolvedPathItems)(nil)

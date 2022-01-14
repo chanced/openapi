@@ -35,14 +35,11 @@ func (c Content) Nodes() Nodes {
 	if len(c) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(c))
+	n := make(Nodes, len(c))
 	for k, v := range c {
-		nodes[k] = NodeDetail{
-			TargetKind: KindMediaType,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindMediaType)
 	}
-	return nodes
+	return n
 }
 
 func (c *Content) Len() int {
@@ -176,14 +173,11 @@ func (c ResolvedContent) Nodes() Nodes {
 	if len(c) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(c))
+	n := make(Nodes, len(c))
 	for k, v := range c {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedMediaType,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedMediaType)
 	}
-	return nodes
+	return n
 }
 
 func (c *ResolvedContent) Len() int {

@@ -29,6 +29,13 @@ type Info struct {
 	Extensions `json:"-"`
 }
 
+func (i *Info) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"contact", i.Contact, KindContact},
+		{"license", i.License, KindLicense},
+	})
+}
+
 // Kind returns KindInfo
 func (*Info) Kind() Kind {
 	return KindInfo

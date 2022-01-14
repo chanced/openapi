@@ -160,14 +160,11 @@ func (es Headers) Nodes() Nodes {
 	if len(es) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(es))
+	n := make(Nodes, len(es))
 	for k, v := range es {
-		nodes[k] = NodeDetail{
-			TargetKind: KindHeader,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindHeader)
 	}
-	return nodes
+	return n
 }
 
 // Kind returns KindHeaders
@@ -330,14 +327,14 @@ func (rhs ResolvedHeaders) Nodes() Nodes {
 	if len(rhs) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(rhs))
+	n := make(Nodes, len(rhs))
 	for k, v := range rhs {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedHeader,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedHeader)
 	}
-	return nodes
+	if len(n) == 0 {
+		return nil
+	}
+	return n
 }
 
 var (

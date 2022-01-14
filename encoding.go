@@ -44,14 +44,14 @@ func (es Encodings) Nodes() Nodes {
 	if len(es) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(es))
+	n := make(Nodes, len(es))
 	for k, v := range es {
-		nodes[k] = NodeDetail{
-			TargetKind: KindEncoding,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindEncoding)
 	}
-	return nodes
+	if len(n) == 0 {
+		return nil
+	}
+	return n
 }
 
 // Encoding definition applied to a single schema property.
@@ -172,14 +172,14 @@ func (res ResolvedEncodings) Nodes() Nodes {
 	if len(res) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(res))
+	n := make(Nodes, len(res))
 	for k, v := range res {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedEncoding,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedEncoding)
 	}
-	return nodes
+	if len(n) == 0 {
+		return nil
+	}
+	return n
 }
 
 // Kind returns KindResolvedEncodings

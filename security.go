@@ -22,6 +22,59 @@ const (
 // SecurityRequirements is a list of SecurityRequirement
 type SecurityRequirements []SecurityRequirement
 
+func (srs SecurityRequirements) Nodes() Nodes {
+	if srs.Len() == 0 {
+		return nil
+	}
+	n := make(Nodes, len(srs))
+	for i, s := range srs {
+		n.maybeAdd(i, s, KindSecurityRequirement)
+	}
+	if len(n) == 0 {
+		return nil
+	}
+	return n
+}
+
+func (srs *SecurityRequirements) Get(idx int) (SecurityRequirement, bool) {
+	if *srs == nil {
+		return nil, false
+	}
+	if idx < 0 || idx >= len(*srs) {
+		return nil, false
+	}
+	return (*srs)[idx], true
+}
+
+func (srs *SecurityRequirements) Append(val SecurityRequirement) {
+	if *srs == nil {
+		*srs = SecurityRequirements{val}
+		return
+	}
+	(*srs) = append(*srs, val)
+}
+
+func (srs *SecurityRequirements) RemoveIndex(i int) {
+	if *srs == nil {
+		return // nothing to do
+	}
+	if i < 0 || i >= len(*srs) {
+		return
+	}
+	copy((*srs)[i:], (*srs)[i+1:])
+	(*srs)[len(*srs)-1] = nil
+	(*srs) = (*srs)[:srs.Len()-1]
+	return
+}
+
+// Len returns the length of s
+func (srs *SecurityRequirements) Len() int {
+	if srs == nil || *srs == nil {
+		return 0
+	}
+	return len(*srs)
+}
+
 // Kind returns KindSecurityRequirements
 func (SecurityRequirements) Kind() Kind {
 	return KindSecurityRequirements
@@ -48,6 +101,8 @@ func (SecurityRequirements) Kind() Kind {
 // contain a list of role names which are required for the execution, but are
 // not otherwise defined or exchanged in-band.
 type SecurityRequirement map[string][]string
+
+func (SecurityRequirement) Nodes() Nodes { return nil }
 
 // Kind returns KindSecurityRequirement
 func (SecurityRequirement) Kind() Kind {
@@ -93,14 +148,11 @@ func (ss SecuritySchemes) Nodes() Nodes {
 	if len(ss) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(ss))
+	n := make(Nodes, len(ss))
 	for k, v := range ss {
-		nodes[k] = NodeDetail{
-			TargetKind: KindSecurityScheme,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindSecurityScheme)
 	}
-	return nodes
+	return n
 }
 
 // Kind returns KindSecuritySchemes
@@ -234,8 +286,8 @@ func (*SecuritySchemeObj) Kind() Kind {
 
 // SecurityScheme can either be a ScecuritySchemeObj or a Reference
 type SecurityScheme interface {
+	Node
 	ResolveSecurityScheme(func(ref string) (*SecuritySchemeObj, error)) (*SecuritySchemeObj, error)
-	Kind() Kind
 }
 
 // ResolvedSecuritySchemes is a map of *ResolvedSecurityScheme
@@ -275,14 +327,11 @@ func (rss ResolvedSecuritySchemes) Nodes() Nodes {
 	if len(rss) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(rss))
+	n := make(Nodes, len(rss))
 	for k, v := range rss {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedSecurityScheme,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedSecurityScheme)
 	}
-	return nodes
+	return n
 }
 
 // ResolvedSecurityScheme lists the required security schemes to execute this
@@ -352,6 +401,12 @@ type ResolvedSecurityScheme struct {
 	// 	*required*
 	OpenIDConnectURL string `json:"openIdConnect,omitempty"`
 	Extensions       `json:"-"`
+}
+
+func (rss *ResolvedSecurityScheme) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"flows", rss.Flows, KindOAuthFlows},
+	})
 }
 
 // Kind returns KindResolvedSecurityScheme

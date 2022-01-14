@@ -30,7 +30,7 @@ type OpenAPI struct {
 	// An array of Server Objects, which provide connectivity information to a
 	// target server. If the servers property is not provided, or is an empty
 	// array, the default value would be a Server Object with a url value of /.
-	Servers []*Server `json:"servers,omitempty" yaml:"servers,omitempty,omtiempty"`
+	Servers Servers `json:"servers,omitempty" yaml:"servers,omitempty,omtiempty"`
 	// The available paths and operations for the API.
 	Paths *Paths `json:"paths,omitempty" yaml:"paths,omitempty"`
 	// The incoming webhooks that MAY be received as part of this API and that
@@ -40,7 +40,7 @@ type OpenAPI struct {
 	// is a unique string to refer to each webhook, while the (optionally
 	// referenced) Path Item Object describes a request that may be initiated by
 	// the API provider and the expected responses. An example is available.
-	Webhooks *PathItems `json:"webhooks,omitempty" yaml:"webhooks,omitempty"`
+	Webhooks *Webhooks `json:"webhooks,omitempty" yaml:"webhooks,omitempty"`
 	// An element to hold various schemas for the document.
 	Components *Components `json:"components,omitempty" yaml:"components,omitempty"`
 	// A list of tags used by the document with additional metadata. The order
@@ -48,7 +48,7 @@ type OpenAPI struct {
 	// Not all tags that are used by the Operation Object must be declared. The
 	// tags that are not declared MAY be organized randomly or based on the
 	// tools’ logic. Each tag name in the list MUST be unique.
-	Tags []*Tag `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Tags Tags `json:"tags,omitempty" yaml:"tags,omitempty"`
 	// A declaration of which security mechanisms can be used across the API.
 	//
 	// The list of values includes alternative security requirement objects that
@@ -61,11 +61,23 @@ type OpenAPI struct {
 	// To make security optional, an empty security requirement ({})
 	// can be included in the array.
 	//
-	Security []*SecurityRequirement `json:"security,omitempty" yaml:"security,omitempty"`
+	Security SecurityRequirements `json:"security,omitempty" yaml:"security,omitempty"`
 	// externalDocs	Additional external documentation.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 
 	Extensions `json:"-"`
+}
+
+func (o *OpenAPI) Nodes() Nodes {
+	return makeNodes(nodes{
+		{"servers", o.Servers, KindServers},
+		{"paths", o.Paths, KindPaths},
+		{"webhooks", o.Webhooks, KindWebhooks},
+		{"components", o.Components, KindComponents},
+		{"tags", o.Tags, KindTags},
+		{"security", o.Security, KindSecurityRequirements},
+		{"externalDocs", o.ExternalDocs, KindExternalDocs},
+	})
 }
 
 // Kind returns KindOpenAPI

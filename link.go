@@ -50,14 +50,11 @@ func (ls Links) Nodes() Nodes {
 	if len(ls) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(ls))
+	n := make(Nodes, len(ls))
 	for k, v := range ls {
-		nodes[k] = NodeDetail{
-			TargetKind: KindLink,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindLink)
 	}
-	return nodes
+	return n
 }
 
 // Kind returns KindLinks
@@ -260,14 +257,11 @@ func (rls ResolvedLinks) Nodes() Nodes {
 	if len(rls) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(rls))
+	n := make(Nodes, len(rls))
 	for k, v := range rls {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedLink,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedLink)
 	}
-	return nodes
+	return n
 }
 
 // Kind returns KindResolvedLinks

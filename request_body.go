@@ -54,14 +54,11 @@ func (rbs RequestBodies) Nodes() Nodes {
 	if len(rbs) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(rbs))
+	n := make(Nodes, len(rbs))
 	for k, v := range rbs {
-		nodes[k] = NodeDetail{
-			TargetKind: KindRequestBody,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindRequestBody)
 	}
-	return nodes
+	return n
 }
 
 func (rbs *RequestBodies) Len() int {
@@ -200,14 +197,11 @@ func (rrbs ResolvedRequestBodies) Nodes() Nodes {
 	if len(rrbs) == 0 {
 		return nil
 	}
-	nodes := make(Nodes, len(rrbs))
+	n := make(Nodes, len(rrbs))
 	for k, v := range rrbs {
-		nodes[k] = NodeDetail{
-			TargetKind: KindResolvedRequestBody,
-			Node:       v,
-		}
+		n.maybeAdd(k, v, KindResolvedRequestBody)
 	}
-	return nodes
+	return n
 }
 
 func (rrbs *ResolvedRequestBodies) Len() int {
