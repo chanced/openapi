@@ -227,31 +227,32 @@ type SchemaObj struct {
 	// matches the same schema. For this kind of array, set the items keyword to
 	// a single schema that will be used to validate all of the items in the
 	// array.
-	Items            *SchemaObj      `json:"items,omitempty"`
-	UnevaluatedObjs  *SchemaObj      `json:"unevaluatedObjs,omitempty"`
-	AdditionalObjs   *SchemaObj      `json:"additionalObjs,omitempty"`
-	PrefixObjs       SchemaSet       `json:"prefixObjs,omitempty"`
-	Contains         *SchemaObj      `json:"contains,omitempty"`
-	MinContains      *Number         `json:"minContains,omitempty"`
-	MaxContains      *Number         `json:"maxContains,omitempty"`
-	MinLength        *Number         `json:"minLength,omitempty"`
-	MaxLength        *Number         `json:"maxLength,omitempty"`
-	Pattern          *Regexp         `json:"pattern,omitempty"`
-	ContentEncoding  string          `json:"contentEncoding,omitempty"`
-	ContentMediaType string          `json:"contentMediaType,omitempty"`
-	Minimum          *Number         `json:"minimum,omitempty"`
-	ExclusiveMinimum *Number         `json:"exclusiveMinimum,omitempty"`
-	Maximum          *Number         `json:"maximum,omitempty"`
-	ExclusiveMaximum *Number         `json:"exclusiveMaximum,omitempty"`
-	MultipleOf       *Number         `json:"multipleOf,omitempty"`
-	Title            string          `json:"title,omitempty"`
-	Description      string          `json:"description,omitempty"`
-	Default          json.RawMessage `json:"default,omitempty"`
-	ReadOnly         *bool           `json:"readOnly,omitempty"`
-	WriteOnly        *bool           `json:"writeOnly,omitempty"`
-	Examples         json.RawMessage `json:"examples,omitempty"`
-	Deprecated       *bool           `json:"deprecated,omitempty"`
-	ExternalDocs     string          `json:"externalDocs,omitempty"`
+	Items            *SchemaObj        `json:"items,omitempty"`
+	UnevaluatedObjs  *SchemaObj        `json:"unevaluatedObjs,omitempty"`
+	AdditionalObjs   *SchemaObj        `json:"additionalObjs,omitempty"`
+	PrefixObjs       SchemaSet         `json:"prefixObjs,omitempty"`
+	Contains         *SchemaObj        `json:"contains,omitempty"`
+	MinContains      *Number           `json:"minContains,omitempty"`
+	MaxContains      *Number           `json:"maxContains,omitempty"`
+	MinLength        *Number           `json:"minLength,omitempty"`
+	MaxLength        *Number           `json:"maxLength,omitempty"`
+	Pattern          *Regexp           `json:"pattern,omitempty"`
+	ContentEncoding  string            `json:"contentEncoding,omitempty"`
+	ContentMediaType string            `json:"contentMediaType,omitempty"`
+	Minimum          *Number           `json:"minimum,omitempty"`
+	ExclusiveMinimum *Number           `json:"exclusiveMinimum,omitempty"`
+	Maximum          *Number           `json:"maximum,omitempty"`
+	ExclusiveMaximum *Number           `json:"exclusiveMaximum,omitempty"`
+	MultipleOf       *Number           `json:"multipleOf,omitempty"`
+	Title            string            `json:"title,omitempty"`
+	Description      string            `json:"description,omitempty"`
+	Default          json.RawMessage   `json:"default,omitempty"`
+	ReadOnly         *bool             `json:"readOnly,omitempty"`
+	WriteOnly        *bool             `json:"writeOnly,omitempty"`
+	Examples         []json.RawMessage `json:"examples,omitempty"`
+	Example          json.RawMessage   `json:"example,omitempty"`
+	Deprecated       *bool             `json:"deprecated,omitempty"`
+	ExternalDocs     string            `json:"externalDocs,omitempty"`
 	// Deprecated: renamed to dynamicAnchor
 	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
 	// Deprecated: renamed to dynamicRef
@@ -344,7 +345,6 @@ func (s *SchemaObj) SetKeyword(key string, value interface{}) error {
 		return err
 	}
 	return s.SetEncodedKeyword(key, b)
-
 }
 
 // SetEncodedKeyword sets the keyword key to value
@@ -574,7 +574,8 @@ type partialschema struct {
 	Default               json.RawMessage     `json:"default,omitempty"`
 	ReadOnly              *bool               `json:"readOnly,omitempty"`
 	WriteOnly             *bool               `json:"writeOnly,omitempty"`
-	Examples              json.RawMessage     `json:"examples,omitempty"`
+	Examples              []json.RawMessage   `json:"examples,omitempty"`
+	Example               json.RawMessage     `json:"example,omitempty"`
 	Deprecated            *bool               `json:"deprecated,omitempty"`
 	ExternalDocs          string              `json:"externalDocs,omitempty"`
 	RecursiveAnchor       *bool               `json:"$recursiveAnchor,omitempty"`
@@ -585,7 +586,9 @@ type partialschema struct {
 	Keywords              map[string]json.RawMessage `json:"-"`
 }
 
-var _ json.Marshaler = (*SchemaObj)(nil)
-var _ json.Unmarshaler = (*SchemaObj)(nil)
-var _ yaml.Unmarshaler = (*SchemaObj)(nil)
-var _ yaml.Marshaler = (*SchemaObj)(nil)
+var (
+	_ json.Marshaler   = (*SchemaObj)(nil)
+	_ json.Unmarshaler = (*SchemaObj)(nil)
+	_ yaml.Unmarshaler = (*SchemaObj)(nil)
+	_ yaml.Marshaler   = (*SchemaObj)(nil)
+)
