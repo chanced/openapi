@@ -285,7 +285,8 @@ type SchemaObj struct {
 	Default          json.RawMessage `json:"default,omitempty"`
 	ReadOnly         *bool           `json:"readOnly,omitempty"`
 	WriteOnly        *bool           `json:"writeOnly,omitempty"`
-	Examples         json.RawMessage `json:"examples,omitempty"`
+	Examples         Examples        `json:"examples,omitempty"`
+	Example          json.RawMessage `json:"example,omitempty"`
 	Deprecated       *bool           `json:"deprecated,omitempty"`
 	ExternalDocs     string          `json:"externalDocs,omitempty"`
 	// Deprecated: renamed to dynamicAnchor
@@ -936,6 +937,7 @@ var schemafields = map[string]struct{}{
 	"readOnly":              {},
 	"writeOnly":             {},
 	"examples":              {},
+	"example:":              {},
 	"deprecated":            {},
 	"externalDocs":          {},
 	"$recursiveAnchor":      {},

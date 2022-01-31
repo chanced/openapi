@@ -8,9 +8,10 @@ import (
 	"github.com/chanced/openapi"
 )
 
+//go:embed testdata/examples/openapi.yaml
+var files embed.FS
+
 func ExampleUsingLoaderToOpenExistingAPI() {
-	//go:embed testdata/examples/openapi.yaml
-	var files embed.FS
 	d, err := files.Open("openapi.yaml")
 	if err != nil {
 		log.Fatal(err)

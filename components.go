@@ -10,25 +10,25 @@ type components Components
 // components object.
 type Components struct {
 	// An object to hold reusable Schema Objects.
-	Schemas Schemas `json:"schemas,omitempty"`
+	Schemas *Schemas `json:"schemas,omitempty"`
 	// An object to hold reusable Response Objects.
-	Responses Responses `json:"responses,omitempty"`
+	Responses *Responses `json:"responses,omitempty"`
 	// An object to hold reusable Parameter Objects.
-	Parameters Parameters `json:"parameters,omitempty"`
+	Parameters *Parameters `json:"parameters,omitempty"`
 	// An object to hold reusable Example Objects.
-	Examples Examples `json:"examples,omitempty"`
+	Examples *Examples `json:"examples,omitempty"`
 	// An object to hold reusable Request Body Objects.
-	RequestBodies RequestBodies `json:"requestBodies,omitempty"`
+	RequestBodies *RequestBodies `json:"requestBodies,omitempty"`
 	// An object to hold reusable Header Objects.
-	Headers Headers `json:"headers,omitempty"`
+	Headers *Headers `json:"headers,omitempty"`
 	// An object to hold reusable Security Scheme Objects.
-	SecuritySchemes SecuritySchemes `json:"securitySchemes,omitempty"`
+	SecuritySchemes *SecuritySchemes `json:"securitySchemes,omitempty"`
 	// An object to hold reusable Link Objects.
 	Links *Links `json:"links,omitempty"`
 	// An object to hold reusable Callback Objects.
-	Callbacks Callbacks `json:"callbacks,omitempty"`
+	Callbacks *Callbacks `json:"callbacks,omitempty"`
 	// An object to hold reusable Path Item Object.
-	PathItems  PathItems `json:"pathItems,omitempty"`
+	PathItems  *PathItems `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
 
@@ -83,25 +83,25 @@ func (c *Components) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // properties outside the components object.
 type ResolvedComponents struct {
 	// An object to hold reusable Schema Objects.
-	Schemas ResolvedSchemas `json:"schemas,omitempty"`
+	Schemas *ResolvedSchemas `json:"schemas,omitempty"`
 	// An object to hold reusable Response Objects.
-	Responses ResolvedResponses `json:"responses,omitempty"`
+	Responses *ResolvedResponses `json:"responses,omitempty"`
 	// An object to hold reusable Parameter Objects.
-	Parameters ResolvedParameters `json:"parameters,omitempty"`
+	Parameters *ResolvedParameters `json:"parameters,omitempty"`
 	// An object to hold reusable Example Objects.
-	Examples ResolvedExamples `json:"examples,omitempty"`
+	Examples *ResolvedExamples `json:"examples,omitempty"`
 	// An object to hold reusable Request Body Objects.
-	RequestBodies ResolvedRequestBodies `json:"requestBodies,omitempty"`
+	RequestBodies *ResolvedRequestBodies `json:"requestBodies,omitempty"`
 	// An object to hold reusable Header Objects.
-	Headers ResolvedHeaders `json:"headers,omitempty"`
+	Headers *ResolvedHeaders `json:"headers,omitempty"`
 	// An object to hold reusable Security Scheme Objects.
-	SecuritySchemes ResolvedSecuritySchemes `json:"securitySchemes,omitempty"`
+	SecuritySchemes *ResolvedSecuritySchemes `json:"securitySchemes,omitempty"`
 	// An object to hold reusable Link Objects.
-	Links ResolvedLinks `json:"links,omitempty"`
+	Links *ResolvedLinks `json:"links,omitempty"`
 	// An object to hold reusable Callback Objects.
-	Callbacks ResolvedCallbacks `json:"callbacks,omitempty"`
+	Callbacks *ResolvedCallbacks `json:"callbacks,omitempty"`
 	// An object to hold reusable Path Item Object.
-	PathItems  ResolvedPathItems `json:"pathItems,omitempty"`
+	PathItems  *ResolvedPathItems `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
 

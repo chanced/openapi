@@ -49,7 +49,9 @@ func (l loader) load() (*ResolvedOpenAPI, error) {
 	panic("not implemented") // TODO: implement
 }
 
-func (l loader) loadSchemas(schemas SchemaSet)
+func (l loader) loadSchemas(schemas SchemaSet) {
+	panic("not implemented") // TODO: implement
+}
 
 const (
 	jsonEncoding = iota + 1
