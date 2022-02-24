@@ -3,6 +3,7 @@ package openapi_test
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/chanced/cmpjson"
@@ -102,5 +103,20 @@ func TestOperation(t *testing.T) {
 		}
 		assert.True(jsonpatch.Equal(data, yb), cmpjson.Diff(data, yb))
 
+	}
+}
+
+func TestExtensionSorting(t *testing.T) {
+	assert := require.New(t)
+	exp := `{"x-key1":1,"x-key2":2}`
+	for n := 0; n < 100; n++ {
+		op := new(openapi.Operation)
+		op.Extensions = make(openapi.Extensions)
+		op.Extensions.SetEncodedExtension("key1", []byte("1"))
+		op.Extensions.SetEncodedExtension("key2", []byte("2"))
+
+		marshaled, _ := json.Marshal(op)
+
+		assert.Equal(string(marshaled), exp, strconv.Itoa(n))
 	}
 }
