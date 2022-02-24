@@ -112,13 +112,8 @@ func TestExtensionSorting(t *testing.T) {
 	for n := 0; n < 100; n++ {
 		op := new(openapi.Operation)
 		op.Extensions = make(openapi.Extensions)
-		if n%2 == 0 {
-			op.Extensions.SetEncodedExtension("key2", []byte("2"))
-			op.Extensions.SetEncodedExtension("key1", []byte("1"))
-		} else {
-			op.Extensions.SetEncodedExtension("key1", []byte("1"))
-			op.Extensions.SetEncodedExtension("key2", []byte("2"))
-		}
+		op.Extensions.SetEncodedExtension("key1", []byte("1"))
+		op.Extensions.SetEncodedExtension("key2", []byte("2"))
 
 		marshaled, _ := json.Marshal(op)
 
