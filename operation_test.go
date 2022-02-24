@@ -108,7 +108,7 @@ func TestOperation(t *testing.T) {
 
 func TestExtensionSorting(t *testing.T) {
 	assert := require.New(t)
-	prev := ""
+	exp := `{"x-key1":1,"x-key2":2}`
 	for n := 0; n < 100; n++ {
 		op := new(openapi.Operation)
 		op.Extensions = make(openapi.Extensions)
@@ -117,9 +117,6 @@ func TestExtensionSorting(t *testing.T) {
 
 		marshaled, _ := json.Marshal(op)
 
-		if prev != "" {
-			assert.Equal(string(marshaled), prev, strconv.Itoa(n))
-		}
-		prev = string(marshaled)
+		assert.Equal(string(marshaled), exp, strconv.Itoa(n))
 	}
 }
