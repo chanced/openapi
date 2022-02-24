@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"encoding/json"
+	"sort"
 	"strings"
 
 	"github.com/tidwall/sjson"
@@ -134,8 +135,16 @@ func marshalExtendedJSON(dst extended) ([]byte, error) {
 
 func marshalExtendedJSONInto(data []byte, obj extended) ([]byte, error) {
 	var err error
-	for k, v := range obj.exts() {
-		data, err = sjson.SetBytes(data, k, v)
+
+	exts := obj.exts()
+	keys := make([]string, 0, len(exts))
+	for k := range exts {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		data, err = sjson.SetBytes(data, k, exts[k])
 		if err != nil {
 			return data, err
 		}
