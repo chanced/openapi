@@ -16,7 +16,8 @@ import (
 func TestSchema(t *testing.T) {
 	assert := require.New(t)
 
-	j := []string{`{
+	j := []string{
+		`{
 		"$schema": "https://json-schema.org/draft/2020-12/schema",
 		"$id": "https://example.com/tree",
 		"$dynamicAnchor": "node",
@@ -310,8 +311,8 @@ func TestSchema(t *testing.T) {
 	  }`,
 	}
 	for _, d := range j {
-		var data = []byte(d)
-		var v *openapi.SchemaObj
+		data := []byte(d)
+		var v *openapi.Schema
 		err := json.Unmarshal(data, &v)
 		assert.NoError(err)
 
@@ -331,7 +332,7 @@ func TestSchema(t *testing.T) {
 		b, err = yaml.Marshal(v)
 		assert.NoError(err)
 
-		var s *openapi.SchemaObj
+		var s *openapi.Schema
 		err = yaml.Unmarshal(b, &s)
 		assert.NoError(err)
 		b, err = json.MarshalIndent(s, "", "  ")
@@ -342,7 +343,7 @@ func TestSchema(t *testing.T) {
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
-		var yo openapi.SchemaObj
+		var yo openapi.Schema
 		err = yaml.Unmarshal(y, &yo)
 		assert.NoError(err)
 		yb, err := json.MarshalIndent(yo, "", "  ")

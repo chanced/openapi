@@ -14,10 +14,10 @@ func TestReference(t *testing.T) {
 		Ref: r,
 	}
 	ran := false
-	v.ResolveCallback(func(ref string) (*openapi.CallbackObj, error) {
+	v.ResolveCallback(func(ref string) (*openapi.Callback, error) {
 		ran = true
 		assert.Equal(r, ref)
-		return &openapi.CallbackObj{}, nil
+		return &openapi.Callback{}, nil
 	})
 	assert.True(ran)
 }

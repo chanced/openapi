@@ -213,7 +213,7 @@ type ParameterObj struct {
 	// value of query. The default value is false.
 	AllowReserved bool `json:"allowReserved,omitempty"`
 	// The schema defining the type used for the parameter.
-	Schema *SchemaObj `json:"schema,omitempty"`
+	Schema *Schema `json:"schema,omitempty"`
 	// Examples of the parameter's potential value. Each example SHOULD
 	// contain a value in the correct format as specified in the parameter
 	// encoding. The examples field is mutually exclusive of the example
@@ -259,7 +259,7 @@ func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 		Style           string          `json:"style,omitempty"`
 		Explode         bool            `json:"explode,omitempty"`
 		AllowReserved   bool            `json:"allowReserved,omitempty"`
-		Schema          *SchemaObj      `json:"-"`
+		Schema          *Schema         `json:"-"`
 		Examples        Examples        `json:"examples,omitempty"`
 		Example         json.RawMessage `json:"example,omitempty"`
 		Content         Content         `json:"content,omitempty"`

@@ -49,16 +49,16 @@ type Encoding struct {
 
 	Extensions `json:"-"`
 }
-type encoding Encoding
+type encodingobj Encoding
 
 // MarshalJSON marshals e into JSON
 func (e Encoding) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(encoding(e))
+	return marshalExtendedJSON(encodingobj(e))
 }
 
 // UnmarshalJSON unmarshals json into e
 func (e *Encoding) UnmarshalJSON(data []byte) error {
-	v := encoding{}
+	v := encodingobj{}
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}

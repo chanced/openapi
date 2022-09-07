@@ -7,17 +7,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// CallbackKind indicates whether the CallbackObj is a Callback or a Reference
-type CallbackKind uint8
-
-const (
-	// CallbackKindObj = CallbackObj
-	CallbackKindObj CallbackKind = iota
-	// CallbackKindRef = Reference
-	CallbackKindRef
-)
-
-// CallbackObj is map of possible out-of band callbacks related to the parent
+// Callback is map of possible out-of band callbacks related to the parent
 // operation. Each value in the map is a Path Item Object that describes a set
 // of requests that may be initiated by the API provider and the expected
 // responses. The key value used to identify the path item object is an
@@ -26,15 +16,15 @@ const (
 //
 // To describe incoming requests from the API provider independent from another
 // API call, use the webhooks field.
-type CallbackObj struct {
+type Callback struct {
 	Paths      PathItems `json:"-"`
 	Extensions `json:"-"`
 }
 
-type callback CallbackObj
+type callback Callback
 
 // MarshalJSON marshals JSON
-func (c CallbackObj) MarshalJSON() ([]byte, error) {
+func (c Callback) MarshalJSON() ([]byte, error) {
 	b, err := json.Marshal(c.Paths)
 	if err != nil {
 		return b, err
@@ -43,8 +33,8 @@ func (c CallbackObj) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals JSON
-func (c *CallbackObj) UnmarshalJSON(data []byte) error {
-	*c = CallbackObj{
+func (c *Callback) UnmarshalJSON(data []byte) error {
+	*c = Callback{
 		Paths:      PathItems{},
 		Extensions: Extensions{},
 	}
@@ -67,31 +57,17 @@ func (c *CallbackObj) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalYAML marshals YAML
-func (c CallbackObj) MarshalYAML() (interface{}, error) {
+func (c Callback) MarshalYAML() (interface{}, error) {
 	return yamlutil.Marshal(c)
 }
 
 // UnmarshalYAML unmarshals YAML
-func (c *CallbackObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *Callback) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, c)
 }
 
-// CallbackKind returns CallbackKindCallback
-func (c *CallbackObj) CallbackKind() CallbackKind { return CallbackKindObj }
-
-// ResolveCallback resolves CallbackObj by returning itself. resolve is  not called.
-func (c *CallbackObj) ResolveCallback(CallbackResolver) (*CallbackObj, error) {
-	return c, nil
-}
-
-// Callback can either be a CallbackObj or a Reference
-type Callback interface {
-	ResolveCallback(CallbackResolver) (*CallbackObj, error)
-	CallbackKind() CallbackKind
-}
-
 // Callbacks is a map of reusable Callback Objects.
-type Callbacks map[string]Callback
+type Callbacks map[string]Ref[*Callback]
 
 // UnmarshalJSON unmarshals JSON
 func (c *Callbacks) UnmarshalJSON(data []byte) error {
@@ -103,17 +79,18 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 	}
 	for k, d := range o {
 		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
+			ref, err := unmarshalReferenceJSON(d)
 			if err != nil {
 				return err
 			}
-			res[k] = v
+			res[k] = newRef[*Callback](ref, nil)
+
 		} else {
-			var v CallbackObj
+			var v Callback
 			if err := json.Unmarshal(d, &v); err != nil {
 				return err
 			}
-			res[k] = &v
+			res[k] = newRef(nil, &v)
 		}
 	}
 	*c = res

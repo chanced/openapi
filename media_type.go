@@ -16,7 +16,7 @@ type Content map[string]*MediaType
 // MediaType  provides schema and examples for the media type identified by its key.
 type MediaType struct {
 	//  The schema defining the content of the request, response, or parameter.
-	Schema *SchemaObj `json:"schema,omitempty"`
+	Schema *Schema `json:"schema,omitempty"`
 	// Example of the media type. The example object SHOULD be in the correct
 	// format as specified by the media type. The example field is mutually
 	// exclusive of the examples field. Furthermore, if referencing a schema
@@ -46,7 +46,7 @@ func (mt MediaType) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals json into mt
 func (mt *MediaType) UnmarshalJSON(data []byte) error {
 	type mediatype struct {
-		Schema     *SchemaObj      `json:"-"`
+		Schema     *Schema         `json:"-"`
 		Example    json.RawMessage `json:"example,omitempty"`
 		Examples   Examples        `json:"examples,omitempty"`
 		Encoding   Encodings       `json:"encoding,omitempty"`

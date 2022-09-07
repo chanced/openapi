@@ -16,19 +16,20 @@ const (
 	HeaderKindRef
 )
 
-// Header is either a Header or a Reference
-type Header interface {
-	ResolveHeader(HeaderResolver) (*HeaderObj, error)
-	HeaderKind() HeaderKind
+type HeaderRef struct {
+	Ref   *Reference `json:"-"`
+	Value *Header    `json:"-"`
 }
 
-// HeaderObj follows the structure of the Parameter Object with the following
+// Header is either a Header or a Reference
+
+// Header follows the structure of the Parameter Object with the following
 // changes:
-//		- name MUST NOT be specified, it is given in the corresponding headers map.
-//		- in MUST NOT be specified, it is implicitly in header.
-//		- All traits that are affected by the location MUST be applicable to a
-// 		  location of header (for example, style).
-type HeaderObj struct {
+//   - name MUST NOT be specified, it is given in the corresponding headers map.
+//   - in MUST NOT be specified, it is implicitly in header.
+//   - All traits that are affected by the location MUST be applicable to a
+//     location of header (for example, style).
+type Header struct {
 	// A brief description of the parameter. This could contain examples of use.
 	// CommonMark syntax MAY be used for rich text representation.
 	Description string `json:"description,omitempty"`
@@ -66,7 +67,7 @@ type HeaderObj struct {
 	// value of query. The default value is false.
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 	// The schema defining the type used for the parameter.
-	Schema *SchemaObj `json:"schema,omitempty"`
+	Schema *Schema `json:"schema,omitempty"`
 	// Examples of the parameter's potential value. Each example SHOULD
 	// contain a value in the correct format as specified in the parameter
 	// encoding. The examples field is mutually exclusive of the example
@@ -85,32 +86,32 @@ type HeaderObj struct {
 	Extensions `json:"-"`
 }
 
-type header HeaderObj
+type header Header
 
 // HeaderKind distinguishes h as a Header by returning HeaderKindHeader
-func (h *HeaderObj) HeaderKind() HeaderKind { return HeaderKindObj }
+func (h *Header) HeaderKind() HeaderKind { return HeaderKindObj }
 
 // ResolveHeader resolves HeaderObj by returning itself. resolve is  not called.
-func (h *HeaderObj) ResolveHeader(HeaderResolver) (*HeaderObj, error) {
+func (h *Header) ResolveHeader(HeaderResolver) (*Header, error) {
 	return h, nil
 }
 
 // MarshalJSON marshals h into JSON
-func (h HeaderObj) MarshalJSON() ([]byte, error) {
+func (h Header) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(header(h))
 }
 
 // UnmarshalJSON unmarshals json into h
-func (h *HeaderObj) UnmarshalJSON(data []byte) error {
+func (h *Header) UnmarshalJSON(data []byte) error {
 	v := header{}
 	err := unmarshalExtendedJSON(data, &v)
-	*h = HeaderObj(v)
+	*h = Header(v)
 	return err
 }
 
 // MarshalYAML first marshals and unmarshals into JSON and then marshals into
 // YAML
-func (h HeaderObj) MarshalYAML() (interface{}, error) {
+func (h Header) MarshalYAML() (interface{}, error) {
 	b, err := json.Marshal(h)
 	if err != nil {
 		return nil, err
@@ -121,7 +122,7 @@ func (h HeaderObj) MarshalYAML() (interface{}, error) {
 }
 
 // UnmarshalYAML unmarshals yaml into s
-func (h *HeaderObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (h *Header) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return yamlutil.Unmarshal(unmarshal, h)
 }
 
@@ -144,7 +145,7 @@ func (h *Headers) UnmarshalJSON(data []byte) error {
 			}
 			(*h)[i] = &v
 		} else {
-			var v HeaderObj
+			var v Header
 			if err = json.Unmarshal(j, &v); err != nil {
 				return err
 			}

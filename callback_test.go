@@ -37,7 +37,7 @@ func TestCallback(t *testing.T) {
 	  }`),
 	}
 	for _, data := range cbj {
-		var v openapi.CallbackObj
+		var v openapi.Callback
 		err := json.Unmarshal(data, &v)
 		assert.NoError(err)
 		b, err := json.MarshalIndent(&v, "", "  ")

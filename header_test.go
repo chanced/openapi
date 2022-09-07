@@ -26,7 +26,7 @@ func TestHeader(t *testing.T) {
 	}
 	for _, d := range j {
 		data := []byte(d)
-		var h openapi.HeaderObj
+		var h openapi.Header
 		err := json.Unmarshal(data, &h)
 		assert.NoError(err)
 
@@ -40,7 +40,7 @@ func TestHeader(t *testing.T) {
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
-		var yo openapi.HeaderObj
+		var yo openapi.Header
 		err = yaml.Unmarshal(y, &yo)
 		assert.NoError(err)
 		yb, err := json.MarshalIndent(yo, "", "  ")
