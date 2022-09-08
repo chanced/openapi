@@ -1,7 +1,5 @@
 package openapi
 
-import "github.com/chanced/openapi/yamlutil"
-
 // OAuthFlows allows configuration of the supported OAuth Flows.
 type OAuthFlows struct {
 	// Configuration for the OAuth Implicit flow
@@ -31,16 +29,6 @@ func (oaf *OAuthFlows) UnmarshalJSON(data []byte) error {
 	}
 	*oaf = OAuthFlows(v)
 	return nil
-}
-
-// MarshalYAML marshals YAML
-func (oaf OAuthFlows) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(oaf)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (oaf *OAuthFlows) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, oaf)
 }
 
 // OAuthFlow configuration details for a supported OAuth Flow
@@ -85,14 +73,4 @@ func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
 	}
 	*o = OAuthFlow(v)
 	return nil
-}
-
-// MarshalYAML marshals YAML
-func (o OAuthFlow) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(o)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (o *OAuthFlow) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, o)
 }

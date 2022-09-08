@@ -3,25 +3,21 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
 
-// ParameterKind indicates whether the entry is a ParameterDef or a Reference
-type ParameterKind uint
+// Parameters is a map of Parameter
+type Parameters Map[*Parameter]
 
-const (
-	// ParameterKindObj is a ParameterObj
-	ParameterKindObj ParameterKind = iota
-	// ParameterKindReference indicates the Parameter is a Reference
-	ParameterKindReference
-)
-
-// Parameter is either a ParameterObject or a ReferenceObject
-type Parameter interface {
-	ParameterKind() ParameterKind
-	ResolveParameter(ParameterResolver) (*ParameterObj, error)
-}
+// ParameterSet is list of parameters that are applicable for a given operation.
+// If a parameter is already defined at the Path Item, the new definition will
+// override it but can never remove it. The list MUST NOT include duplicated
+// parameters. A unique parameter is defined by a combination of a name and
+// location. The list can use the Reference Object to link to parameters that
+// are defined at the OpenAPI Object's components/parameters.
+//
+// Can either be a Parameter or a Reference
+type ParameterSet Slice[*Parameter]
 
 /*
 * Path Parameters
@@ -140,7 +136,7 @@ const (
 	// StyleSimple comma-separated values. Corresponds to the
 	// {param_name} URI template.
 	StyleSimple Style = "simple"
-	// StyleMatrix  semicolon-prefixed values, also known as path-style
+	// StyleMatrix is semicolon-prefixed values, also known as path-style
 	// expansion. Corresponds to the {;param_name} URI template.
 	StyleMatrix Style = "matrix"
 	// StyleLabel dot-prefixed values, also known as label expansion.
@@ -149,25 +145,30 @@ const (
 	// StyleDeepObject a simple way of rendering nested objects using
 	// form parameters (applies to objects only).
 	StyleDeepObject Style = "deepObject"
-	// StylePipeDelimited is pipeline-separated array values. Same as
-	// collectionFormat: pipes in OpenAPI 2.0. Has effect only for non-exploded
-	// arrays (explode: false), that is, the pipe separates the array values if
-	// the array is a single parameter, as in arr=a|b|c
+	// StylePipeDelimited is pipeline-separated array values.
+	//
+	// Same as collectionFormat: pipes in OpenAPI 2.0. Has effect only for
+	// non-exploded arrays (explode: false), that is, the pipe separates the
+	// array values if the array is a single parameter, as in
+	// 	arr=a|b|c
 	StylePipeDelimited Style = "pipeDelimited"
 )
 
-// ParameterObj describes a single operation parameter.
+// Parameter describes a single operation parameter.
 //
 // A unique parameter is defined by a combination of a name and location.
-type ParameterObj struct {
+type Parameter struct {
 	// The name of the parameter. Parameter names are case sensitive:
-	//   - If In is "path", the name field MUST correspond to a template
-	//     expression occurring within the path field in the Paths Object.
-	//     See Path Templating for further information.
-	//   - If In is "header" and the name field is "Accept", "Content-Type"
-	//     or "Authorization", the parameter definition SHALL be ignored.
-	//   - For all other cases, the name corresponds to the parameter name
-	//     used by the in property.
+	//
+	// - If In is "path", the name field MUST correspond to a template
+	// expression occurring within the path field in the Paths Object.
+	// See Path Templating for further information.
+	//
+	// - If In is "header" and the name field is "Accept", "Content-Type"
+	// or "Authorization", the parameter definition SHALL be ignored.
+	//
+	// - For all other cases, the name corresponds to the parameter name
+	// used by the in property.
 	//
 	//  *required*
 	Name string `json:"name"`
@@ -196,7 +197,7 @@ type ParameterObj struct {
 	// Describes how the parameter value will be serialized depending on the
 	// type of the parameter value.
 	// Default values (based on value of in):
-	// 	- for query - form;
+	//  - for query - form;
 	// 	- for path - simple;
 	// 	- for header - simple;
 	// 	- for cookie - form.
@@ -227,28 +228,18 @@ type ParameterObj struct {
 	// schema property, or a content property, but not both. When example or
 	// examples are provided in conjunction with the schema object, the example
 	// MUST follow the prescribed serialization strategy for the parameter.
-
 	Content    Content `json:"content,omitempty"`
 	Extensions `json:"-"`
 }
 
-// ResolveParameter resolves p by returning itself
-func (p *ParameterObj) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
-	return p, nil
-}
-
-// ParameterKind indicates that this is a Parameter for unmarshaling
-// ParameterObjs by returning ParameterKindParameter
-func (p *ParameterObj) ParameterKind() ParameterKind { return ParameterKindObj }
-
 // MarshalJSON marshals h into JSON
-func (p ParameterObj) MarshalJSON() ([]byte, error) {
-	type parameter ParameterObj
+func (p Parameter) MarshalJSON() ([]byte, error) {
+	type parameter Parameter
 	return marshalExtendedJSON(parameter(p))
 }
 
 // UnmarshalJSON unmarshals json into p
-func (p *ParameterObj) UnmarshalJSON(data []byte) error {
+func (p *Parameter) UnmarshalJSON(data []byte) error {
 	type parameter struct {
 		Name            string          `json:"name"`
 		In              In              `json:"in"`
@@ -278,120 +269,21 @@ func (p *ParameterObj) UnmarshalJSON(data []byte) error {
 		}
 		v.Schema = s
 	}
-	*p = ParameterObj(v)
+	*p = Parameter(v)
 	return nil
 }
 
-// UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
-}
+func (Parameter) Kind() Kind { return KindParameter }
 
-// MarshalYAML marshals p into YAML
-func (p ParameterObj) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(p)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// ParameterList is list of parameters that are applicable for a given operation.
-// If a parameter is already defined at the Path Item, the new definition will
-// override it but can never remove it. The list MUST NOT include duplicated
-// parameters. A unique parameter is defined by a combination of a name and
-// location. The list can use the Reference Object to link to parameters that
-// are defined at the OpenAPI Object's components/parameters.
-//
-// Can either be a Parameter or a Reference
-type ParameterList []Parameter
-
-// MarshalJSON marshals JSON
-func (p ParameterList) MarshalJSON() ([]byte, error) {
-	if p != nil {
-		return json.Marshal([]Parameter(p))
-	}
-	return json.Marshal(make([]Parameter, 0))
-}
-
-// UnmarshalJSON unmarshals JSON data into p
-func (p *ParameterList) UnmarshalJSON(data []byte) error {
-	var rd []json.RawMessage
-	var err error
-	if err = json.Unmarshal(data, &rd); err != nil {
-		return err
-	}
-	items := make([]Parameter, len(rd))
-	for i, d := range rd {
-		var p Parameter
-		err = unmarshalParameterJSON(d, &p)
-		if err != nil {
-			return err
-		}
-		items[i] = p
-	}
-	*p = items
-	return nil
-}
-
-func unmarshalParameterJSON(data []byte, dst *Parameter) error {
+func unmarshalParameterJSON(data []byte) (Component[*Parameter], error) {
 	var err error
 	if isRefJSON(data) {
 		var v Reference
 		err = json.Unmarshal(data, &v)
-		*dst = &v
+		return newComponent[*Parameter](&v, nil), err
 	} else {
-		var v ParameterObj
+		var v Parameter
 		err = json.Unmarshal(data, &v)
-		*dst = &v
+		return newComponent[*Parameter](nil, &v), err
 	}
-	return err
-}
-
-// UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterList) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
-}
-
-// MarshalYAML marshals p into YAML
-func (p ParameterList) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(p)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// Parameters is a map of Parameter
-type Parameters map[string]Parameter
-
-// UnmarshalJSON unmarshals JSON
-func (p *Parameters) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(Parameters, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v ParameterObj
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
-
-		res[k] = &v
-	}
-	*p = res
-	return nil
 }

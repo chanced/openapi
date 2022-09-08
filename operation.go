@@ -1,9 +1,7 @@
 package openapi
 
 import (
-	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 // Operation describes a single API operation on a path.
@@ -30,7 +28,7 @@ type Operation struct {
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters *ParameterList `json:"parameters,omitempty"`
+	Parameters *ParameterSet `json:"parameters,omitempty"`
 
 	// The request body applicable for this operation. The requestBody is fully
 	// supported in HTTP methods where the HTTP 1.1 specification RFC7231 has
@@ -38,7 +36,7 @@ type Operation struct {
 	// HTTP spec is vague (such as GET, HEAD and DELETE), requestBody is
 	// permitted but does not have well-defined semantics and SHOULD be avoided
 	// if possible.
-	RequestBody RequestBody `json:"requestBody,omitempty"`
+	RequestBody Component[*RequestBody] `json:"requestBody,omitempty"`
 	// The list of possible responses as they are returned from executing this
 	// operation.
 	Responses Responses `json:"responses,omitempty"`
@@ -65,36 +63,20 @@ type Operation struct {
 	Servers    []*Server `json:"servers,omitempty"`
 	Extensions `json:"-"`
 }
-type operation struct {
-	Tags         []string             `json:"tags,omitempty"`
-	Summary      string               `json:"summary,omitempty"`
-	Description  string               `json:"description,omitempty"`
-	ExternalDocs *ExternalDocs        `json:"externalDocs,omitempty"`
-	OperationID  string               `json:"operationId,omitempty"`
-	Parameters   *ParameterList       `json:"parameters,omitempty"`
-	RequestBody  RequestBody          `json:"-"`
-	Responses    Responses            `json:"responses,omitempty"`
-	Callbacks    Callbacks            `json:"callbacks,omitempty"`
-	Deprecated   bool                 `json:"deprecated,omitempty"`
-	Security     SecurityRequirements `json:"security,omitempty"`
-	Servers      []*Server            `json:"servers,omitempty"`
-	Extensions   `json:"-"`
-}
 
 // MarshalJSON marshals JSON
 func (o Operation) MarshalJSON() ([]byte, error) {
+	type operation Operation
 	b, err := marshalExtendedJSON(operation(o))
 	if err != nil {
 		return b, err
-	}
-	if o.RequestBody != nil {
-		b, err = sjson.SetBytes(b, "requestBody", o.RequestBody)
 	}
 	return b, err
 }
 
 // UnmarshalJSON unmarshals JSON
 func (o *Operation) UnmarshalJSON(data []byte) error {
+	type operation Operation
 	var v operation
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
@@ -109,14 +91,4 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	}
 	*o = Operation(v)
 	return nil
-}
-
-// MarshalYAML marshals YAML
-func (o Operation) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(o)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (o *Operation) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, o)
 }

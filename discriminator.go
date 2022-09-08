@@ -1,9 +1,5 @@
 package openapi
 
-import (
-	"github.com/chanced/openapi/yamlutil"
-)
-
 // Discriminator can be used to aid in serialization, deserialization, and
 // validation of request bodies or response payloads which may be one of a
 // number of different schemas. The discriminator is a specific object in a
@@ -39,13 +35,3 @@ func (d *Discriminator) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (d Discriminator) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(d)
-}
-
-// UnmarshalYAML unmarshals yaml into s
-func (d *Discriminator) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, d)
-}

@@ -1,7 +1,5 @@
 package openapi
 
-import "github.com/chanced/openapi/yamlutil"
-
 // Server represention of a Server.
 type Server struct {
 	// A URL to the target host. This URL supports Server Variables and MAY be
@@ -30,16 +28,6 @@ func (s *Server) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*s = Server(v)
 	return err
-}
-
-// MarshalYAML marshals YAML
-func (s Server) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(s)
-}
-
-// UnmarshalYAML unmarshals YAML data into s
-func (s *Server) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, s)
 }
 
 // ServerVariable for server URL template substitution.
@@ -74,14 +62,4 @@ func (sv *ServerVariable) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*sv = ServerVariable(v)
 	return err
-}
-
-// MarshalYAML marshals YAML
-func (sv ServerVariable) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(sv)
-}
-
-// UnmarshalYAML unmarshals YAML data into s
-func (sv *ServerVariable) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, sv)
 }

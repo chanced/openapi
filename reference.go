@@ -4,21 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
-
-type Ref[T Node] struct {
-	Ref   *Reference
-	Value T
-}
-
-func newRef[T Node](ref *Reference, obj T) Ref[T] {
-	return Ref[T]{
-		Ref:   ref,
-		Value: obj,
-	}
-}
 
 // ErrNotReference indicates not a reference
 var ErrNotReference = errors.New("error: data is not a Reference")
@@ -46,16 +33,6 @@ type Reference struct {
 	// the referenced object-type does not allow a description field, then this
 	// field has no effect.
 	Description string `yaml:"description" json:"description,omitempty"`
-}
-
-// MarshalYAML marshals YAML
-func (r Reference) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(r)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (r *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, r)
 }
 
 func isRefJSON(data []byte) bool {

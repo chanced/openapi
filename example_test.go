@@ -66,9 +66,9 @@ func TestIssue5(t *testing.T) {
 	assert.Len(*pi.Parameters, 1)
 	params := *pi.Parameters
 	param := params[0]
-	paramobj := param.(*openapi.ParameterObj)
+	paramobj := param.Value
 	assert.Contains(paramobj.Examples, "an example")
-	ex := paramobj.Examples["an example"].(*openapi.ExampleObj)
+	ex := paramobj.Examples["an example"].Value
 	assert.Equal(json.RawMessage(`"someval"`), ex.Value)
 }
 

@@ -90,7 +90,7 @@ func TestParameter(t *testing.T) {
 	}
 	for _, d := range j {
 		data := []byte(d)
-		var p openapi.ParameterObj
+		var p openapi.Parameter
 		err := json.Unmarshal(data, &p)
 		assert.NoError(err)
 		b, err := json.MarshalIndent(p, "", "  ")
@@ -106,7 +106,7 @@ func TestParameter(t *testing.T) {
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
-		var yo openapi.ParameterObj
+		var yo openapi.Parameter
 		err = yaml.Unmarshal(y, &yo)
 		assert.NoError(err)
 		yb, err := json.MarshalIndent(yo, "", "  ")

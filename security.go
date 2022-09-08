@@ -1,11 +1,5 @@
 package openapi
 
-import (
-	"encoding/json"
-
-	"github.com/chanced/openapi/yamlutil"
-)
-
 const (
 	// SecuritySchemeTypeAPIKey = "apiKey"
 	SecuritySchemeTypeAPIKey SecuritySchemeType = "apiKey"
@@ -51,57 +45,11 @@ func (ss SecuritySchemeType) String() string {
 	return string(ss)
 }
 
-// SecuritySchemeKind is either a SecuritySchemeObj or Reference
-type SecuritySchemeKind uint8
-
-const (
-	// SecuritySchemeKindObj = SecuritySchemeObj
-	SecuritySchemeKindObj SecuritySchemeKind = iota
-	// SecuritySchemeKindRef = Reference
-	SecuritySchemeKindRef
-)
-
 // SecuritySchemes is a map of SecurityScheme
-type SecuritySchemes map[string]SecurityScheme
+type SecuritySchemes Map[*SecurityScheme]
 
-// UnmarshalJSON unmarshals json
-func (ss *SecuritySchemes) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(SecuritySchemes, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v SecuritySchemeObj
-		if err := json.Unmarshal(d, &v); err != nil {
-			return err
-		}
-		res[k] = &v
-	}
-	*ss = res
-	return nil
-}
-
-// MarshalYAML marshals YAML
-func (ss SecuritySchemes) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(ss)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (ss *SecuritySchemes) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, ss)
-}
-
-// SecuritySchemeObj defines a security scheme that can be used by the operations.
-type SecuritySchemeObj struct {
+// SecurityScheme defines a security scheme that can be used by the operations.
+type SecurityScheme struct {
 	// The type of the security scheme.
 	//
 	// *required
@@ -147,41 +95,21 @@ type SecuritySchemeObj struct {
 	Extensions       `json:"-"`
 }
 
-type securityscheme SecuritySchemeObj
-
 // UnmarshalJSON unmarshals JSON
-func (sso *SecuritySchemeObj) UnmarshalJSON(data []byte) error {
+func (sso *SecurityScheme) UnmarshalJSON(data []byte) error {
+	type securityscheme SecurityScheme
+
 	var v securityscheme
 	err := unmarshalExtendedJSON(data, &v)
-	*sso = SecuritySchemeObj(v)
+	*sso = SecurityScheme(v)
 	return err
 }
 
 // MarshalJSON marshals JSON
-func (sso SecuritySchemeObj) MarshalJSON() ([]byte, error) {
+func (sso SecurityScheme) MarshalJSON() ([]byte, error) {
+	type securityscheme SecurityScheme
+
 	return marshalExtendedJSON(securityscheme(sso))
 }
 
-// MarshalYAML marshals YAML
-func (sso SecuritySchemeObj) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(sso)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (sso *SecuritySchemeObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, sso)
-}
-
-// SecuritySchemeKind returns SecuritySchemeKindObj
-func (sso *SecuritySchemeObj) SecuritySchemeKind() SecuritySchemeKind { return SecuritySchemeKindObj }
-
-// ResolveSecurityScheme resolves SecuritySchemeObj by returning itself. resolve is  not called.
-func (sso *SecuritySchemeObj) ResolveSecurityScheme(SecuritySchemeResolver) (*SecuritySchemeObj, error) {
-	return sso, nil
-}
-
-// SecurityScheme can either be a ScecuritySchemeObj or a Reference
-type SecurityScheme interface {
-	ResolveSecurityScheme(SecuritySchemeResolver) (*SecuritySchemeObj, error)
-	SecuritySchemeKind() SecuritySchemeKind
-}
+func (SecurityScheme) Kind() Kind { return KindSecurityScheme }

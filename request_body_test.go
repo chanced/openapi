@@ -61,7 +61,7 @@ func TestRequestBody(t *testing.T) {
 	}
 	for _, d := range j {
 		data := []byte(d)
-		var rb openapi.RequestBodyObj
+		var rb openapi.RequestBody
 		err := json.Unmarshal(data, &rb)
 		assert.NoError(err)
 		b, err := json.Marshal(rb)
@@ -72,7 +72,7 @@ func TestRequestBody(t *testing.T) {
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
-		var yo openapi.RequestBodyObj
+		var yo openapi.RequestBody
 		err = yaml.Unmarshal(y, &yo)
 		assert.NoError(err)
 		yb, err := json.MarshalIndent(yo, "", "  ")

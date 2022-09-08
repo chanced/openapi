@@ -10,45 +10,45 @@ const (
 	// TypeString = string
 	//
 	// https://json-schema.org/understanding-json-schema/reference/string.html#string
-	TypeString SchemaType = "string"
+	TypeString Type = "string"
 	// TypeNumber = number
 	//
 	// https://json-schema.org/understanding-json-schema/reference/numeric.html#number
-	TypeNumber SchemaType = "number"
+	TypeNumber Type = "number"
 	// TypeInteger = integer
 	//
 	// https://json-schema.org/understanding-json-schema/reference/numeric.html#integer
-	TypeInteger SchemaType = "integer"
+	TypeInteger Type = "integer"
 	// TypeObject = object
 	//
 	// https://json-schema.org/understanding-json-schema/reference/object.html#object
-	TypeObject SchemaType = "object"
+	TypeObject Type = "object"
 	// TypeArray = array
 	//
 	// https://json-schema.org/understanding-json-schema/reference/array.html#array
-	TypeArray SchemaType = "array"
+	TypeArray Type = "array"
 	// TypeBoolean = boolean
 	//
 	// https://json-schema.org/understanding-json-schema/reference/boolean.html#boolean
-	TypeBoolean SchemaType = "boolean"
+	TypeBoolean Type = "boolean"
 	// TypeNull = null
 	//
 	// https://json-schema.org/understanding-json-schema/reference/null.html#null
-	TypeNull SchemaType = "null"
+	TypeNull Type = "null"
 )
 
-// SchemaType restricts to a JSON Schema specific type
+// Type restricts to a JSON Schema specific type
 //
 // https://json-schema.org/understanding-json-schema/reference/type.html#type
-type SchemaType string
+type Type string
 
-func (t SchemaType) String() string {
+func (t Type) String() string {
 	return string(t)
 }
 
 // Types is a set of Types. A single Type marshals/unmarshals into a string
 // while 2+ marshals into an array.
-type Types []SchemaType
+type Types []Type
 type types Types
 
 // ContainsString returns true if TypeString is present
@@ -92,7 +92,7 @@ func (t Types) IsSingle() bool {
 }
 
 // IsEmpty returns true if len(t) == 0
-func (t SchemaType) IsEmpty() bool {
+func (t Type) IsEmpty() bool {
 	return len(t) == 0
 }
 
@@ -102,7 +102,7 @@ func (t Types) Len() int {
 }
 
 // Contains returns true if t contains typ
-func (t Types) Contains(typ SchemaType) bool {
+func (t Types) Contains(typ Type) bool {
 	for _, v := range t {
 		if v == typ {
 			return true
@@ -112,7 +112,7 @@ func (t Types) Contains(typ SchemaType) bool {
 }
 
 // Add adds typ if not present
-func (t *Types) Add(typ SchemaType) Types {
+func (t *Types) Add(typ Type) Types {
 	if !t.Contains(typ) {
 		*t = append(*t, typ)
 	}
@@ -120,7 +120,7 @@ func (t *Types) Add(typ SchemaType) Types {
 }
 
 // Remove removes typ if present
-func (t *Types) Remove(typ SchemaType) Types {
+func (t *Types) Remove(typ Type) Types {
 	for i, v := range *t {
 		if typ == v {
 			copy((*t)[i:], (*t)[i+1:])
@@ -145,7 +145,7 @@ func (t Types) MarshalJSON() ([]byte, error) {
 func (t *Types) UnmarshalJSON(data []byte) error {
 	d := dynamic.JSON(data)
 	if d.IsString() {
-		var v SchemaType
+		var v Type
 		err := json.Unmarshal(data, &v)
 		*t = Types{v}
 		return err

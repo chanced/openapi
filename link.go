@@ -5,24 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-
-	"github.com/chanced/openapi/yamlutil"
 )
-
-// LinkKind differentiates a Link and a Reference
-type LinkKind uint8
 
 // ErrLinkParameterNotFound is returned if a
 var ErrLinkParameterNotFound = errors.New("error: link parameter not found")
 
-const (
-	// LinkKindObj = *Link
-	LinkKindObj LinkKind = iota
-	// LinkKindRef = *Reference
-	LinkKindRef
-)
+// Links is a Map of either Links or References to Links
+type Links Map[*Link]
 
-// LinkObj represents a possible design-time link for a response. The presence of a
+// Link represents a possible design-time link for a response. The presence of a
 // link does not guarantee the caller's ability to successfully invoke it,
 // rather it provides a known relationship and traversal mechanism between
 // responses and other operations.
@@ -33,7 +24,7 @@ const (
 // For computing links, and providing instructions to execute them, a runtime
 // expression is used for accessing values in an operation and using them as
 // parameters while invoking the linked operation.
-type LinkObj struct {
+type Link struct {
 	// A relative or absolute URI reference to an OAS operation. This field is
 	// mutually exclusive of the operationId field, and MUST point to an
 	// Operation Object. Relative operationRef values MAY be used to locate an
@@ -59,83 +50,32 @@ type LinkObj struct {
 	Description string `json:"description,omitempty"`
 	Extensions  `json:"-"`
 }
-type link LinkObj
 
 // MarshalJSON marshals JSON
-func (l LinkObj) MarshalJSON() ([]byte, error) {
+func (l Link) MarshalJSON() ([]byte, error) {
+	type link Link
 	return marshalExtendedJSON(link(l))
 }
 
 // UnmarshalJSON unmarshals JSON
-func (l *LinkObj) UnmarshalJSON(data []byte) error {
+func (l *Link) UnmarshalJSON(data []byte) error {
+	type link Link
 	var lv link
 	if err := unmarshalExtendedJSON(data, &lv); err != nil {
 		return err
 	}
-	*l = LinkObj(lv)
+	*l = Link(lv)
 	return nil
-}
-
-// MarshalYAML marshals YAML
-func (l LinkObj) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(l)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (l *LinkObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, l)
 }
 
 // DecodeRequestBody decodes l.RequestBody into dst
 //
 // dst should be a pointer to a concrete type
-func (l *LinkObj) DecodeRequestBody(dst interface{}) error {
+func (l *Link) DecodeRequestBody(dst interface{}) error {
 	return json.Unmarshal(l.RequestBody, dst)
 }
 
-// LinkKind returns LinkKindObj
-func (l *LinkObj) LinkKind() LinkKind { return LinkKindObj }
-
-// ResolveLink resolves LinkObj by returning itself. resolve is  not called.
-func (l *LinkObj) ResolveLink(LinkResolver) (*LinkObj, error) {
-	return l, nil
-}
-
-// Link can either be a Link or a Reference
-type Link interface {
-	ResolveLink(LinkResolver) (*LinkObj, error)
-	LinkKind() LinkKind
-}
-
-// Links is a map to hold reusable LinkObjs.
-type Links map[string]Link
-
-// UnmarshalJSON unmarshals JSON
-func (l *Links) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(Links, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v link
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
-		lv := LinkObj(v)
-		res[k] = &lv
-	}
-	*l = res
-	return nil
-}
+func (Link) Kind() Kind { return KindLink }
 
 // LinkParameters is a map representing parameters to pass to an operation as
 // specified with operationId or identified via operationRef. The key is the

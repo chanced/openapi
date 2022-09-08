@@ -1,7 +1,5 @@
 package openapi
 
-import "github.com/chanced/openapi/yamlutil"
-
 // Info provides metadata about the API. The metadata MAY be used by the clients
 // if needed, and MAY be presented in editing or documentation generation tools
 // for convenience.
@@ -42,14 +40,4 @@ func (i *Info) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*i = Info(v)
 	return err
-}
-
-// MarshalYAML marshals YAML
-func (i Info) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(i)
-}
-
-// UnmarshalYAML unmarshals YAML data into i
-func (i *Info) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, i)
 }

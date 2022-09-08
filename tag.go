@@ -1,11 +1,5 @@
 package openapi
 
-import (
-	"encoding/json"
-
-	"github.com/chanced/openapi/yamlutil"
-)
-
 // Tag adds metadata that is used by the Operation Object.
 //
 // It is not mandatory to have a Tag Object per tag defined in the Operation
@@ -40,21 +34,4 @@ func (t *Tag) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*t = Tag(v)
 	return err
-}
-
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (t Tag) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(t)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// UnmarshalYAML unmarshals yaml into t
-func (t *Tag) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, t)
 }

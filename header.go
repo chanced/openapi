@@ -2,26 +2,10 @@ package openapi
 
 import (
 	"encoding/json"
-
-	"github.com/chanced/openapi/yamlutil"
 )
 
-// HeaderKind distinguishes between Header and Reference
-type HeaderKind uint8
-
-const (
-	// HeaderKindObj = Header
-	HeaderKindObj HeaderKind = iota
-	// HeaderKindRef = Reference
-	HeaderKindRef
-)
-
-type HeaderRef struct {
-	Ref   *Reference `json:"-"`
-	Value *Header    `json:"-"`
-}
-
-// Header is either a Header or a Reference
+// Headers holds reusable Headers.
+type Headers Map[*Header]
 
 // Header follows the structure of the Parameter Object with the following
 // changes:
@@ -86,87 +70,20 @@ type Header struct {
 	Extensions `json:"-"`
 }
 
-type header Header
-
-// HeaderKind distinguishes h as a Header by returning HeaderKindHeader
-func (h *Header) HeaderKind() HeaderKind { return HeaderKindObj }
-
-// ResolveHeader resolves HeaderObj by returning itself. resolve is  not called.
-func (h *Header) ResolveHeader(HeaderResolver) (*Header, error) {
-	return h, nil
-}
-
 // MarshalJSON marshals h into JSON
 func (h Header) MarshalJSON() ([]byte, error) {
+	type header Header
+
 	return marshalExtendedJSON(header(h))
 }
 
 // UnmarshalJSON unmarshals json into h
 func (h *Header) UnmarshalJSON(data []byte) error {
+	type header Header
+
 	v := header{}
 	err := unmarshalExtendedJSON(data, &v)
 	*h = Header(v)
 	return err
 }
-
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (h Header) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(h)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// UnmarshalYAML unmarshals yaml into s
-func (h *Header) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, h)
-}
-
-// Headers holds reusable HeaderObjs.
-type Headers map[string]Header
-
-// UnmarshalJSON unmarshals JSON data into p
-func (h *Headers) UnmarshalJSON(data []byte) error {
-	var m map[string]json.RawMessage
-	err := json.Unmarshal(data, &m)
-	*h = make(Headers, len(m))
-	if err != nil {
-		return err
-	}
-	for i, j := range m {
-		if isRefJSON(data) {
-			var v Reference
-			if err = json.Unmarshal(j, &v); err != nil {
-				return err
-			}
-			(*h)[i] = &v
-		} else {
-			var v Header
-			if err = json.Unmarshal(j, &v); err != nil {
-				return err
-			}
-			(*h)[i] = &v
-		}
-	}
-	return nil
-}
-
-// UnmarshalYAML unmarshals YAML data into p
-func (h *Headers) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, h)
-}
-
-// MarshalYAML marshals p into YAML
-func (h Headers) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(h)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
+func (Header) Kind() Kind { return KindHeader }

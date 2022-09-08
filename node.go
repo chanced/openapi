@@ -5,4 +5,6 @@ type Node interface {
 	MarshalJSON() ([]byte, error)
 	// UnmarshalJSON unmarshals JSON
 	UnmarshalJSON(data []byte) error
+
+	Kind() Kind
 }

@@ -1,6 +1,58 @@
 package openapi
 
-import "github.com/chanced/openapi/yamlutil"
+import (
+	"encoding/json"
+)
+
+type (
+	// Slice is a slice of Components of type T
+	Slice[T Node] []Component[T]
+	// Map is a map of Components of type T
+	Map[T Node] map[string]Component[T]
+)
+
+type Component[T Node] struct {
+	Ref   *Reference
+	Value T
+}
+
+func newComponent[T Node](ref *Reference, obj T) Component[T] {
+	return Component[T]{
+		Ref:   ref,
+		Value: obj,
+	}
+}
+
+func (c Component[T]) MarshalJSON() ([]byte, error) {
+	if c.Ref != nil {
+		return json.Marshal(c.Ref)
+	}
+	if any(c.Value) != nil {
+		return c.Value.MarshalJSON()
+	}
+	return nil, nil
+}
+
+func (c *Component[T]) UnmarshalJSON(data []byte) error {
+	if isRefJSON(data) {
+		var ref Reference
+		if err := json.Unmarshal(data, &ref); err != nil {
+			return err
+		}
+		*c = Component[T]{
+			Ref: &ref,
+		}
+		return nil
+	}
+	var value T
+	if err := value.UnmarshalJSON(data); err != nil {
+		return err
+	}
+	*c = Component[T]{
+		Value: value,
+	}
+	return nil
+}
 
 // Components holds a set of reusable objects for different aspects of the OAS.
 // All objects defined within the components object will have no effect on the
@@ -44,14 +96,4 @@ func (c *Components) UnmarshalJSON(data []byte) error {
 	}
 	*c = Components(v)
 	return nil
-}
-
-// MarshalYAML marshals YAML
-func (c Components) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(c)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (c *Components) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, c)
 }

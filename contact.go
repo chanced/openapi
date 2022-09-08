@@ -1,7 +1,5 @@
 package openapi
 
-import "github.com/chanced/openapi/yamlutil"
-
 // Contact information for the exposed API.
 type Contact struct {
 	// The identifying name of the contact person/organization.
@@ -27,14 +25,4 @@ func (c *Contact) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*c = Contact(v)
 	return err
-}
-
-// MarshalYAML marshals YAML
-func (c Contact) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(c)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (c *Contact) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, c)
 }

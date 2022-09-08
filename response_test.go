@@ -32,7 +32,7 @@ func TestResponse(t *testing.T) {
 	}
 	for _, d := range j {
 		data := []byte(d)
-		var v openapi.ResponseObj
+		var v openapi.Response
 		err := json.Unmarshal(data, &v)
 		assert.NoError(err)
 		b, err := json.Marshal(v)
@@ -43,7 +43,7 @@ func TestResponse(t *testing.T) {
 
 		y, err := yaml.JSONToYAML(data)
 		assert.NoError(err)
-		var yo openapi.ResponseObj
+		var yo openapi.Response
 		err = yaml.Unmarshal(y, &yo)
 		assert.NoError(err)
 		yb, err := json.MarshalIndent(yo, "", "  ")

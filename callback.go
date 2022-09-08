@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
 
@@ -44,9 +43,12 @@ func (c *Callback) UnmarshalJSON(data []byte) error {
 		if IsExtensionKey(key.String()) {
 			c.Extensions.SetEncodedExtension(key.String(), d)
 		} else {
-			var v Path
-			v, err = unmarshalPathJSON(d)
-			c.Paths[key.String()] = v
+			var comp Component[*Path]
+			err = comp.UnmarshalJSON(d)
+			if err != nil {
+				return false
+			}
+			c.Paths[key.String()] = comp
 		}
 		if err != nil {
 			return false
@@ -56,53 +58,8 @@ func (c *Callback) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// MarshalYAML marshals YAML
-func (c Callback) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(c)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (c *Callback) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, c)
-}
+// Kind returns KindCallback
+func (Callback) Kind() Kind { return KindCallback }
 
 // Callbacks is a map of reusable Callback Objects.
-type Callbacks map[string]Ref[*Callback]
-
-// UnmarshalJSON unmarshals JSON
-func (c *Callbacks) UnmarshalJSON(data []byte) error {
-	var o map[string]json.RawMessage
-	res := make(Callbacks, len(o))
-	err := json.Unmarshal(data, &o)
-	if err != nil {
-		return err
-	}
-	for k, d := range o {
-		if isRefJSON(d) {
-			ref, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = newRef[*Callback](ref, nil)
-
-		} else {
-			var v Callback
-			if err := json.Unmarshal(d, &v); err != nil {
-				return err
-			}
-			res[k] = newRef(nil, &v)
-		}
-	}
-	*c = res
-	return nil
-}
-
-// MarshalYAML marshals YAML
-func (c Callbacks) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(c)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (c *Callbacks) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, c)
-}
+type Callbacks Map[*Callback]

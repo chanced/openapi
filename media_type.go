@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/gjson"
 )
 
@@ -68,21 +67,4 @@ func (mt *MediaType) UnmarshalJSON(data []byte) error {
 		mt.Schema = s
 	}
 	return nil
-}
-
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (mt MediaType) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(mt)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// UnmarshalYAML unmarshals yaml into mt
-func (mt *MediaType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, mt)
 }

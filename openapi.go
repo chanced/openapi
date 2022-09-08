@@ -2,8 +2,6 @@ package openapi
 
 import (
 	"encoding/json"
-
-	"github.com/chanced/openapi/yamlutil"
 )
 
 // OpenAPI root object of the OpenAPI document.
@@ -89,15 +87,3 @@ func (o *OpenAPI) UnmarshalJSON(data []byte) error {
 	*o = OpenAPI(v)
 	return err
 }
-
-// MarshalYAML marshals o into yaml
-func (o OpenAPI) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(o)
-}
-
-// UnmarshalYAML unmarshals YAML data into o
-func (o *OpenAPI) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, o)
-}
-
-type OpenAPIs []*OpenAPI

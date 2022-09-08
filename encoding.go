@@ -1,9 +1,5 @@
 package openapi
 
-import (
-	"github.com/chanced/openapi/yamlutil"
-)
-
 // Encoding definition applied to a single schema property.
 type Encoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -49,31 +45,22 @@ type Encoding struct {
 
 	Extensions `json:"-"`
 }
-type encodingobj Encoding
 
 // MarshalJSON marshals e into JSON
 func (e Encoding) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(encodingobj(e))
+	type encoding Encoding
+	return marshalExtendedJSON(encoding(e))
 }
 
 // UnmarshalJSON unmarshals json into e
 func (e *Encoding) UnmarshalJSON(data []byte) error {
-	v := encodingobj{}
+	type encoding Encoding
+	v := encoding{}
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
 	*e = Encoding(v)
 	return nil
-}
-
-// MarshalYAML marshals YAML
-func (e Encoding) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(e)
-}
-
-// UnmarshalYAML unmarshals YAML
-func (e *Encoding) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, e)
 }
 
 // Encodings is a map between a property name and its encoding information. The

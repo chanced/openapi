@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/chanced/dynamic"
-	"github.com/chanced/openapi/yamlutil"
 	"github.com/tidwall/sjson"
-	"gopkg.in/yaml.v2"
 )
 
 // Schemas is a map of Schemas
@@ -73,6 +71,9 @@ func (s *Schemas) UnmarshalJSON(data []byte) error {
 // arbitrary properties.
 // A Schema represents compiled version of json-schema.
 type Schema struct {
+	RefResolved          *Schema `json:"-"`
+	RecursiveRefResolved *Schema `json:"-"`
+	DynamicRefResolved   *Schema `json:"-"`
 	// Always will be assigned if the schema value is a boolean
 	Always *bool  `json:"-"`
 	Schema string `json:"$schema,omitempty"`
@@ -288,23 +289,6 @@ func (s *Schema) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (s Schema) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// UnmarshalYAML unmarshals yaml into s
-func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, s)
-}
-
 // IsStrings returns false
 func (s *Schema) IsStrings() bool {
 	return false
@@ -502,6 +486,9 @@ var jsfields = map[string]struct{}{
 }
 
 type partialschema struct {
+	RefResolved           *Schema             `json:"-"`
+	RecursiveRefResolved  *Schema             `json:"-"`
+	DynamicRefResolved    *Schema             `json:"-"`
 	Always                *bool               `json:"-"`
 	Schema                string              `json:"$schema,omitempty"`
 	ID                    string              `json:"$id,omitempty"`
@@ -571,6 +558,4 @@ type partialschema struct {
 var (
 	_ json.Marshaler   = (*Schema)(nil)
 	_ json.Unmarshaler = (*Schema)(nil)
-	_ yaml.Unmarshaler = (*Schema)(nil)
-	_ yaml.Marshaler   = (*Schema)(nil)
 )
