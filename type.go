@@ -3,7 +3,7 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/dynamic"
+	"github.com/chanced/jay"
 )
 
 const (
@@ -143,7 +143,7 @@ func (t Types) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals JSON
 func (t *Types) UnmarshalJSON(data []byte) error {
-	d := dynamic.JSON(data)
+	d := jay.JSON(data)
 	if d.IsString() {
 		var v Type
 		err := json.Unmarshal(data, &v)

@@ -2,8 +2,6 @@ package openapi
 
 import (
 	"encoding/json"
-
-	"github.com/tidwall/gjson"
 )
 
 // Parameters is a map of Parameter
@@ -250,24 +248,16 @@ func (p *Parameter) UnmarshalJSON(data []byte) error {
 		Style           string          `json:"style,omitempty"`
 		Explode         bool            `json:"explode,omitempty"`
 		AllowReserved   bool            `json:"allowReserved,omitempty"`
-		Schema          *Schema         `json:"-"`
+		Schema          *Schema         `json:"schema"`
 		Examples        Examples        `json:"examples,omitempty"`
 		Example         json.RawMessage `json:"example,omitempty"`
 		Content         Content         `json:"content,omitempty"`
 		Extensions      `json:"-"`
 	}
-	v := parameter{}
+	var v parameter
 
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
-	}
-	g := gjson.GetBytes(data, "schema")
-	if g.Exists() {
-		s, err := unmarshalSchemaJSON([]byte(g.Raw))
-		if err != nil {
-			return err
-		}
-		v.Schema = s
 	}
 	*p = Parameter(v)
 	return nil

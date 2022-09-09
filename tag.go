@@ -21,15 +21,17 @@ type Tag struct {
 	Extensions `json:"-"`
 }
 
-type tag Tag
-
 // MarshalJSON marshals t into JSON
 func (t Tag) MarshalJSON() ([]byte, error) {
+	type tag Tag
+
 	return marshalExtendedJSON(tag(t))
 }
 
 // UnmarshalJSON unmarshals json into t
 func (t *Tag) UnmarshalJSON(data []byte) error {
+	type tag Tag
+
 	v := tag{}
 	err := unmarshalExtendedJSON(data, &v)
 	*t = Tag(v)

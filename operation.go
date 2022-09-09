@@ -1,9 +1,5 @@
 package openapi
 
-import (
-	"github.com/tidwall/gjson"
-)
-
 // Operation describes a single API operation on a path.
 type Operation struct {
 	// A list of tags for API documentation control. Tags can be used for
@@ -80,14 +76,6 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	var v operation
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
-	}
-	r := gjson.GetBytes(data, "requestBody")
-	if len(r.Raw) > 0 {
-		var rb RequestBody
-		if err := unmarshalRequestBody([]byte(r.Raw), &rb); err != nil {
-			return err
-		}
-		v.RequestBody = rb
 	}
 	*o = Operation(v)
 	return nil

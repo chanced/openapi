@@ -72,7 +72,8 @@ func (o OpenAPI) Validate() error {
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
 	}
-	return validate(m)
+	// return validate(m)
+	panic("not impl")
 }
 
 // MarshalJSON marshals JSON
