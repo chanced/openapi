@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/chanced/jay"
@@ -332,7 +331,7 @@ func (s *Schema) DecodeKeywords(dst interface{}) error {
 	return json.Unmarshal(data, dst)
 }
 
-func (s *schema) fields() map[string]interface{} {
+func (s *Schema) fields() map[string]interface{} {
 	return map[string]interface{}{
 		"$schema":               &s.Schema,
 		"$id":                   &s.ID,
@@ -452,147 +451,20 @@ func unmarshalSchema(data []byte) (*Schema, error) {
 	return &res, err
 }
 
-var (
-	_ json.Marshaler   = (*Schema)(nil)
-	_ json.Unmarshaler = (*Schema)(nil)
-)
-
-// A Draft represents json-schema draft
-type Draft struct {
-	version    int
-	meta       *Schema
-	id         string // property name used to represent schema id.
-	boolSchema bool   // is boolean valid schema
-	subschemas map[string]position
+type SchemaRef struct {
+	Ref      string  `-`
+	Resolved *Schema `json:"-"`
 }
 
-func (d *Draft) loadMeta(base string, schemas map[string]string) {
-	c := NewCompiler()
-	c.AssertFormat = true
-	for u, schema := range schemas {
-		if err := c.AddResource(base+"/"+u, strings.NewReader(schema)); err != nil {
-			panic(err)
-		}
+func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
+	if jay.IsString(data) {
+		var s string
+		err := json.Unmarshal(data, &s)
+		sr.Ref = s
+		return err
 	}
-	d.meta = c.MustCompile(base + "/schema")
+	var s Schema
+	err := json.Unmarshal(data, &s)
+	sr.Resolved = &s
+	return err
 }
-
-func (d *Draft) getID(sch interface{}) string {
-	m, ok := sch.(map[string]interface{})
-	if !ok {
-		return ""
-	}
-	v, ok := m[d.id]
-	if !ok {
-		return ""
-	}
-	id, ok := v.(string)
-	if !ok {
-		return ""
-	}
-	return id
-}
-
-func (d *Draft) resolveID(base string, sch interface{}) (string, error) {
-	id, _ := split(d.getID(sch)) // strip fragment
-	if id == "" {
-		return "", nil
-	}
-	url, err := resolveURL(base, id)
-	url, _ = split(url) // strip fragment
-	return url, err
-}
-
-func (d *Draft) anchors(sch interface{}) []string {
-	m, ok := sch.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	var anchors []string
-
-	// before draft2019, anchor is specified in id
-	_, f := split(d.getID(m))
-	if f != "#" {
-		anchors = append(anchors, f[1:])
-	}
-
-	if v, ok := m["$anchor"]; ok && d.version >= 2019 {
-		anchors = append(anchors, v.(string))
-	}
-	if v, ok := m["$dynamicAnchor"]; ok && d.version >= 2020 {
-		anchors = append(anchors, v.(string))
-	}
-	return anchors
-}
-
-// listSubschemas collects subschemas in r into rr.
-func (d *Draft) listSubschemas(r *resource, base string, rr map[string]*resource) error {
-	add := func(loc string, sch interface{}) error {
-		url, err := d.resolveID(base, sch)
-		if err != nil {
-			return err
-		}
-		floc := r.floc + "/" + loc
-		sr := &resource{url: url, floc: floc, doc: sch}
-		rr[floc] = sr
-
-		base := base
-		if url != "" {
-			base = url
-		}
-		return d.listSubschemas(sr, base, rr)
-	}
-
-	sch, ok := r.doc.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-	for kw, pos := range d.subschemas {
-		v, ok := sch[kw]
-		if !ok {
-			continue
-		}
-		if pos&self != 0 {
-			switch v := v.(type) {
-			case map[string]interface{}:
-				if err := add(kw, v); err != nil {
-					return err
-				}
-			case bool:
-				if d.boolSchema {
-					if err := add(kw, v); err != nil {
-						return err
-					}
-				}
-			}
-		}
-		if pos&item != 0 {
-			if v, ok := v.([]interface{}); ok {
-				for i, item := range v {
-					if err := add(kw+"/"+strconv.Itoa(i), item); err != nil {
-						return err
-					}
-				}
-			}
-		}
-		if pos&prop != 0 {
-			if v, ok := v.(map[string]interface{}); ok {
-				for pname, pval := range v {
-					if err := add(kw+"/"+escape(pname), pval); err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-
-type position uint
-
-const (
-	self position = 1 << iota
-	prop
-	item
-)

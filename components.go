@@ -12,14 +12,14 @@ type (
 )
 
 type Component[T Node] struct {
-	Ref   *Reference
-	Value T
+	Ref    *Reference
+	Object T
 }
 
 func newComponent[T Node](ref *Reference, obj T) Component[T] {
 	return Component[T]{
-		Ref:   ref,
-		Value: obj,
+		Ref:    ref,
+		Object: obj,
 	}
 }
 
@@ -27,8 +27,8 @@ func (c Component[T]) MarshalJSON() ([]byte, error) {
 	if c.Ref != nil {
 		return json.Marshal(c.Ref)
 	}
-	if any(c.Value) != nil {
-		return c.Value.MarshalJSON()
+	if any(c.Object) != nil {
+		return c.Object.MarshalJSON()
 	}
 	return nil, nil
 }
@@ -49,7 +49,7 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*c = Component[T]{
-		Value: value,
+		Object: value,
 	}
 	return nil
 }
