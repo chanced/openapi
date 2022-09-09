@@ -1,7 +1,7 @@
 package openapi
 
-// RequestBodies is a map of RequestBody
-type RequestBodies Map[*RequestBody]
+// RequestBodyMap is a map of RequestBody
+type RequestBodyMap = ComponentMap[*RequestBody]
 
 // RequestBody describes a single request body.
 type RequestBody struct {

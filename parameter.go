@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 )
 
-// Parameters is a map of Parameter
-type Parameters Map[*Parameter]
+// ParameterMap is a map of Parameter
+type ParameterMap = ComponentMap[*Parameter]
 
 // ParameterSet is list of parameters that are applicable for a given operation.
 // If a parameter is already defined at the Path Item, the new definition will
@@ -15,7 +15,7 @@ type Parameters Map[*Parameter]
 // are defined at the OpenAPI Object's components/parameters.
 //
 // Can either be a Parameter or a Reference
-type ParameterSet Slice[*Parameter]
+type ParameterSet = ComponentSet[*Parameter]
 
 /*
 * Path Parameters
@@ -218,7 +218,7 @@ type Parameter struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples Examples        `json:"examples,omitempty"`
+	Examples ExampleMap      `json:"examples,omitempty"`
 	Example  json.RawMessage `json:"example,omitempty"`
 
 	// For more complex scenarios, the content property can define the media
@@ -249,7 +249,7 @@ func (p *Parameter) UnmarshalJSON(data []byte) error {
 		Explode         bool            `json:"explode,omitempty"`
 		AllowReserved   bool            `json:"allowReserved,omitempty"`
 		Schema          *Schema         `json:"schema"`
-		Examples        Examples        `json:"examples,omitempty"`
+		Examples        ExampleMap      `json:"examples,omitempty"`
 		Example         json.RawMessage `json:"example,omitempty"`
 		Content         Content         `json:"content,omitempty"`
 		Extensions      `json:"-"`

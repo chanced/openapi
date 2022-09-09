@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 )
 
-// Headers holds reusable Headers.
-type Headers Map[*Header]
+// HeaderMap holds reusable HeaderMap.
+type HeaderMap = ComponentMap[*Header]
 
 // Header follows the structure of the Parameter Object with the following
 // changes:
@@ -57,7 +57,7 @@ type Header struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples Examples `json:"examples,omitempty"`
+	Examples ExampleMap `json:"examples,omitempty"`
 	// Example of the parameter's potential value. The example SHOULD match the
 	// specified schema and encoding properties if present. The example field is
 	// mutually exclusive of the examples field. Furthermore, if referencing a

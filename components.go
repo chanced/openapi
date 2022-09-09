@@ -2,25 +2,16 @@ package openapi
 
 import (
 	"encoding/json"
-)
 
-type (
-	// Slice is a slice of Components of type T
-	Slice[T Node] []Component[T]
-	// Map is a map of Components of type T
-	Map[T Node] map[string]Component[T]
+	"github.com/chanced/why"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+	"gopkg.in/yaml.v3"
 )
 
 type Component[T Node] struct {
 	Ref    *Reference
 	Object T
-}
-
-func newComponent[T Node](ref *Reference, obj T) Component[T] {
-	return Component[T]{
-		Ref:    ref,
-		Object: obj,
-	}
 }
 
 func (c Component[T]) MarshalJSON() ([]byte, error) {
@@ -54,31 +45,144 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ComponentSet is a slice of Components of type T
+type ComponentSet[T Node] []Component[T]
+
+// ComponentEntry is an entry in a ComponentMap consisting of a Key/Value pair for
+// an object consiting of Component[T]s
+type ComponentEntry[V Node] struct {
+	Key       string
+	Component Component[V]
+}
+
+// ComponentMap is a pseudo map consisting of Components with type T.
+//
+// Unlike a regular map, ComponentMap maintains the order of the map's
+// fields.
+//
+// Under the hood, ComponentMap is of a slice of ComponentField[T]
+type ComponentMap[T Node] []ComponentEntry[T]
+
+func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
+	var err error
+	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
+		var comp Component[T]
+
+		err = comp.UnmarshalJSON([]byte(value.Raw))
+		*cm = append(*cm, ComponentEntry[T]{
+			Key:       key.String(),
+			Component: comp,
+		})
+		return err == nil
+	})
+	return err
+}
+
+// MarshalJSON marshals JSON
+func (cm ComponentMap[T]) MarshalJSON() ([]byte, error) {
+	b := []byte("{}")
+	for _, field := range cm {
+		b, err := field.Component.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b, err = sjson.SetBytes(b, field.Key, field.Component)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return b, nil
+}
+
+func (cm *ComponentMap[T]) Get(key string) (Component[T], bool) {
+	for _, v := range *cm {
+		if v.Key == key {
+			return v.Component, true
+		}
+	}
+	return Component[T]{}, false
+}
+
+// Set sets the value of the key in the ComponentMap
+func (cm *ComponentMap[T]) Set(key string, value Component[T]) {
+	if cm == nil {
+		*cm = ComponentMap[T]{{Key: key, Component: value}}
+		return
+	}
+	for i, v := range *cm {
+		if v.Key == key {
+			(*cm)[i] = ComponentEntry[T]{
+				Key:       key,
+				Component: value,
+			}
+		}
+	}
+	*cm = append(*cm, ComponentEntry[T]{
+		Key:       key,
+		Component: value,
+	})
+}
+
+func (cm *ComponentMap[T]) Delete(key string) {
+	for i, v := range *cm {
+		if v.Key == key {
+			*cm = append((*cm)[:i], (*cm)[i+1:]...)
+			return
+		}
+	}
+}
+
+func (cm *ComponentMap[T]) MarshalYAML() (interface{}, error) {
+	j, err := cm.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return why.JSONToYAML(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (cm *ComponentMap[T]) UnmarshalYAML(value *yaml.Node) error {
+	j, err := why.YAMLToJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, cm)
+}
+
+// ComponentMap is a pseudo map consisting of Components with type T.
+
+func newComponent[T Node](ref *Reference, obj T) Component[T] {
+	return Component[T]{
+		Ref:    ref,
+		Object: obj,
+	}
+}
+
 // Components holds a set of reusable objects for different aspects of the OAS.
 // All objects defined within the components object will have no effect on the
 // API unless they are explicitly referenced from properties outside the
 // components object.
 type Components struct {
 	// An object to hold reusable Schema Objects.
-	Schemas *Schemas `json:"schemas,omitempty"`
+	Schemas *SchemaMap `json:"schemas,omitempty"`
 	// An object to hold reusable Response Objects.
-	Responses *Responses `json:"responses,omitempty"`
+	Responses *ResponseMap `json:"responses,omitempty"`
 	// An object to hold reusable Parameter Objects.
-	Parameters *Parameters `json:"parameters,omitempty"`
+	Parameters *ParameterMap `json:"parameters,omitempty"`
 	// An object to hold reusable Example Objects.
-	Examples *Examples `json:"examples,omitempty"`
+	Examples *ExampleMap `json:"examples,omitempty"`
 	// An object to hold reusable Request Body Objects.
-	RequestBodies *RequestBodies `json:"requestBodies,omitempty"`
+	RequestBodies *RequestBodyMap `json:"requestBodies,omitempty"`
 	// An object to hold reusable Header Objects.
-	Headers *Headers `json:"headers,omitempty"`
+	Headers *HeaderMap `json:"headers,omitempty"`
 	// An object to hold reusable Security Scheme Objects.
-	SecuritySchemes *SecuritySchemes `json:"securitySchemes,omitempty"`
+	SecuritySchemes *SecuritySchemeMap `json:"securitySchemes,omitempty"`
 	// An object to hold reusable Link Objects.
-	Links *Links `json:"links,omitempty"`
+	Links *LinkMap `json:"links,omitempty"`
 	// An object to hold reusable Callback Objects.
-	Callbacks *Callbacks `json:"callbacks,omitempty"`
+	Callbacks *CallbackMap `json:"callbacks,omitempty"`
 	// An object to hold reusable Path Item Object.
-	PathItems  *PathItems `json:"pathItems,omitempty"`
+	PathItems  *PathItemMap `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
 type components Components

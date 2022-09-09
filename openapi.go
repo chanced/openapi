@@ -1,9 +1,5 @@
 package openapi
 
-import (
-	"encoding/json"
-)
-
 // OpenAPI root object of the OpenAPI document.
 type OpenAPI struct {
 	// Version - OpenAPI Version
@@ -34,7 +30,7 @@ type OpenAPI struct {
 	// is a unique string to refer to each webhook, while the (optionally
 	// referenced) Path Item Object describes a request that may be initiated by
 	// the API provider and the expected responses. An example is available.
-	Webhooks *PathItems `json:"webhooks,omitempty" yaml:"webhooks,omitempty"`
+	Webhooks *PathItemMap `json:"webhooks,omitempty" yaml:"webhooks,omitempty"`
 	// An element to hold various schemas for the document.
 	Components *Components `json:"components,omitempty" yaml:"components,omitempty"`
 	// A list of tags used by the document with additional metadata. The order
@@ -61,20 +57,6 @@ type OpenAPI struct {
 	Extensions   `json:"-"`
 }
 type openapi OpenAPI
-
-// Validate validates an OpenAPI 3.1 specification
-func (o OpenAPI) Validate() error {
-	b, err := json.Marshal(o)
-	if err != nil {
-		return err
-	}
-	var m map[string]interface{}
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
-	}
-	// return validate(m)
-	panic("not impl")
-}
 
 // MarshalJSON marshals JSON
 func (o OpenAPI) MarshalJSON() ([]byte, error) {

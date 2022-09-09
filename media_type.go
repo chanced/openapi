@@ -2,8 +2,6 @@ package openapi
 
 import (
 	"encoding/json"
-
-	"github.com/tidwall/gjson"
 )
 
 // Content is a map containing descriptions of potential response payloads. The key is
@@ -27,7 +25,7 @@ type MediaType struct {
 	// exclusive of the example field. Furthermore, if referencing a schema
 	// which contains an example, the examples value SHALL override the example
 	// provided by the schema.
-	Examples Examples `json:"examples,omitempty"`
+	Examples ExampleMap `json:"examples,omitempty"`
 	// A map between a property name and its encoding information. The key,
 	// being the property name, MUST exist in the schema as a property. The
 	// encoding object SHALL only apply to requestBody objects when the media
@@ -44,27 +42,12 @@ func (mt MediaType) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals json into mt
 func (mt *MediaType) UnmarshalJSON(data []byte) error {
-	type mediatype struct {
-		Schema     *Schema         `json:"-"`
-		Example    json.RawMessage `json:"example,omitempty"`
-		Examples   Examples        `json:"examples,omitempty"`
-		Encoding   Encodings       `json:"encoding,omitempty"`
-		Extensions `json:"-"`
-	}
+	type mediatype MediaType
 
-	v := mediatype{}
+	var v mediatype
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
 	*mt = MediaType(v)
-
-	g := gjson.GetBytes(data, "schema")
-	if g.Exists() {
-		s, err := unmarshalSchemaJSON([]byte(g.Raw))
-		if err != nil {
-			return err
-		}
-		mt.Schema = s
-	}
 	return nil
 }

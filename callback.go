@@ -2,8 +2,6 @@ package openapi
 
 import (
 	"encoding/json"
-
-	"github.com/tidwall/gjson"
 )
 
 // Callback is map of possible out-of band callbacks related to the parent
@@ -16,14 +14,13 @@ import (
 // To describe incoming requests from the API provider independent from another
 // API call, use the webhooks field.
 type Callback struct {
-	Paths      PathItems `json:"-"`
+	Paths      PathItemMap `json:"-"`
 	Extensions `json:"-"`
 }
 
-type callback Callback
-
 // MarshalJSON marshals JSON
 func (c Callback) MarshalJSON() ([]byte, error) {
+	type callback Callback
 	b, err := json.Marshal(c.Paths)
 	if err != nil {
 		return b, err
@@ -33,33 +30,18 @@ func (c Callback) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals JSON
 func (c *Callback) UnmarshalJSON(data []byte) error {
-	*c = Callback{
-		Paths:      PathItems{},
-		Extensions: Extensions{},
+	type callback Callback
+	var n callback
+	err := unmarshalExtendedJSON(data, &n)
+	if err != nil {
+		return err
 	}
-	var err error
-	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
-		d := []byte(value.Raw)
-		if IsExtensionKey(key.String()) {
-			c.Extensions.SetEncodedExtension(key.String(), d)
-		} else {
-			var comp Component[*Path]
-			err = comp.UnmarshalJSON(d)
-			if err != nil {
-				return false
-			}
-			c.Paths[key.String()] = comp
-		}
-		if err != nil {
-			return false
-		}
-		return true
-	})
-	return err
+	*c = Callback(n)
+	return nil
 }
 
 // Kind returns KindCallback
 func (Callback) Kind() Kind { return KindCallback }
 
-// Callbacks is a map of reusable Callback Objects.
-type Callbacks Map[*Callback]
+// CallbackMap is a map of reusable Callback Objects.
+type CallbackMap = ComponentMap[*Callback]

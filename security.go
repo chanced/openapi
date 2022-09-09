@@ -45,8 +45,8 @@ func (ss SecuritySchemeType) String() string {
 	return string(ss)
 }
 
-// SecuritySchemes is a map of SecurityScheme
-type SecuritySchemes Map[*SecurityScheme]
+// SecuritySchemeMap is a map of SecurityScheme
+type SecuritySchemeMap = ComponentMap[*SecurityScheme]
 
 // SecurityScheme defines a security scheme that can be used by the operations.
 type SecurityScheme struct {

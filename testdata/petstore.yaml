@@ -230,16 +230,13 @@ components:
             type: object
             properties:
                 parameters:
-                    allOf:
-                        - $ref: "#/components/schemas/ValidationErrorOutputUnit"
+                    $ref: "#/components/schemas/ValidationErrorOutputUnit"
                 body:
-                    allOf:
-                        - $ref: "#/components/schemas/ValidationErrorOutputUnit"
+                    $ref: "#/components/schemas/ValidationErrorOutputUnit"
         ValidationErrorOutputUnitArray:
             type: array
             items:
-                allOf:
-                    - $ref: "#/components/schemas/ValidationErrorOutputUnit"
+                $ref: "#/components/schemas/ValidationErrorOutputUnit"
         ValidationErrorOutputUnit:
             description: A schema that validates the minimum requirements for validation output
             properties:
@@ -255,11 +252,9 @@ components:
                     type: string
                     format: uri-reference
                 errors:
-                    allOf:
-                        - $ref: "#/components/schemas/ValidationErrorOutputUnitArray"
+                    $ref: "#/components/schemas/ValidationErrorOutputUnitArray"
                 annotations:
-                    allOf:
-                        - $ref: "#/components/schemas/ValidationErrorOutputUnitArray"
+                    $ref: "#/components/schemas/ValidationErrorOutputUnitArray"
             required:
                 - valid
                 - keywordLocation

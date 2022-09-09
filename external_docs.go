@@ -11,15 +11,18 @@ type ExternalDocs struct {
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 	Extensions  `json:"-"`
 }
-type externaldocs ExternalDocs
 
 // MarshalJSON marshals JSON
 func (ed ExternalDocs) MarshalJSON() ([]byte, error) {
+	type externaldocs ExternalDocs
+
 	return marshalExtendedJSON(externaldocs(ed))
 }
 
 // UnmarshalJSON unmarshals JSON
 func (ed *ExternalDocs) UnmarshalJSON(data []byte) error {
+	type externaldocs ExternalDocs
+
 	var v externaldocs
 	err := unmarshalExtendedJSON(data, &v)
 	*ed = ExternalDocs(v)

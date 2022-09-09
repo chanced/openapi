@@ -16,7 +16,7 @@ type Encoding struct {
 	// example Content-Disposition. Content-Type is described separately and
 	// SHALL be ignored in this section. This property SHALL be ignored if the
 	// request body media type is not a multipart.
-	Headers Headers `json:"headers,omitempty"`
+	Headers HeaderMap `json:"headers,omitempty"`
 	// Describes how a specific property value will be serialized depending on
 	// its type. See Parameter Object for details on the style property. The
 	// behavior follows the same values as query parameters, including default

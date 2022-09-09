@@ -4,6 +4,7 @@ type Kind uint
 
 const (
 	KindUnknown        Kind = iota
+	KindOpenAPI             // OpenAPI
 	KindExample             // Example
 	KindSchema              // Schema
 	KindHeader              // Header

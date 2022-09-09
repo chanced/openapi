@@ -7,8 +7,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// PathItems is a map of Paths that can either be a Path or a Reference
-type PathItems Map[*Path]
+// PathItemMap is a map of Paths that can either be a Path or a Reference
+type PathItemMap = ComponentMap[*Path]
 
 // PathValue is relative path to an individual endpoint. The path is appended
 // (no relative URL resolution) to the expanded URL from the Server Object's url

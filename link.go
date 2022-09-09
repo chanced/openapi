@@ -10,8 +10,8 @@ import (
 // ErrLinkParameterNotFound is returned if a
 var ErrLinkParameterNotFound = errors.New("error: link parameter not found")
 
-// Links is a Map of either Links or References to Links
-type Links Map[*Link]
+// LinkMap is a Map of either LinkMap or References to LinkMap
+type LinkMap = ComponentMap[*Link]
 
 // Link represents a possible design-time link for a response. The presence of a
 // link does not guarantee the caller's ability to successfully invoke it,

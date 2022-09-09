@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 )
 
-// Examples is an object to hold reusable Examples.
-type Examples Map[*Example]
+// ExampleMap is an object to hold reusable ExampleMap.
+type ExampleMap = ComponentMap[*Example]
 
 // Example is an example for various api interactions such as Responses
 //

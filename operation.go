@@ -35,13 +35,13 @@ type Operation struct {
 	RequestBody Component[*RequestBody] `json:"requestBody,omitempty"`
 	// The list of possible responses as they are returned from executing this
 	// operation.
-	Responses Responses `json:"responses,omitempty"`
+	Responses ResponseMap `json:"responses,omitempty"`
 
 	// A map of possible out-of band callbacks related to the parent operation.
 	// The key is a unique identifier for the Callback Object. Each value in the
 	// map is a Callback Object that describes a request that may be initiated
 	// by the API provider and the expected responses.
-	Callbacks Callbacks `json:"callbacks,omitempty"`
+	Callbacks CallbackMap `json:"callbacks,omitempty"`
 	// Declares this operation to be deprecated. Consumers SHOULD refrain from
 	// usage of the declared operation. Default value is false.
 	Deprecated bool `json:"deprecated,omitempty"`

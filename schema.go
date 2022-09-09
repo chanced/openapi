@@ -3,33 +3,55 @@ package openapi
 import (
 	"encoding/json"
 	"errors"
+	"reflect"
 	"strings"
 
 	"github.com/chanced/jay"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
-// Schemas is a map of Schemas
-type Schemas map[string]*Schema
-
-// UnmarshalJSON unmarshals JSON
-func (s *Schemas) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(Schemas, len(dm))
-
-	for k, d := range dm {
-		v, err := unmarshalSchemaJSON(d)
-		if err != nil {
-			return err
-		}
-		res[k] = v
-	}
-	*s = res
-	return nil
+type SchemaEntry struct {
+	Key    string
+	Schema *Schema
 }
+
+// SchemaMap is a psuedo map of SchemaMap
+type SchemaMap []SchemaEntry
+
+func (sm *SchemaMap) MarshalJSON() ([]byte, error) {
+	b := []byte("{}")
+	var err error
+	for _, v := range *sm {
+		b, err = json.Marshal(v.Schema)
+		if err != nil {
+			return b, err
+		}
+		b, err = sjson.SetBytes(b, v.Key, b)
+		if err != nil {
+			return b, err
+		}
+	}
+	return b, nil
+}
+
+func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
+	t := jay.TypeOf(data)
+	if t != jay.TypeObject {
+		return &json.UnmarshalTypeError{Value: t.String(), Type: reflect.TypeOf(sm)}
+	}
+	*sm = make(SchemaMap, 0)
+	var err error
+	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
+		var s Schema
+		err = json.Unmarshal([]byte(value.Raw), &s)
+		*sm = append(*sm, SchemaEntry{Key: key.String(), Schema: &s})
+		return err == nil
+	})
+	return err
+}
+
+type SchemaSet []*Schema
 
 // Schema allows the definition of input and output data types. These types can
 // be objects, but also primitives and arrays. This object is a superset of the
@@ -72,7 +94,8 @@ func (s *Schemas) UnmarshalJSON(data []byte) error {
 // A Schema represents compiled version of json-schema.
 type Schema struct {
 	// Always will be assigned if the schema value is a boolean
-	Always *bool  `json:"-"`
+	Always *bool `json:"-"`
+
 	Schema string `json:"$schema,omitempty"`
 	// The value of $id is a URI-reference without a fragment that resolves
 	// against the Retrieval URI. The resulting URI is the base URI for the
@@ -110,7 +133,7 @@ type Schema struct {
 	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
-	Definitions Schemas `json:"$defs,omitempty"`
+	Definitions SchemaMap `json:"$defs,omitempty"`
 	// The format keyword allows for basic semantic identification of certain kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
 	//
 	// Optionally, validator implementations can provide a configuration option to
@@ -184,15 +207,15 @@ type Schema struct {
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
 	Then *Schema `json:"then,omitempty"`
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Else                 *Schema  `json:"else,omitempty"`
-	MinProperties        *int     `json:"minProperties,omitempty"`
-	MaxProperties        *int     `json:"maxProperties,omitempty"`
-	Required             []string `json:"required,omitempty"`
-	Properties           Schemas  `json:"properties,omitempty"`
-	PropertyNames        *Schema  `json:"propertyNames,omitempty"`
-	RegexProperties      *bool    `json:"regexProperties,omitempty"`
-	PatternProperties    Schemas  `json:"patternProperties,omitempty"`
-	AdditionalProperties *Schema  `json:"additionalProperties,omitempty"`
+	Else                 *Schema   `json:"else,omitempty"`
+	MinProperties        *int      `json:"minProperties,omitempty"`
+	MaxProperties        *int      `json:"maxProperties,omitempty"`
+	Required             []string  `json:"required,omitempty"`
+	Properties           SchemaMap `json:"properties,omitempty"`
+	PropertyNames        *Schema   `json:"propertyNames,omitempty"`
+	RegexProperties      *bool     `json:"regexProperties,omitempty"`
+	PatternProperties    SchemaMap `json:"patternProperties,omitempty"`
+	AdditionalProperties *Schema   `json:"additionalProperties,omitempty"`
 	// The dependentRequired keyword conditionally requires that certain
 	// properties must be present if a given property is present in an object.
 	// For example, suppose we have a schema representing a customer. If you
@@ -208,9 +231,9 @@ type Schema struct {
 	// given property is present. This schema is applied in the same way allOf
 	// applies schemas. Nothing is merged or extended. Both schemas apply
 	// independently.
-	DependentSchemas      Schemas `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties *Schema `json:"unevaluatedProperties,omitempty"`
-	UniqueObjs            *bool   `json:"uniqueObjs,omitempty"`
+	DependentSchemas      SchemaMap `json:"dependentSchemas,omitempty"`
+	UnevaluatedProperties *Schema   `json:"unevaluatedProperties,omitempty"`
+	UniqueObjs            *bool     `json:"uniqueObjs,omitempty"`
 	// List validation is useful for arrays of arbitrary length where each item
 	// matches the same schema. For this kind of array, set the items keyword to
 	// a single schema that will be used to validate all of the items in the
@@ -255,13 +278,9 @@ type Schema struct {
 	Keywords   map[string]json.RawMessage `json:"-"`
 }
 
-// Detail returns a ptr to the *SchemaObj
-func (s Schema) Detail() *Schema {
-	return &s
-}
-
 // MarshalJSON marshals JSON
 func (s Schema) MarshalJSON() ([]byte, error) {
+	type schema Schema
 	if s.Always != nil {
 		return json.Marshal(s.Always)
 	}
@@ -279,9 +298,49 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals JSON
 func (s *Schema) UnmarshalJSON(data []byte) error {
-	sv, err := unmarshalSchemaJSON(data)
-	*s = *sv
+	t := jay.TypeOf(data)
+	switch t {
+	case jay.TypeBool:
+		return s.unmarshalJSONBool(data)
+	case jay.TypeObject:
+		return s.unmarshalJSONObj(data)
+	default:
+		return &json.UnmarshalTypeError{Value: t.String(), Type: reflect.TypeOf(s)}
+	}
+}
+
+func (s *Schema) unmarshalJSONBool(data []byte) error {
+	var b bool
+	err := json.Unmarshal(data, &b)
+	*s = Schema{Always: &b}
 	return err
+}
+
+func (s *Schema) unmarshalJSONObj(data []byte) error {
+	res := Schema{
+		Extensions: make(Extensions),
+		Keywords:   make(map[string]json.RawMessage),
+	}
+
+	d := map[string]json.RawMessage{}
+	err := json.Unmarshal(data, &d)
+	if err != nil {
+		return err
+	}
+	fields := res.fields()
+	for k, v := range d {
+		if f, ok := fields[k]; ok {
+			err = json.Unmarshal(v, f)
+			if err != nil {
+				return err
+			}
+		} else if strings.HasPrefix(k, "x-") {
+			res.Extensions[k] = v
+		} else {
+			res.Keywords[k] = v
+		}
+	}
+	return nil
 }
 
 // IsStrings returns false
@@ -296,7 +355,7 @@ func (s *Schema) IsBool() bool {
 
 // IsRef returns true if s.Ref is set
 func (s *Schema) IsRef() bool {
-	return s.Ref != ""
+	return s.Ref != nil
 }
 
 // SetKeyword encodes and sets the keyword key to the encoded value
@@ -397,60 +456,6 @@ func (s *Schema) fields() map[string]interface{} {
 	}
 }
 
-// SchemaSet is a slice of **SchemaObj
-type SchemaSet []*Schema
-
-// UnmarshalJSON unmarshals JSON
-func (s *SchemaSet) UnmarshalJSON(data []byte) error {
-	var j []jay.JSON
-	if err := json.Unmarshal(data, &j); err != nil {
-		return err
-	}
-	res := make(SchemaSet, len(j))
-	for i, d := range j {
-		v, err := unmarshalSchemaJSON(d)
-		if err != nil {
-			return err
-		}
-		res[i] = v
-	}
-	*s = res
-	return nil
-}
-
-func unmarshalSchema(data []byte) (*Schema, error) {
-	var j interface{}
-	if err := json.Unmarshal(data, &j); err != nil {
-		return nil, err
-	}
-
-	var err error
-	exts := Extensions{}
-
-	if err = json.Unmarshal(data, &jm); err != nil {
-		return nil, err
-	}
-
-	for key, d := range jm {
-		if strings.HasPrefix(key, "x-") {
-			exts[key] = d
-		} else if set, isSchema := schemaFieldSetters[key]; isSchema {
-			var v *Schema
-			v, err = unmarshalSchemaJSON(d)
-			if err != nil {
-				return nil, err
-			}
-			set(&dst, v)
-		} else if _, isfield := jsfields[key]; !isfield {
-			kw[key] = d
-		}
-	}
-	res := Schema(dst)
-	res.Keywords = kw
-	res.Extensions = exts
-	return &res, err
-}
-
 type SchemaRef struct {
 	Ref      string  `-`
 	Resolved *Schema `json:"-"`
@@ -467,4 +472,8 @@ func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s)
 	sr.Resolved = &s
 	return err
+}
+
+func (sr *SchemaRef) MarshalJSON() ([]byte, error) {
+	return json.Marshal(sr.Ref)
 }
