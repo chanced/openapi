@@ -2,10 +2,14 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/tidwall/gjson"
 )
+
+var ErrCallbackNotFound = fmt.Errorf("callback not found")
 
 type CallbackItemMap = ComponentMap[*PathItem]
 
@@ -60,3 +64,19 @@ func (*Callbacks) kind() kind { return kindCallbacks }
 
 // CallbackMap is a map of reusable Callback Objects.
 type CallbackMap = ComponentMap[*Callbacks]
+
+func (c *Callbacks) resolve(p string) (node, error) {
+	ptr, err := jsonpointer.Parse(p)
+	if err != nil {
+		return nil, fmt.Errorf("unable to resolve p: %q: %w", p, err)
+	}
+	np, t, ok := ptr.Next()
+	if !ok {
+		return c, nil
+	}
+	pi, ok := c.Items.Get(string(t))
+	if !ok {
+		return nil, fmt.Errorf("%w: %q", ErrCallbackNotFound, t)
+	}
+	return pi.resolve(np.String())
+}

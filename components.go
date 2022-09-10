@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/chanced/why"
@@ -44,6 +45,7 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+func (c Component[T]) resolve(ctx context.Context, resolver resolver, p string) (node, error)
 
 // ComponentSet is a slice of Components of type T
 type ComponentSet[T node] []Component[T]
