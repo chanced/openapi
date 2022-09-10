@@ -1,7 +1,7 @@
 package openapi
 
-// OpenAPI root object of the OpenAPI document.
-type OpenAPI struct {
+// Document root object of the Document document.
+type Document struct {
 	// Version - OpenAPI Version
 	//
 	// This string MUST be the version number of the OpenAPI
@@ -56,17 +56,17 @@ type OpenAPI struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 	Extensions   `json:"-"`
 }
-type openapi OpenAPI
+type openapi Document
 
 // MarshalJSON marshals JSON
-func (o OpenAPI) MarshalJSON() ([]byte, error) {
+func (o Document) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(openapi(o))
 }
 
 // UnmarshalJSON unmarshals JSON
-func (o *OpenAPI) UnmarshalJSON(data []byte) error {
+func (o *Document) UnmarshalJSON(data []byte) error {
 	v := openapi{}
 	err := unmarshalExtendedJSON(data, &v)
-	*o = OpenAPI(v)
+	*o = Document(v)
 	return err
 }

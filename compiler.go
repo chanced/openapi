@@ -17,45 +17,23 @@ var schemaDir embed.FS
 
 type internalSchemas struct {
 	schema202012 *jsonschema.Schema
-	openapi3_1   openapi31Schemas
+	openapi31    map[Kind]*jsonschema.Schema
 }
 
 var schemas internalSchemas
 
-func (s *internalSchemas) compile(compiler *jsonschema.Compiler) error {
+func compileInternalSchemas(compiler *jsonschema.Compiler) (internalSchemas, error) {
 	var err error
+	s := internalSchemas{}
 	s.schema202012, err = compiler.Compile("https://json-schema.org/draft/2020-12/schema")
 	if err != nil {
-		return err
+		return s, err
 	}
-	return s.openapi3_1.compile(compiler)
+	s.openapi31, err = compileOpenAPI31Schemas(compiler)
+	return s, err
 }
 
-type openapi31Schemas struct {
-	OpenAPI        *jsonschema.Schema
-	Operation      *jsonschema.Schema
-	Callback       *jsonschema.Schema
-	Example        *jsonschema.Schema
-	Header         *jsonschema.Schema
-	License        *jsonschema.Schema
-	Link           *jsonschema.Schema
-	Parameter      *jsonschema.Schema
-	RequestBody    *jsonschema.Schema
-	Response       *jsonschema.Schema
-	SecurityScheme *jsonschema.Schema
-	Tag            *jsonschema.Schema
-	Paths          *jsonschema.Schema
-	PathItem       *jsonschema.Schema
-	MediaType      *jsonschema.Schema
-	Info           *jsonschema.Schema
-	Contact        *jsonschema.Schema
-	Encoding       *jsonschema.Schema
-	ExternalDocs   *jsonschema.Schema
-	Reference      *jsonschema.Schema
-	// XML          *jsonschema.Schema
-}
-
-func (oapi *openapi31Schemas) compile(compiler *jsonschema.Compiler) error {
+func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschema.Schema, error) {
 	u := "https://spec.openapis.org/oas/3.1/schema/2022-02-27"
 
 	compileDef := func(name string) (*jsonschema.Schema, error) {
@@ -63,127 +41,127 @@ func (oapi *openapi31Schemas) compile(compiler *jsonschema.Compiler) error {
 	}
 	openAPI, err := compiler.Compile(u)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	operation, err := compileDef("operation")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	callback, err := compileDef("callbacks")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	example, err := compileDef("example")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	header, err := compileDef("header")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	license, err := compileDef("license")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	link, err := compileDef("link")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	parameter, err := compileDef("parameter")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	requestBody, err := compileDef("request-body")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	paths, err := compileDef("paths")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pathItem, err := compileDef("path-item")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	response, err := compileDef("response")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	securityScheme, err := compileDef("security-scheme")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	tag, err := compileDef("tag")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	mediaType, err := compileDef("media-type")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	info, err := compileDef("info")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	contact, err := compileDef("contact")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	encoding, err := compileDef("encoding")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	reference, err := compileDef("reference")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	externalDocs, err := compileDef("external-documentation")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	*oapi = openapi31Schemas{
-		OpenAPI:        openAPI,
-		Operation:      operation,
-		Callback:       callback,
-		Example:        example,
-		Header:         header,
-		License:        license,
-		Link:           link,
-		Parameter:      parameter,
-		RequestBody:    requestBody,
-		Response:       response,
-		SecurityScheme: securityScheme,
-		Tag:            tag,
-		Paths:          paths,
-		PathItem:       pathItem,
-		MediaType:      mediaType,
-		Info:           info,
-		Contact:        contact,
-		Encoding:       encoding,
-		ExternalDocs:   externalDocs,
-		Reference:      reference,
+	o := map[Kind]*jsonschema.Schema{
+		KindDocument:       openAPI,
+		KindOperation:      operation,
+		KindCallback:       callback,
+		KindExample:        example,
+		KindHeader:         header,
+		KindLicense:        license,
+		KindLink:           link,
+		KindParameter:      parameter,
+		KindRequestBody:    requestBody,
+		KindResponse:       response,
+		KindSecurityScheme: securityScheme,
+		KindTag:            tag,
+		KindPaths:          paths,
+		KindPath:           pathItem,
+		KindMediaType:      mediaType,
+		KindInfo:           info,
+		KindContact:        contact,
+		KindEncoding:       encoding,
+		KindExternalDocs:   externalDocs,
+		KindReference:      reference,
 	}
-	return nil
+	return o, nil
 }
 
 func init() {
@@ -217,7 +195,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("error loading schemas: %v", err)
 	}
-	err = schemas.compile(compiler)
+	schemas, err = compileInternalSchemas(compiler)
 	if err != nil {
 		log.Fatalf("error compiling schemas: %v", err)
 	}

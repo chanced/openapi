@@ -4,7 +4,7 @@ type Kind uint
 
 const (
 	KindUnknown        Kind = iota
-	KindOpenAPI             // OpenAPI
+	KindDocument            // OpenAPI Document
 	KindExample             // Example
 	KindSchema              // Schema
 	KindHeader              // Header
@@ -15,4 +15,14 @@ const (
 	KindRequestBody         // RequestBody
 	KindCallback            // Callback
 	KindSecurityScheme      // SecurityScheme
+	KindOperation           // Operation
+	KindLicense             // License
+	KindTag                 // Tag
+	KindPaths               // Paths
+	KindMediaType           // MediaType
+	KindInfo                // Info
+	KindContact             // Contact
+	KindEncoding            // Encoding
+	KindExternalDocs        // ExternalDocs
+	KindReference           // Reference
 )
