@@ -9,14 +9,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Component[T Node] struct {
-	Ref    *Reference
-	Object T
+type Component[T node] struct {
+	Reference *Reference
+	Object    T
 }
 
 func (c Component[T]) MarshalJSON() ([]byte, error) {
-	if c.Ref != nil {
-		return json.Marshal(c.Ref)
+	if c.Reference != nil {
+		return json.Marshal(c.Reference)
 	}
 	if any(c.Object) != nil {
 		return c.Object.MarshalJSON()
@@ -31,7 +31,7 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		*c = Component[T]{
-			Ref: &ref,
+			Reference: &ref,
 		}
 		return nil
 	}
@@ -46,11 +46,11 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 }
 
 // ComponentSet is a slice of Components of type T
-type ComponentSet[T Node] []Component[T]
+type ComponentSet[T node] []Component[T]
 
 // ComponentEntry is an entry in a ComponentMap consisting of a Key/Value pair for
 // an object consiting of Component[T]s
-type ComponentEntry[V Node] struct {
+type ComponentEntry[V node] struct {
 	Key       string
 	Component Component[V]
 }
@@ -61,7 +61,7 @@ type ComponentEntry[V Node] struct {
 // fields.
 //
 // Under the hood, ComponentMap is of a slice of ComponentField[T]
-type ComponentMap[T Node] []ComponentEntry[T]
+type ComponentMap[T node] []ComponentEntry[T]
 
 func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
 	var err error
@@ -87,6 +87,7 @@ func (cm ComponentMap[T]) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b, err = sjson.SetBytes(b, field.Key, field.Component)
+		_ = b
 		if err != nil {
 			return nil, err
 		}
@@ -151,10 +152,10 @@ func (cm *ComponentMap[T]) UnmarshalYAML(value *yaml.Node) error {
 
 // ComponentMap is a pseudo map consisting of Components with type T.
 
-func newComponent[T Node](ref *Reference, obj T) Component[T] {
+func newComponent[T node](ref *Reference, obj T) Component[T] {
 	return Component[T]{
-		Ref:    ref,
-		Object: obj,
+		Reference: ref,
+		Object:    obj,
 	}
 }
 
@@ -185,15 +186,16 @@ type Components struct {
 	PathItems  *PathItemMap `json:"pathItems,omitempty"`
 	Extensions `json:"-"`
 }
-type components Components
 
 // MarshalJSON marshals JSON
 func (c Components) MarshalJSON() ([]byte, error) {
+	type components Components
 	return marshalExtendedJSON(components(c))
 }
 
 // UnmarshalJSON unmarshals JSON
 func (c *Components) UnmarshalJSON(data []byte) error {
+	type components Components
 	var v components
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err

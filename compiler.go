@@ -17,7 +17,7 @@ var schemaDir embed.FS
 
 type internalSchemas struct {
 	schema202012 *jsonschema.Schema
-	openapi31    map[Kind]*jsonschema.Schema
+	openapi31    map[kind]*jsonschema.Schema
 }
 
 var schemas internalSchemas
@@ -33,7 +33,7 @@ func compileInternalSchemas(compiler *jsonschema.Compiler) (internalSchemas, err
 	return s, err
 }
 
-func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschema.Schema, error) {
+func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[kind]*jsonschema.Schema, error) {
 	u := "https://spec.openapis.org/oas/3.1/schema/2022-02-27"
 
 	compileDef := func(name string) (*jsonschema.Schema, error) {
@@ -49,7 +49,7 @@ func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschem
 		return nil, err
 	}
 
-	callback, err := compileDef("callbacks")
+	callbacks, err := compileDef("callbacks")
 	if err != nil {
 		return nil, err
 	}
@@ -139,27 +139,27 @@ func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschem
 		return nil, err
 	}
 
-	o := map[Kind]*jsonschema.Schema{
-		KindDocument:       openAPI,
-		KindOperation:      operation,
-		KindCallback:       callback,
-		KindExample:        example,
-		KindHeader:         header,
-		KindLicense:        license,
-		KindLink:           link,
-		KindParameter:      parameter,
-		KindRequestBody:    requestBody,
-		KindResponse:       response,
-		KindSecurityScheme: securityScheme,
-		KindTag:            tag,
-		KindPaths:          paths,
-		KindPath:           pathItem,
-		KindMediaType:      mediaType,
-		KindInfo:           info,
-		KindContact:        contact,
-		KindEncoding:       encoding,
-		KindExternalDocs:   externalDocs,
-		KindReference:      reference,
+	o := map[kind]*jsonschema.Schema{
+		kindDocument:       openAPI,
+		kindOperation:      operation,
+		kindCallbacks:      callbacks,
+		kindExample:        example,
+		kindHeader:         header,
+		kindLicense:        license,
+		kindLink:           link,
+		kindParameter:      parameter,
+		kindRequestBody:    requestBody,
+		kindResponse:       response,
+		kindSecurityScheme: securityScheme,
+		kindTag:            tag,
+		kindPaths:          paths,
+		kindPath:           pathItem,
+		kindMediaType:      mediaType,
+		kindInfo:           info,
+		kindContact:        contact,
+		kindEncoding:       encoding,
+		kindExternalDocs:   externalDocs,
+		kindReference:      reference,
 	}
 	return o, nil
 }

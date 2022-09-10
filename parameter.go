@@ -238,22 +238,7 @@ func (p Parameter) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals json into p
 func (p *Parameter) UnmarshalJSON(data []byte) error {
-	type parameter struct {
-		Name            string          `json:"name"`
-		In              In              `json:"in"`
-		Description     string          `json:"description,omitempty"`
-		Required        *bool           `json:"required,omitempty"`
-		Deprecated      bool            `json:"deprecated,omitempty"`
-		AllowEmptyValue bool            `json:"allowEmptyValue,omitempty"`
-		Style           string          `json:"style,omitempty"`
-		Explode         bool            `json:"explode,omitempty"`
-		AllowReserved   bool            `json:"allowReserved,omitempty"`
-		Schema          *Schema         `json:"schema"`
-		Examples        ExampleMap      `json:"examples,omitempty"`
-		Example         json.RawMessage `json:"example,omitempty"`
-		Content         Content         `json:"content,omitempty"`
-		Extensions      `json:"-"`
-	}
+	type parameter Parameter
 	var v parameter
 
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
@@ -263,7 +248,7 @@ func (p *Parameter) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (Parameter) Kind() Kind { return KindParameter }
+func (*Parameter) kind() kind { return kindParameter }
 
 func unmarshalParameterJSON(data []byte) (Component[*Parameter], error) {
 	var err error
@@ -274,6 +259,6 @@ func unmarshalParameterJSON(data []byte) (Component[*Parameter], error) {
 	} else {
 		var v Parameter
 		err = json.Unmarshal(data, &v)
-		return newComponent[*Parameter](nil, &v), err
+		return newComponent(nil, &v), err
 	}
 }

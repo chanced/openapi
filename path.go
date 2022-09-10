@@ -8,90 +8,54 @@ import (
 )
 
 // PathItemMap is a map of Paths that can either be a Path or a Reference
-type PathItemMap = ComponentMap[*Path]
-
-// PathValue is relative path to an individual endpoint. The path is appended
-// (no relative URL resolution) to the expanded URL from the Server Object's url
-// field in order to construct the full URL. PathValue templating is allowed. When
-// matching URLs, concrete (non-templated) paths would be matched before their
-// templated counterparts. Templated paths with the same hierarchy but different
-// templated names MUST NOT exist as they are identical. In case of ambiguous
-// matching, it's up to the tooling to decide which one to use.
-type PathValue string
-
-func (pv PathValue) String() string {
-	str := string(pv)
-	if len(pv) == 0 {
-		return "/"
-	}
-	if pv[0] != '/' {
-		return "/" + str
-	}
-	return str
-}
-
-// // Params returns all params in the path
-// func (pv PathValue) Params() []string {
-// 	panic("not impl")
-// }
-
-// MarshalJSON Marshals PathEntry to JSON
-func (pv PathValue) MarshalJSON() ([]byte, error) {
-	return json.Marshal(pv.String())
-}
+type PathItemMap = ComponentMap[*PathItem]
 
 // Paths holds the relative paths to the individual endpoints and their
 // operations. The path is appended to the URL from the Server Object in order
 // to construct the full URL. The Paths MAY be empty, due to Access Control List
 // (ACL) constraints.
 type Paths struct {
-	Items      map[PathValue]*Path `json:"-"`
+	// Items are the Path
+	Items      PathItemMap `json:"-"`
 	Extensions `json:"-"`
 }
 
 // MarshalJSON marshals JSON
 func (p Paths) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{}, len(p.Items)+len(p.Extensions))
-	for k, v := range p.Items {
-		m[k.String()] = v
+	j, err := p.Items.MarshalJSON()
+	if err != nil {
+		return nil, err
 	}
-	for k, v := range p.Extensions {
-		m[k] = v
-	}
-	return json.Marshal(m)
+	return p.marshalExtensionsInto(j)
 }
 
 // UnmarshalJSON unmarshals JSON data into p
 func (p *Paths) UnmarshalJSON(data []byte) error {
 	*p = Paths{
-		Items:      map[PathValue]*Path{},
 		Extensions: Extensions{},
 	}
 	var err error
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		if strings.HasPrefix(key.String(), "x-") {
-			p.SetEncodedExtension(key.String(), []byte(value.Raw))
+			p.SetRawExtension(key.String(), []byte(value.Raw))
 		} else {
-			var v Path
+			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)
-			p.Items[PathValue(key.String())] = &v
+			p.Items = append(p.Items, ComponentEntry[*PathItem]{
+				Key:       key.String(),
+				Component: Component[*PathItem]{Object: &v},
+			})
 		}
 		return err == nil
 	})
 	return err
 }
 
-// Path describes the operations available on a single path. A Path Item MAY
+// PathItem describes the operations available on a single path. A PathItem Item MAY
 // be empty, due to ACL constraints. The path itself is still exposed to the
 // documentation viewer but they will not know which operations and parameters
 // are available.
-type Path struct {
-	// Allows for a referenced definition of this path item. The referenced
-	// structure MUST be in the form of a Path Item Object. In case a Path Item
-	// Object field appears both in the defined object and the referenced
-	// object, the behavior is undefined. See the rules for resolving Relative
-	// References.
-	Ref string `json:"$ref,omitempty"`
+type PathItem struct {
 	// An optional, string summary, intended to apply to all operations in this path.
 	Summary string `json:"summary,omitempty"`
 	// An optional, string description, intended to apply to all operations in
@@ -126,21 +90,21 @@ type Path struct {
 }
 
 // MarshalJSON marshals p into JSON
-func (p Path) MarshalJSON() ([]byte, error) {
-	type path Path
+func (p PathItem) MarshalJSON() ([]byte, error) {
+	type path PathItem
 	return marshalExtendedJSON(path(p))
 }
 
 // UnmarshalJSON unmarshals json into p
-func (p *Path) UnmarshalJSON(data []byte) error {
-	type path Path
+func (p *PathItem) UnmarshalJSON(data []byte) error {
+	type path PathItem
 
 	var v path
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
-	*p = Path(v)
+	*p = PathItem(v)
 	return nil
 }
 
-func (Path) Kind() Kind { return KindPath }
+func (*PathItem) kind() kind { return kindPath }

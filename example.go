@@ -50,5 +50,5 @@ func (e *Example) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Kind returns KindExample
-func (Example) Kind() Kind { return KindExample }
+// kind returns kindExample
+func (*Example) kind() kind { return kindExample }

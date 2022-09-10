@@ -80,3 +80,7 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	*o = Operation(v)
 	return nil
 }
+
+func (*Operation) kind() kind { return kindOperation }
+
+var _ node = (*Operation)(nil)

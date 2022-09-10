@@ -1,28 +1,28 @@
 package openapi
 
-type Kind uint
+type kind uint
 
 const (
-	KindUnknown        Kind = iota
-	KindDocument            // OpenAPI Document
-	KindExample             // Example
-	KindSchema              // Schema
-	KindHeader              // Header
-	KindLink                // Link
-	KindPath                // Path
-	KindResponse            // Response
-	KindParameter           // Parameter
-	KindRequestBody         // RequestBody
-	KindCallback            // Callback
-	KindSecurityScheme      // SecurityScheme
-	KindOperation           // Operation
-	KindLicense             // License
-	KindTag                 // Tag
-	KindPaths               // Paths
-	KindMediaType           // MediaType
-	KindInfo                // Info
-	KindContact             // Contact
-	KindEncoding            // Encoding
-	KindExternalDocs        // ExternalDocs
-	KindReference           // Reference
+	kindUnknown        kind = iota
+	kindDocument            // OpenAPI Document
+	kindExample             // Example
+	kindSchema              // Schema
+	kindHeader              // Header
+	kindLink                // Link
+	kindPath                // Path
+	kindResponse            // Response
+	kindParameter           // Parameter
+	kindRequestBody         // RequestBody
+	kindCallbacks           // Callbacks
+	kindSecurityScheme      // SecurityScheme
+	kindOperation           // Operation
+	kindLicense             // License
+	kindTag                 // Tag
+	kindPaths               // Paths
+	kindMediaType           // MediaType
+	kindInfo                // Info
+	kindContact             // Contact
+	kindEncoding            // Encoding
+	kindExternalDocs        // ExternalDocs
+	kindReference           // Reference
 )

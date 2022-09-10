@@ -75,7 +75,7 @@ func (l *Link) DecodeRequestBody(dst interface{}) error {
 	return json.Unmarshal(l.RequestBody, dst)
 }
 
-func (Link) Kind() Kind { return KindLink }
+func (*Link) kind() kind { return kindLink }
 
 // LinkParameters is a map representing parameters to pass to an operation as
 // specified with operationId or identified via operationRef. The key is the

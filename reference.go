@@ -1,7 +1,6 @@
 package openapi
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/tidwall/gjson"
@@ -38,12 +37,4 @@ type Reference struct {
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")
 	return r.Str != ""
-}
-
-func unmarshalReferenceJSON(data []byte) (*Reference, error) {
-	if !isRefJSON(data) {
-		return nil, ErrNotReference
-	}
-	var r Reference
-	return &r, json.Unmarshal(data, &r)
 }

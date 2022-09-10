@@ -1,9 +1,5 @@
 package openapi
 
-import (
-	"encoding/json"
-)
-
 // ResponseMap is a container for the expected responses of an operation. The
 // container maps a HTTP response code to the expected response.
 //
@@ -59,21 +55,4 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func (Response) Kind() Kind { return KindResponse }
-
-func unmarshalResponse(data []byte) (Component[*Response], error) {
-	if isRefJSON(data) {
-		ref, err := unmarshalReferenceJSON(data)
-		if err != nil {
-			return Component[*Response]{}, err
-		}
-		return newComponent[*Response](ref, nil), nil
-	}
-	var v Response
-	err := json.Unmarshal(data, &v)
-	if err != nil {
-		return Component[*Response]{}, err
-	}
-
-	return newComponent(nil, &v), nil
-}
+func (*Response) kind() kind { return kindResponse }

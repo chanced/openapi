@@ -16,8 +16,33 @@ type SchemaEntry struct {
 	Schema *Schema
 }
 
-// SchemaMap is a psuedo map of SchemaMap
+// SchemaMap is a psuedo, ordered map of Schemas
+//
+// Under the hood, SchemaMap is a slice of SchemaEntry
 type SchemaMap []SchemaEntry
+
+func (sm *SchemaMap) Set(key string, s *Schema) {
+	se := SchemaEntry{
+		Key:    key,
+		Schema: s,
+	}
+	for i, v := range *sm {
+		if v.Key == key {
+			(*sm)[i] = se
+			return
+		}
+	}
+	(*sm) = append((*sm), se)
+}
+
+func (sm SchemaMap) Get(key string) *Schema {
+	for _, v := range sm {
+		if v.Key == key {
+			return v.Schema
+		}
+	}
+	return nil
+}
 
 func (sm *SchemaMap) MarshalJSON() ([]byte, error) {
 	b := []byte("{}")
@@ -51,7 +76,19 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+func (sm *SchemaMap) uniqueRefs(refs map[*SchemaRef]struct{}) {
+	for _, v := range *sm {
+		v.Schema.uniqueRefs(refs)
+	}
+}
+
 type SchemaSet []*Schema
+
+func (sm *SchemaSet) uniqueRefs(refs map[*SchemaRef]struct{}) {
+	for _, s := range *sm {
+		s.uniqueRefs(refs)
+	}
+}
 
 // Schema allows the definition of input and output data types. These types can
 // be objects, but also primitives and arrays. This object is a superset of the
@@ -390,6 +427,41 @@ func (s *Schema) DecodeKeywords(dst interface{}) error {
 	return json.Unmarshal(data, dst)
 }
 
+func (s *Schema) schemaRefs() schemaRefs {
+	if s == nil {
+		return nil
+	}
+	var r schemaRefs
+	return s.uniqueRefs(r)
+}
+
+func (s *Schema) uniqueRefs(refs schemaRefs) schemaRefs {
+	if s == nil {
+		return refs
+	}
+	s.Ref.uniqueRefs(refs)
+	s.Definitions.uniqueRefs(refs)
+	s.Not.uniqueRefs(refs)
+	s.AllOf.uniqueRefs(refs)
+	s.AnyOf.uniqueRefs(refs)
+	s.OneOf.uniqueRefs(refs)
+	s.If.uniqueRefs(refs)
+	s.Then.uniqueRefs(refs)
+	s.Else.uniqueRefs(refs)
+	s.Properties.uniqueRefs(refs)
+	s.PropertyNames.uniqueRefs(refs)
+	s.PatternProperties.uniqueRefs(refs)
+	s.AdditionalProperties.uniqueRefs(refs)
+	s.DependentSchemas.uniqueRefs(refs)
+	s.UnevaluatedProperties.uniqueRefs(refs)
+	s.Items.uniqueRefs(refs)
+	s.UnevaluatedObjs.uniqueRefs(refs)
+	s.AdditionalObjs.uniqueRefs(refs)
+	s.PrefixObjs.uniqueRefs(refs)
+	s.Contains.uniqueRefs(refs)
+	return refs
+}
+
 func (s *Schema) fields() map[string]interface{} {
 	return map[string]interface{}{
 		"$schema":               &s.Schema,
@@ -457,7 +529,7 @@ func (s *Schema) fields() map[string]interface{} {
 }
 
 type SchemaRef struct {
-	Ref      string  `-`
+	Ref      string  `json:"-"`
 	Resolved *Schema `json:"-"`
 }
 
@@ -476,4 +548,52 @@ func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 
 func (sr *SchemaRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sr.Ref)
+}
+
+func (sr *SchemaRef) schemaRefs() schemaRefs {
+	if sr == nil {
+		return nil
+	}
+	res := make(schemaRefs)
+	sr.uniqueRefs(res)
+	return res
+}
+
+func (sr *SchemaRef) uniqueRefs(refs schemaRefs) {
+	if sr == nil {
+		return
+	}
+	if refs.exists(sr) {
+		return
+	}
+	refs.add(sr)
+	sr.Resolved.uniqueRefs(refs)
+}
+
+type schemaRefs map[*SchemaRef]struct{}
+
+func (sr *schemaRefs) append(a schemaRefs) {
+	if sr == nil {
+		if a != nil {
+			*sr = a
+		}
+		return
+	}
+	m := *sr
+	for k := range a {
+		m[k] = struct{}{}
+	}
+	return
+}
+
+func (sr schemaRefs) exists(a *SchemaRef) bool {
+	_, ok := sr[a]
+	return ok
+}
+
+func (sr *schemaRefs) add(a *SchemaRef) {
+	if sr == nil {
+		*sr = make(schemaRefs)
+	}
+	(*sr)[a] = struct{}{}
 }

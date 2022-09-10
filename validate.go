@@ -19,7 +19,7 @@ func Validate(data []byte) error {
 	if jay.IsObject(data) {
 		err := json.Unmarshal(data, &spec)
 		if err == nil {
-			return schemas.openapi31[KindDocument].Validate(spec)
+			return schemas.openapi31[kindDocument].Validate(spec)
 		}
 	}
 	var yn interface{}
@@ -39,10 +39,10 @@ func Validate(data []byte) error {
 	if err != nil {
 		return fmt.Errorf("error unmarshaling json or yaml: %w", err)
 	}
-	return schemas.openapi31[KindDocument].Validate(spec)
+	return schemas.openapi31[kindDocument].Validate(spec)
 }
 
-func validateComponent(kind Kind, data []byte) error {
+func validateComponent(kind kind, data []byte) error {
 	var v interface{}
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err

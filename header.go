@@ -51,7 +51,7 @@ type Header struct {
 	// value of query. The default value is false.
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 	// The schema defining the type used for the parameter.
-	Schema *Schema `json:"schema,omitempty"`
+	Schema *SchemaRef `json:"schema,omitempty"`
 	// Examples of the parameter's potential value. Each example SHOULD
 	// contain a value in the correct format as specified in the parameter
 	// encoding. The examples field is mutually exclusive of the example
@@ -86,4 +86,4 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 	*h = Header(v)
 	return err
 }
-func (Header) Kind() Kind { return KindHeader }
+func (*Header) kind() kind { return kindHeader }

@@ -59,14 +59,14 @@ type Document struct {
 type openapi Document
 
 // MarshalJSON marshals JSON
-func (o Document) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(openapi(o))
+func (d Document) MarshalJSON() ([]byte, error) {
+	return marshalExtendedJSON(openapi(d))
 }
 
 // UnmarshalJSON unmarshals JSON
-func (o *Document) UnmarshalJSON(data []byte) error {
+func (d *Document) UnmarshalJSON(data []byte) error {
 	v := openapi{}
 	err := unmarshalExtendedJSON(data, &v)
-	*o = Document(v)
+	*d = Document(v)
 	return err
 }

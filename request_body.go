@@ -18,7 +18,7 @@ type RequestBody struct {
 	Extensions `json:"-"`
 }
 
-func (RequestBody) Kind() Kind { return KindRequestBody }
+func (*RequestBody) kind() kind { return kindRequestBody }
 
 // MarshalJSON marshals h into JSON
 func (rb RequestBody) MarshalJSON() ([]byte, error) {

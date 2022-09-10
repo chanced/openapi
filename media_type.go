@@ -13,7 +13,7 @@ type Content map[string]*MediaType
 // MediaType  provides schema and examples for the media type identified by its key.
 type MediaType struct {
 	//  The schema defining the content of the request, response, or parameter.
-	Schema *Schema `json:"schema,omitempty"`
+	Schema *SchemaRef `json:"schema,omitempty"`
 	// Example of the media type. The example object SHOULD be in the correct
 	// format as specified by the media type. The example field is mutually
 	// exclusive of the examples field. Furthermore, if referencing a schema

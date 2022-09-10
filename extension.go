@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/chanced/maps"
 	"github.com/tidwall/sjson"
 )
 
@@ -54,6 +55,20 @@ type extender interface {
 	setExts(Extensions)
 }
 
+func (e *Extensions) marshalExtensionsInto(json []byte) ([]byte, error) {
+	if e == nil {
+		return json, nil
+	}
+	var err error
+	for _, kv := range maps.SortByKeys(*e) {
+		json, err = sjson.SetRawBytes(json, kv.Key, kv.Val)
+		if err != nil {
+			return json, err
+		}
+	}
+	return json, err
+}
+
 // Decode decodes all extensions into dst.
 func (e Extensions) Decode(dst interface{}) error {
 	b, err := json.Marshal(e)
@@ -81,12 +96,12 @@ func (e *Extensions) SetExtension(key string, val interface{}) error {
 	if err != nil {
 		return err
 	}
-	e.SetEncodedExtension(key, data)
+	e.SetRawExtension(key, data)
 	return nil
 }
 
-// SetEncodedExtension sets val to key
-func (e *Extensions) SetEncodedExtension(key string, val []byte) {
+// SetRawExtension sets the raw JSON encoded val to key
+func (e *Extensions) SetRawExtension(key string, val []byte) {
 	if !strings.HasPrefix(key, "x-") {
 		key = "x-" + key
 	}

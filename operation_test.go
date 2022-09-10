@@ -112,8 +112,8 @@ package openapi_test
 // 	for n := 0; n < 100; n++ {
 // 		op := new(openapi.Operation)
 // 		op.Extensions = make(openapi.Extensions)
-// 		op.Extensions.SetEncodedExtension("key1", []byte("1"))
-// 		op.Extensions.SetEncodedExtension("key2", []byte("2"))
+// 		op.Extensions.SetRawExtension("key1", []byte("1"))
+// 		op.Extensions.SetRawExtension("key2", []byte("2"))
 
 // 		marshaled, _ := json.Marshal(op)
 

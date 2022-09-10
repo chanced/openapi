@@ -1,5 +1,12 @@
 package openapi
 
+// SecuritySchemeType represents the type of the security scheme.
+type SecuritySchemeType string
+
+func (ss SecuritySchemeType) String() string {
+	return string(ss)
+}
+
 const (
 	// SecuritySchemeTypeAPIKey = "apiKey"
 	SecuritySchemeTypeAPIKey SecuritySchemeType = "apiKey"
@@ -37,13 +44,6 @@ type SecurityRequirements []SecurityRequirement
 // contain a list of role names which are required for the execution, but are
 // not otherwise defined or exchanged in-band.
 type SecurityRequirement map[string][]string
-
-// SecuritySchemeType represents the type of the security scheme.
-type SecuritySchemeType string
-
-func (ss SecuritySchemeType) String() string {
-	return string(ss)
-}
 
 // SecuritySchemeMap is a map of SecurityScheme
 type SecuritySchemeMap = ComponentMap[*SecurityScheme]
@@ -96,20 +96,20 @@ type SecurityScheme struct {
 }
 
 // UnmarshalJSON unmarshals JSON
-func (sso *SecurityScheme) UnmarshalJSON(data []byte) error {
+func (ss *SecurityScheme) UnmarshalJSON(data []byte) error {
 	type securityscheme SecurityScheme
 
 	var v securityscheme
 	err := unmarshalExtendedJSON(data, &v)
-	*sso = SecurityScheme(v)
+	*ss = SecurityScheme(v)
 	return err
 }
 
 // MarshalJSON marshals JSON
-func (sso SecurityScheme) MarshalJSON() ([]byte, error) {
+func (ss SecurityScheme) MarshalJSON() ([]byte, error) {
 	type securityscheme SecurityScheme
 
-	return marshalExtendedJSON(securityscheme(sso))
+	return marshalExtendedJSON(securityscheme(ss))
 }
 
-func (SecurityScheme) Kind() Kind { return KindSecurityScheme }
+func (*SecurityScheme) kind() kind { return kindSecurityScheme }
