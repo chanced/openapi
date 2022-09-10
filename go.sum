@@ -1,5 +1,9 @@
 github.com/chanced/jay v0.0.3 h1:yaftWp+NvIIXc8vMAmwOiFp7zJdK1ffFl6sNpL1BC4A=
 github.com/chanced/jay v0.0.3/go.mod h1:0hPHwA6ni5KdorNTIOK33aH+e4F0n3RJWSw85o3iasI=
+github.com/chanced/maps v0.0.2 h1:Lpixr8bK1ZKdVWC9+dtfO3AFDpfPdh08nrRrSbIFdXQ=
+github.com/chanced/maps v0.0.2/go.mod h1:+gAhsn8IHMw6nS10PwKiqowwrM3aKLkiLKF4IYzdKQU=
+github.com/chanced/uri v0.0.1 h1:8OWoG1gfFSinoM8jvCqSWxXmlZ/uoKJAEp2TIc4oaZQ=
+github.com/chanced/uri v0.0.1/go.mod h1:rQ71Mb+hLjOz5r1f8IcvyBJTbfnBE0pfRoP0flwxPPU=
 github.com/chanced/why v0.0.3 h1:IaneNlKQP60zDMbIpFARhYn253UebOY2TKw8MsZzXnM=
 github.com/chanced/why v0.0.3/go.mod h1:vC20ivWScZwWOQTuOSOQ4Gg/j0HIHyDZOE+Bf0/9L3w=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=

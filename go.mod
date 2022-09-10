@@ -4,8 +4,9 @@ go 1.18
 
 require (
 	github.com/chanced/jay v0.0.3
-	github.com/chanced/why v0.0.3
 	github.com/chanced/maps v0.0.2
+	github.com/chanced/why v0.0.3
+	github.com/chanced/uri v0.0.1
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0
 	github.com/tidwall/gjson v1.14.3
 	github.com/tidwall/sjson v1.2.5
@@ -16,5 +17,3 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 )
-
-replace github.com/chanced/maps v0.0.2 => ../maps

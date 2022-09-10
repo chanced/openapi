@@ -3,7 +3,7 @@ package openapi
 import (
 	"fmt"
 
-	"github.com/chanced/openapi/uri"
+	"github.com/chanced/uri"
 )
 
 type Loader struct {
