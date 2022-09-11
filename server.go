@@ -34,7 +34,7 @@ func (s *Server) UnmarshalJSON(data []byte) error {
 type ServerVariable struct {
 	// An enumeration of string values to be used if the substitution options
 	// are from a limited set. The array MUST NOT be empty.
-	Enum []string `json:"enum" yaml:"enum"`
+	Enum []string `json:"enum"`
 	// The default value to use for substitution, which SHALL be sent if an
 	// alternate value is not supplied. Note this behavior is different than the
 	// Schema Object's treatment of default values, because in those cases
@@ -42,10 +42,10 @@ type ServerVariable struct {
 	// exist in the enum's values.
 	//
 	// 	*required*
-	Default string `json:"default" yaml:"default"`
+	Default string `json:"default"`
 	// An optional description for the server variable. CommonMark syntax MAY be
 	// used for rich text representation.
-	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 	Extensions  `json:"-"`
 }
 

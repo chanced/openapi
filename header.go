@@ -1,7 +1,10 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
 )
 
 // HeaderMap holds reusable HeaderMap.
@@ -68,6 +71,7 @@ type Header struct {
 	Example json.RawMessage `json:"example,omitempty"`
 	// OpenAPI extensions
 	Extensions `json:"-"`
+	Location   Location `json:"-"`
 }
 
 // MarshalJSON marshals h into JSON
@@ -87,3 +91,19 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 	return err
 }
 func (*Header) kind() kind { return kindHeader }
+
+func (h *Header) init(ctx context.Context, resolver *resolver) error {
+}
+
+func (h *Header) setLocation(loc Location) {
+	h.Location = loc
+	h.Examples.setLocation(loc)
+	h.Schema.setLocation(loc)
+}
+
+// resolve implements node
+func (*Header) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
+	panic("unimplemented")
+}
+
+var _ node = (*Header)(nil)

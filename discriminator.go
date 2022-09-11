@@ -16,17 +16,25 @@ type Discriminator struct {
 	Mapping map[string]string `json:"mapping,omitempty"`
 
 	Extensions `json:"-"`
+	Location   Location `json:"-"`
 }
 
-type discriminator Discriminator
+func (d *Discriminator) setLocation(loc Location) error {
+	d.Location = loc
+	return nil
+}
 
 // MarshalJSON marshals d into JSON
 func (d Discriminator) MarshalJSON() ([]byte, error) {
+	type discriminator Discriminator
+
 	return marshalExtendedJSON(discriminator(d))
 }
 
 // UnmarshalJSON unmarshals json into d
 func (d *Discriminator) UnmarshalJSON(data []byte) error {
+	type discriminator Discriminator
+
 	v := discriminator{}
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
@@ -34,4 +42,3 @@ func (d *Discriminator) UnmarshalJSON(data []byte) error {
 	*d = Discriminator(v)
 	return nil
 }
-

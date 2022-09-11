@@ -56,3 +56,5 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 }
 
 func (*Response) kind() kind { return kindResponse }
+
+var _ node = (*Response)(nil)

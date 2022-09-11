@@ -1,5 +1,11 @@
 package openapi
 
+import (
+	"context"
+
+	"github.com/chanced/jsonpointer"
+)
+
 // Operation describes a single API operation on a path.
 type Operation struct {
 	// A list of tags for API documentation control. Tags can be used for
@@ -56,7 +62,11 @@ type Operation struct {
 	// An alternative server array to service this operation. If an alternative
 	// server object is specified at the Path Item Object or Root level, it will
 	// be overridden by this value.
-	Servers    []*Server `json:"servers,omitempty"`
+	Servers []*Server `json:"servers,omitempty"`
+
+	// Location contains information about the location of the node in the
+	// document or referenced resource
+	Location   *Location `json:"-"`
 	Extensions `json:"-"`
 }
 
@@ -82,5 +92,15 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 }
 
 func (*Operation) kind() kind { return kindOperation }
+
+// init implements node
+func (o *Operation) init(ctx context.Context, resolver *resolver, location Location) error {
+	panic("not done")
+}
+
+// resolve implements node
+func (*Operation) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
+	panic("unimplemented")
+}
 
 var _ node = (*Operation)(nil)

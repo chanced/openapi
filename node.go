@@ -1,6 +1,10 @@
 package openapi
 
-import "context"
+import (
+	"context"
+
+	"github.com/chanced/jsonpointer"
+)
 
 type node interface {
 	// MarshalJSON marshals JSON
@@ -9,6 +13,7 @@ type node interface {
 	UnmarshalJSON(data []byte) error
 
 	kind() kind
-
-	resolve(ctx context.Context, resolver resolver, p string, kind kind) (interface{}, error)
+	setLocation(loc Location) error
+	init(ctx context.Context, resolver *resolver) error
+	resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error)
 }

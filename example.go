@@ -30,6 +30,7 @@ type Example struct {
 	// exclusive. See the rules for resolving Relative References.
 	ExternalValue string `json:"externalValue,omitempty"`
 	Extensions    `json:"-"`
+	Location      Location `json:"-"`
 }
 
 // MarshalJSON marshals JSON

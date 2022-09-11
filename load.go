@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/chanced/uri"
 )
@@ -13,16 +14,25 @@ type resolver struct {
 	fn              func(context.Context, *uri.URI) ([]byte, error)
 	uri             *uri.URI
 	document        *Document
-	schemas         map[string]*Schema
-	responses       map[string]*Response
-	parameters      map[string]*Parameter
-	Examples        map[string]*Example
-	requestBodies   map[string]*RequestBody
-	headers         map[string]*Header
-	securitySchemes map[string]*SecurityScheme
-	Links           map[string]*Link
-	Callbacks       map[string]*Callbacks
-	PathItems       map[string]*PathItem
+	// id rather have map[string]*Callback and so on, but that causes a circular dependency
+	// and I have no idea why
+	nodesByKind map[kind]map[string]node
+	nodes       map[string]node
+}
+
+func (r *resolver) resolve(ctx context.Context, kind kind, u *uri.URI) (node, error) {
+	if u.Fragment != "" {
+		nu := *u
+		nu.Fragment = ""
+		if n, ok := r.nodes[nu.String()]; ok {
+			// return n.resolve(ctx, r, u.Fragment)
+			_ = n
+			_ = ok
+		} else {
+			// return nil, fmt.Errorf("failed to resolve %s: %w", u)
+		}
+	}
+	panic("not done")
 }
 
 // NewLoader returns a new Loader where documentURI is the URI of root OpenAPI document
@@ -36,7 +46,8 @@ func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri
 	if documentURI == "" {
 		return nil, fmt.Errorf("documentURI cannot be empty")
 	}
-
+	var h http.Request
+	h.Context()
 	docURI, err := uri.Parse(documentURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse documentURI: %w", err)
@@ -62,5 +73,7 @@ func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri
 		fn:  fn,
 		uri: docURI,
 	}
-	return loader, nil
+	_ = loader
+	panic("not done")
+	// return loader, nil
 }

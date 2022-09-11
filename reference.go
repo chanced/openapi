@@ -26,12 +26,14 @@ type Reference struct {
 	// A short summary which by default SHOULD override that of the referenced
 	// component. If the referenced object-type does not allow a summary field,
 	// then this field has no effect.
-	Summary string `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Summary string `json:"summary,omitempty"`
 	// A description which by default SHOULD override that of the referenced
 	// component. CommonMark syntax MAY be used for rich text representation. If
 	// the referenced object-type does not allow a description field, then this
 	// field has no effect.
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
+
+	Location Location `json:"-"`
 }
 
 func isRefJSON(data []byte) bool {

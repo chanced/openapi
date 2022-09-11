@@ -1,12 +1,16 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/chanced/jay"
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/uri"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -33,6 +37,19 @@ func (sm *SchemaMap) Set(key string, s *Schema) {
 		}
 	}
 	(*sm) = append((*sm), se)
+}
+
+func (sm SchemaMap) setLocation(loc Location) error {
+	if sm == nil {
+		return nil
+	}
+	for _, e := range sm {
+		err := e.Schema.setLocation(loc.Append(e.Key))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (sm SchemaMap) Get(key string) *Schema {
@@ -76,18 +93,19 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func (sm *SchemaMap) uniqueRefs(refs map[*SchemaRef]struct{}) {
-	for _, v := range *sm {
-		v.Schema.uniqueRefs(refs)
-	}
-}
-
 type SchemaSet []*Schema
 
-func (sm *SchemaSet) uniqueRefs(refs map[*SchemaRef]struct{}) {
-	for _, s := range *sm {
-		s.uniqueRefs(refs)
+func (ss SchemaSet) setLocation(loc Location) error {
+	if ss == nil {
+		return nil
 	}
+	for i, s := range ss {
+		err := s.setLocation(loc.Append(strconv.Itoa(i)))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Schema allows the definition of input and output data types. These types can
@@ -188,7 +206,7 @@ type Schema struct {
 	// is encountered while evaluating an instance.
 	//
 	// https://json-schema.org/draft/2020-12/json-schema-core.html#dynamic-ref
-	DynamicRef string `json:"$dynamicRef,omitempty"`
+	DynamicRef *SchemaRef `json:"$dynamicRef,omitempty"`
 	// A less common way to identify a subschema is to create a named anchor in
 	// the schema using the $anchor keyword and using that name in the URI
 	// fragment. Anchors must start with a letter followed by any number of
@@ -245,8 +263,8 @@ type Schema struct {
 	Then *Schema `json:"then,omitempty"`
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
 	Else                 *Schema   `json:"else,omitempty"`
-	MinProperties        *int      `json:"minProperties,omitempty"`
-	MaxProperties        *int      `json:"maxProperties,omitempty"`
+	MinProperties        *Number   `json:"minProperties,omitempty"`
+	MaxProperties        *Number   `json:"maxProperties,omitempty"`
 	Required             []string  `json:"required,omitempty"`
 	Properties           SchemaMap `json:"properties,omitempty"`
 	PropertyNames        *Schema   `json:"propertyNames,omitempty"`
@@ -304,7 +322,7 @@ type Schema struct {
 	// Deprecated: renamed to dynamicAnchor
 	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
 	// Deprecated: renamed to dynamicRef
-	RecursiveRef string `json:"$recursiveRef,omitempty"`
+	RecursiveRef *SchemaRef `json:"$recursiveRef,omitempty"`
 
 	Discriminator *Discriminator `json:"discriminator,omitempty"`
 	// This MAY be used only on properties schemas. It has no effect on root
@@ -313,6 +331,7 @@ type Schema struct {
 	XML        *XML `json:"xml,omitempty"`
 	Extensions `json:"-"`
 	Keywords   map[string]json.RawMessage `json:"-"`
+	Location   Location                   `json:"-"`
 }
 
 // MarshalJSON marshals JSON
@@ -427,41 +446,6 @@ func (s *Schema) DecodeKeywords(dst interface{}) error {
 	return json.Unmarshal(data, dst)
 }
 
-func (s *Schema) schemaRefs() schemaRefs {
-	if s == nil {
-		return nil
-	}
-	var r schemaRefs
-	return s.uniqueRefs(r)
-}
-
-func (s *Schema) uniqueRefs(refs schemaRefs) schemaRefs {
-	if s == nil {
-		return refs
-	}
-	s.Ref.uniqueRefs(refs)
-	s.Definitions.uniqueRefs(refs)
-	s.Not.uniqueRefs(refs)
-	s.AllOf.uniqueRefs(refs)
-	s.AnyOf.uniqueRefs(refs)
-	s.OneOf.uniqueRefs(refs)
-	s.If.uniqueRefs(refs)
-	s.Then.uniqueRefs(refs)
-	s.Else.uniqueRefs(refs)
-	s.Properties.uniqueRefs(refs)
-	s.PropertyNames.uniqueRefs(refs)
-	s.PatternProperties.uniqueRefs(refs)
-	s.AdditionalProperties.uniqueRefs(refs)
-	s.DependentSchemas.uniqueRefs(refs)
-	s.UnevaluatedProperties.uniqueRefs(refs)
-	s.Items.uniqueRefs(refs)
-	s.UnevaluatedObjs.uniqueRefs(refs)
-	s.AdditionalObjs.uniqueRefs(refs)
-	s.PrefixObjs.uniqueRefs(refs)
-	s.Contains.uniqueRefs(refs)
-	return refs
-}
-
 func (s *Schema) fields() map[string]interface{} {
 	return map[string]interface{}{
 		"$schema":               &s.Schema,
@@ -529,17 +513,38 @@ func (s *Schema) fields() map[string]interface{} {
 }
 
 type SchemaRef struct {
-	Ref      string  `json:"-"`
-	Resolved *Schema `json:"-"`
+	Ref      *uri.URI `json:"-"`
+	Resolved *Schema  `json:"-"`
+}
+
+func (sr *SchemaRef) setLocation(l Location) error {
+	if sr == nil {
+		return nil
+	}
+	if sr.Resolved != nil {
+		if sr.Ref != nil {
+			nl, err := NewLocation(sr.Ref)
+			if err != nil {
+				return err
+			}
+			sr.Resolved.setLocation(nl)
+			return nil
+		}
+		return sr.Resolved.setLocation(l)
+	}
+	return nil
 }
 
 func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 	if jay.IsString(data) {
-		var s string
-		err := json.Unmarshal(data, &s)
-		sr.Ref = s
-		return err
+		var u uri.URI
+		if err := json.Unmarshal(data, &u); err != nil {
+			return err
+		}
+		sr.Ref = &u
+		return nil
 	}
+
 	var s Schema
 	err := json.Unmarshal(data, &s)
 	sr.Resolved = &s
@@ -550,50 +555,96 @@ func (sr *SchemaRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sr.Ref)
 }
 
-func (sr *SchemaRef) schemaRefs() schemaRefs {
-	if sr == nil {
-		return nil
-	}
-	res := make(schemaRefs)
-	sr.uniqueRefs(res)
-	return res
+// init implements node
+func (*Schema) init(ctx context.Context, resolver *resolver) error {
+	panic("unimplemented")
 }
 
-func (sr *SchemaRef) uniqueRefs(refs schemaRefs) {
-	if sr == nil {
-		return
-	}
-	if refs.exists(sr) {
-		return
-	}
-	refs.add(sr)
-	sr.Resolved.uniqueRefs(refs)
+// kind implements node
+func (*Schema) kind() kind { return kindSchema }
+
+// resolve implements node
+func (*Schema) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
+	panic("unimplemented")
 }
 
-type schemaRefs map[*SchemaRef]struct{}
+// setLocation implements node
+func (s *Schema) setLocation(loc Location) error {
+	s.Location = loc
 
-func (sr *schemaRefs) append(a schemaRefs) {
-	if sr == nil {
-		if a != nil {
-			*sr = a
-		}
-		return
+	if err := s.Ref.setLocation(loc.Append("ref")); err != nil {
+		return err
 	}
-	m := *sr
-	for k := range a {
-		m[k] = struct{}{}
+	if err := s.Definitions.setLocation(loc.Append("definitions")); err != nil {
+		return err
 	}
-	return
+	if err := s.DynamicRef.setLocation(loc.Append("dynamicRef")); err != nil {
+		return err
+	}
+	if err := s.Not.setLocation(loc.Append("not")); err != nil {
+		return err
+	}
+	if err := s.AllOf.setLocation(loc.Append("allOf")); err != nil {
+		return err
+	}
+	if err := s.AnyOf.setLocation(loc.Append("anyOf")); err != nil {
+		return err
+	}
+	if err := s.OneOf.setLocation(loc.Append("oneOf")); err != nil {
+		return err
+	}
+	if err := s.If.setLocation(loc.Append("if")); err != nil {
+		return err
+	}
+	if err := s.Then.setLocation(loc.Append("then")); err != nil {
+		return err
+	}
+	if err := s.Else.setLocation(loc.Append("else")); err != nil {
+		return err
+	}
+	if err := s.Properties.setLocation(loc.Append("properties")); err != nil {
+		return err
+	}
+	if err := s.PropertyNames.setLocation(loc.Append("propertyNames")); err != nil {
+		return err
+	}
+	if err := s.PatternProperties.setLocation(loc.Append("patternProperties")); err != nil {
+		return err
+	}
+	if err := s.AdditionalProperties.setLocation(loc.Append("additionalProperties")); err != nil {
+		return err
+	}
+	if err := s.DependentSchemas.setLocation(loc.Append("dependentSchemas")); err != nil {
+		return err
+	}
+	if err := s.UnevaluatedProperties.setLocation(loc.Append("unevaluatedProperties")); err != nil {
+		return err
+	}
+	if err := s.Items.setLocation(loc.Append("items")); err != nil {
+		return err
+	}
+	if err := s.UnevaluatedObjs.setLocation(loc.Append("unevaluatedObjs")); err != nil {
+		return err
+	}
+	if err := s.AdditionalObjs.setLocation(loc.Append("additionalObjs")); err != nil {
+		return err
+	}
+	if err := s.PrefixObjs.setLocation(loc.Append("prefixObjs")); err != nil {
+		return err
+	}
+	if err := s.Contains.setLocation(loc.Append("contains")); err != nil {
+		return err
+	}
+	if err := s.RecursiveRef.setLocation(loc.Append("recursiveRef")); err != nil {
+		return err
+	}
+	if err := s.Discriminator.setLocation(loc.Append("discriminator")); err != nil {
+		return err
+	}
+	if err := s.XML.setLocation(loc.Append("xml")); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (sr schemaRefs) exists(a *SchemaRef) bool {
-	_, ok := sr[a]
-	return ok
-}
-
-func (sr *schemaRefs) add(a *SchemaRef) {
-	if sr == nil {
-		*sr = make(schemaRefs)
-	}
-	(*sr)[a] = struct{}{}
-}
+var _ node = (*Schema)(nil)

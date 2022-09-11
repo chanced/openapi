@@ -5,12 +5,12 @@ type License struct {
 	// The license name used for the API.
 	//
 	// 	*required*
-	Name string `json:"name" yaml:"name"`
+	Name string `json:"name"`
 
 	// An SPDX license expression for the API. The identifier field is mutually
 	// exclusive of the url field.
-	Identifier string `json:"identifier,omitempty" yaml:"identifier,omitempty"`
+	Identifier string `json:"identifier,omitempty"`
 	// A URL to the license used for the API. This MUST be in the form of a URL.
 	// The url field is mutually exclusive of the identifier field.
-	URL string `json:"url,omitempty" yaml:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 }

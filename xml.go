@@ -27,4 +27,13 @@ type XML struct {
 	// only when defined alongside type being array (outside the items).
 	Wrapped    bool `json:"wrapped,omitempty"`
 	Extensions `json:"-"`
+	Location   Location `json:"-"`
+}
+
+func (xml *XML) setLocation(loc Location) error {
+	if xml == nil {
+		return nil
+	}
+	xml.Location = loc
+	return nil
 }
