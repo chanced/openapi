@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/chanced/jay"
-	"github.com/chanced/why"
+	"github.com/chanced/transcodefmt"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,7 +19,7 @@ func Validate(data []byte) error {
 	if jay.IsObject(data) {
 		err := json.Unmarshal(data, &spec)
 		if err == nil {
-			return schemas.openapi31[kindDocument].Validate(spec)
+			return schemas.openapi31[KindDocument].Validate(spec)
 		}
 	}
 	var yn interface{}
@@ -31,7 +31,7 @@ func Validate(data []byte) error {
 	if err != nil {
 		return fmt.Errorf("error unmarshaling json or yaml: %w", err)
 	}
-	j, err := why.YAMLToJSON(y)
+	j, err := transcodefmt.YAMLToJSON(y)
 	if err != nil {
 		return fmt.Errorf("error unmarshaling json or yaml: %w", err)
 	}
@@ -39,10 +39,10 @@ func Validate(data []byte) error {
 	if err != nil {
 		return fmt.Errorf("error unmarshaling json or yaml: %w", err)
 	}
-	return schemas.openapi31[kindDocument].Validate(spec)
+	return schemas.openapi31[KindDocument].Validate(spec)
 }
 
-func validateComponent(kind kind, data []byte) error {
+func validateComponent(kind Kind, data []byte) error {
 	var v interface{}
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err

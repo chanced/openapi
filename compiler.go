@@ -17,23 +17,52 @@ var schemaDir embed.FS
 
 type internalSchemas struct {
 	schema202012 *jsonschema.Schema
-	openapi31    map[kind]*jsonschema.Schema
+	openapi31    map[Kind]*jsonschema.Schema
 }
 
 var schemas internalSchemas
 
-func compileInternalSchemas(compiler *jsonschema.Compiler) (internalSchemas, error) {
-	var err error
-	s := internalSchemas{}
-	s.schema202012, err = compiler.Compile("https://json-schema.org/draft/2020-12/schema")
-	if err != nil {
-		return s, err
-	}
-	s.openapi31, err = compileOpenAPI31Schemas(compiler)
-	return s, err
+// AddCompilerResources adds the schemas for OpenAPI 3.1 & JSON Schema 2020-12 to compiler
+func AddCompilerResources(compiler *jsonschema.Compiler) error {
+	return fs.WalkDir(schemaDir, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != ".json" {
+			return nil
+		}
+		f, err := schemaDir.Open(path)
+		if err != nil {
+			return nil
+		}
+
+		b, err := io.ReadAll(f)
+		if err != nil {
+			return err
+		}
+
+		id := gjson.GetBytes(b, "$id").String()
+		err = compiler.AddResource(id, bytes.NewReader(b))
+		return err
+	})
 }
 
-func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[kind]*jsonschema.Schema, error) {
+// CompileSchemas compiles the schemas for OpenAPI3.1 & JSON Schema 2020-12
+// used to validate OpenAPI documents & schemas
+func CompileSchemas(compiler *jsonschema.Compiler) error {
+	var err error
+	schemas.schema202012, err = compiler.Compile("https://json-schema.org/draft/2020-12/schema")
+	if err != nil {
+		return err
+	}
+	schemas.openapi31, err = compileOpenAPI31Schemas(compiler)
+	return err
+}
+
+func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschema.Schema, error) {
 	u := "https://spec.openapis.org/oas/3.1/schema/2022-02-27"
 
 	compileDef := func(name string) (*jsonschema.Schema, error) {
@@ -139,27 +168,27 @@ func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[kind]*jsonschem
 		return nil, err
 	}
 
-	o := map[kind]*jsonschema.Schema{
-		kindDocument:       openAPI,
-		kindOperation:      operation,
-		kindCallbacks:      callbacks,
-		kindExample:        example,
-		kindHeader:         header,
-		kindLicense:        license,
-		kindLink:           link,
-		kindParameter:      parameter,
-		kindRequestBody:    requestBody,
-		kindResponse:       response,
-		kindSecurityScheme: securityScheme,
-		kindTag:            tag,
-		kindPaths:          paths,
-		kindPath:           pathItem,
-		kindMediaType:      mediaType,
-		kindInfo:           info,
-		kindContact:        contact,
-		kindEncoding:       encoding,
-		kindExternalDocs:   externalDocs,
-		kindReference:      reference,
+	o := map[Kind]*jsonschema.Schema{
+		KindDocument:       openAPI,
+		KindOperation:      operation,
+		KindCallbacks:      callbacks,
+		KindExample:        example,
+		KindHeader:         header,
+		KindLicense:        license,
+		KindLink:           link,
+		KindParameter:      parameter,
+		KindRequestBody:    requestBody,
+		KindResponse:       response,
+		KindSecurityScheme: securityScheme,
+		KindTag:            tag,
+		KindPaths:          paths,
+		KindPathItem:       pathItem,
+		KindMediaType:      mediaType,
+		KindInfo:           info,
+		KindContact:        contact,
+		KindEncoding:       encoding,
+		KindExternalDocs:   externalDocs,
+		KindReference:      reference,
 	}
 	return o, nil
 }
@@ -168,34 +197,11 @@ func init() {
 	log.SetFlags(0)
 	compiler := jsonschema.NewCompiler()
 	compiler.Draft = jsonschema.Draft2020
-	err := fs.WalkDir(schemaDir, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		if filepath.Ext(path) != ".json" {
-			return nil
-		}
-		f, err := schemaDir.Open(path)
-		if err != nil {
-			return nil
-		}
-
-		b, err := io.ReadAll(f)
-		if err != nil {
-			return err
-		}
-
-		id := gjson.GetBytes(b, "$id").String()
-		err = compiler.AddResource(id, bytes.NewReader(b))
-		return err
-	})
+	err := AddCompilerResources(compiler)
 	if err != nil {
 		log.Fatalf("error loading schemas: %v", err)
 	}
-	schemas, err = compileInternalSchemas(compiler)
+	err = CompileSchemas(compiler)
 	if err != nil {
 		log.Fatalf("error compiling schemas: %v", err)
 	}

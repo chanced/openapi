@@ -1,10 +1,7 @@
 package openapi
 
 import (
-	"context"
 	"encoding/json"
-
-	"github.com/chanced/jsonpointer"
 )
 
 // HeaderMap holds reusable HeaderMap.
@@ -19,7 +16,7 @@ type HeaderMap = ComponentMap[*Header]
 type Header struct {
 	// A brief description of the parameter. This could contain examples of use.
 	// CommonMark syntax MAY be used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// Determines whether this parameter is mandatory. If the parameter location
 	// is "path", this property is REQUIRED and its value MUST be true.
 	// Otherwise, the property MAY be included and its default value is false.
@@ -41,7 +38,7 @@ type Header struct {
 	// 	- for path - simple;
 	// 	- for header - simple;
 	// 	- for cookie - form.
-	Style string `json:"style,omitempty"`
+	Style Text `json:"style,omitempty"`
 	// When this is true, parameter values of type array or object generate
 	// separate parameters for each value of the array or key-value pair of the
 	// map. For other types of parameters this property has no effect. When
@@ -54,7 +51,7 @@ type Header struct {
 	// value of query. The default value is false.
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 	// The schema defining the type used for the parameter.
-	Schema *SchemaRef `json:"schema,omitempty"`
+	Schema *Schema `json:"schema,omitempty"`
 	// Examples of the parameter's potential value. Each example SHOULD
 	// contain a value in the correct format as specified in the parameter
 	// encoding. The examples field is mutually exclusive of the example
@@ -71,7 +68,7 @@ type Header struct {
 	Example json.RawMessage `json:"example,omitempty"`
 	// OpenAPI extensions
 	Extensions `json:"-"`
-	Location   Location `json:"-"`
+	Location   *Location `json:"-"`
 }
 
 // MarshalJSON marshals h into JSON
@@ -90,20 +87,18 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 	*h = Header(v)
 	return err
 }
-func (*Header) kind() kind { return kindHeader }
+func (*Header) Kind() Kind { return KindHeader }
 
-func (h *Header) init(ctx context.Context, resolver *resolver) error {
-}
+func (h *Header) setLocation(loc Location) error {
+	h.Location = &loc
+	if err := h.Examples.setLocation(loc.Append("examples")); err != nil {
+		return err
+	}
 
-func (h *Header) setLocation(loc Location) {
-	h.Location = loc
-	h.Examples.setLocation(loc)
-	h.Schema.setLocation(loc)
-}
-
-// resolve implements node
-func (*Header) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
-	panic("unimplemented")
+	if err := h.Schema.setLocation(loc.Append("schema")); err != nil {
+		return err
+	}
+	return nil
 }
 
 var _ node = (*Header)(nil)

@@ -8,7 +8,7 @@ type Document struct {
 	// Specification that the OpenAPI document uses. The openapi field SHOULD be
 	// used by tooling to interpret the OpenAPI document. This is not related to
 	// the API info.version string.
-	Version string `json:"openapi"`
+	Version Text `json:"openapi"`
 	// Provides metadata about the API. The metadata MAY be used by
 	// tooling as required.
 	//
@@ -16,7 +16,7 @@ type Document struct {
 	Info *Info `json:"info"`
 	// The default value for the $schema keyword within Schema Objects contained
 	// within this OAS document. This MUST be in the form of a URI.
-	JSONSchemaDialect string `json:"jsonSchemaDialect,omitempty"`
+	JSONSchemaDialect Text `json:"jsonSchemaDialect,omitempty"`
 	// An array of Server Objects, which provide connectivity information to a
 	// target server. If the servers property is not provided, or is an empty
 	// array, the default value would be a Server Object with a url value of /.

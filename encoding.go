@@ -11,7 +11,7 @@ type Encoding struct {
 	// The value can be a specific media type (e.g. application/json), a
 	// wildcard media type (e.g. image/*), or a comma-separated list of the two
 	// types.
-	ContentType string `json:"contentType,omitempty"`
+	ContentType Text `json:"contentType,omitempty"`
 	// A map allowing additional information to be provided as headers, for
 	// example Content-Disposition. Content-Type is described separately and
 	// SHALL be ignored in this section. This property SHALL be ignored if the

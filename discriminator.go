@@ -10,17 +10,20 @@ type Discriminator struct {
 	// value.
 	//
 	// *required
-	PropertyName string `json:"propertyName"`
+	PropertyName Text `json:"propertyName"`
 	// An object to hold mappings between payload values and schema names or
 	// references.
 	Mapping map[string]string `json:"mapping,omitempty"`
 
 	Extensions `json:"-"`
-	Location   Location `json:"-"`
+	Location   *Location `json:"-"`
 }
 
 func (d *Discriminator) setLocation(loc Location) error {
-	d.Location = loc
+	if d == nil {
+		return nil
+	}
+	d.Location = &loc
 	return nil
 }
 

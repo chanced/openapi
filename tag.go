@@ -8,13 +8,13 @@ type Tag struct {
 	// The name of the tag.
 	//
 	// 	*required*
-	Name string `json:"name"`
+	Name Text `json:"name"`
 	//  A description for the tag.
 	//
 	// CommonMark syntax MAY be used for rich text representation.
 	//
 	// https://spec.commonmark.org/
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// Additional external documentation for this tag.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
 

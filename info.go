@@ -7,14 +7,14 @@ type Info struct {
 	// The title of the API.
 	//
 	// 	*required*
-	Title string `json:"title"`
+	Title Text `json:"title"`
 	// A short summary of the API.
-	Summary string `json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
 	// A description of the API. CommonMark syntax MAY be used for rich text
 	// representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// A URL to the Terms of Service for the API. This MUST be in the form of a URL.
-	TermsOfService string `json:"termsOfService,omitempty" bson:"termsOfService,omitempty"`
+	TermsOfService Text `json:"termsOfService,omitempty" bson:"termsOfService,omitempty"`
 	// The contact information for the exposed API.
 	Contact *Contact `json:"contact,omitempty" bson:"contact,omitempty"`
 	// License information for the exposed API.
@@ -23,7 +23,7 @@ type Info struct {
 	// Specification version or the API implementation version).
 	//
 	// 	*required*
-	Version    string `json:"version"`
+	Version    Text `json:"version"`
 	Extensions `json:"-"`
 }
 

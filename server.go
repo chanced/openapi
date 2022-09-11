@@ -6,10 +6,10 @@ type Server struct {
 	// relative, to indicate that the host location is relative to the location
 	// where the OpenAPI document is being served. Variable substitutions will
 	// be made when a variable is named in {brackets}.
-	URL string `json:"url"`
+	URL Text `json:"url"`
 	// Description of the host designated by the URL. CommonMark syntax MAY be
 	// used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// A map between a variable name and its value. The value is used for
 	// substitution in the server's URL template.
 	Variables  map[string]*ServerVariable `json:"variables,omitempty"`
@@ -42,10 +42,10 @@ type ServerVariable struct {
 	// exist in the enum's values.
 	//
 	// 	*required*
-	Default string `json:"default"`
+	Default Text `json:"default"`
 	// An optional description for the server variable. CommonMark syntax MAY be
 	// used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	Extensions  `json:"-"`
 }
 

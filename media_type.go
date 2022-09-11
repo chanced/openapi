@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 )
 
-// Content is a map containing descriptions of potential response payloads. The key is
+// ContentMap is a map containing descriptions of potential response payloads. The key is
 // a media type or media type range and the value describes it. For
 // responses that match multiple keys, only the most specific key is
 // applicable. e.g. text/plain overrides text/*
-type Content map[string]*MediaType
+type ContentMap ComponentMap[*MediaType]
 
 // MediaType  provides schema and examples for the media type identified by its key.
 type MediaType struct {
 	//  The schema defining the content of the request, response, or parameter.
-	Schema *SchemaRef `json:"schema,omitempty"`
+	Schema *Schema `json:"schema,omitempty"`
 	// Example of the media type. The example object SHOULD be in the correct
 	// format as specified by the media type. The example field is mutually
 	// exclusive of the examples field. Furthermore, if referencing a schema
@@ -32,6 +32,7 @@ type MediaType struct {
 	// type is multipart or application/x-www-form-urlencoded.
 	Encoding   Encodings `json:"encoding,omitempty"`
 	Extensions `json:"-"`
+	Location   *Location
 }
 
 // MarshalJSON marshals mt into JSON
@@ -51,3 +52,17 @@ func (mt *MediaType) UnmarshalJSON(data []byte) error {
 	*mt = MediaType(v)
 	return nil
 }
+
+func (mt *MediaType) setLocation(loc Location) error {
+	mt.Location = &loc
+	if err := mt.Schema.setLocation(loc.Append("schema")); err != nil {
+		return err
+	}
+	if err := mt.Examples.setLocation(loc.Append("examples")); err != nil {
+		return err
+	}
+	return nil
+}
+func (*MediaType) Kind() Kind { return KindMediaType }
+
+var _ node = (*MediaType)(nil)

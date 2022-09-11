@@ -22,19 +22,29 @@ type Reference struct {
 	// The reference identifier. This MUST be in the form of a URI.
 	//
 	// 	*required*
-	Ref string `yaml:"$ref" json:"$ref"`
+	Ref Text `yaml:"$ref" json:"$ref"`
 	// A short summary which by default SHOULD override that of the referenced
 	// component. If the referenced object-type does not allow a summary field,
 	// then this field has no effect.
-	Summary string `json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
 	// A description which by default SHOULD override that of the referenced
 	// component. CommonMark syntax MAY be used for rich text representation. If
 	// the referenced object-type does not allow a description field, then this
 	// field has no effect.
-	Description string `json:"description,omitempty"`
-
-	Location Location `json:"-"`
+	Description Text `json:"description,omitempty"`
+	// Location of the Reference
+	Location *Location `json:"-"`
 }
+
+func (r *Reference) setLocation(loc Location) error {
+	if r == nil {
+		return nil
+	}
+	r.Location = &loc
+	return nil
+}
+
+func (r *Reference) Kind() Kind { return KindReference }
 
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")

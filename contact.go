@@ -1,15 +1,17 @@
 package openapi
 
+import "github.com/chanced/uri"
+
 // Contact information for the exposed API.
 type Contact struct {
 	// The identifying name of the contact person/organization.
-	Name string `json:"name,omitempty"`
+	Name Text `json:"name,omitempty"`
 	// The URL pointing to the contact information. This MUST be in the form of
 	// a URL.
-	URL string `json:"url,omitempty"`
+	URL *uri.URI `json:"url,omitempty"`
 	// The email address of the contact person/organization. This MUST be in the
 	// form of an email address.
-	Emails     string `json:"email,omitempty"`
+	Emails     Text `json:"email,omitempty"`
 	Extensions `json:"-"`
 }
 type contact Contact

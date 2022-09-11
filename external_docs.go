@@ -6,10 +6,12 @@ type ExternalDocs struct {
 	// The URL for the target documentation. This MUST be in the form of a URL.
 	//
 	// 	*required*
-	URL string `json:"url"`
+	URL Text `json:"url"`
 	// A description of the target documentation. CommonMark syntax MAY be used for rich text representation.
-	Description string `json:"description,omitempty"`
-	Extensions  `json:"-"`
+	Description Text `json:"description,omitempty"`
+
+	Location   *Location `json:"-"`
+	Extensions `json:"-"`
 }
 
 // MarshalJSON marshals JSON
@@ -27,4 +29,12 @@ func (ed *ExternalDocs) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*ed = ExternalDocs(v)
 	return err
+}
+
+func (ed *ExternalDocs) setLocation(loc Location) error {
+	if ed == nil {
+		return nil
+	}
+	ed.Location = &loc
+	return nil
 }

@@ -24,6 +24,7 @@ type CallbackItemMap = ComponentMap[*PathItem]
 type Callbacks struct {
 	Items      PathItemMap `json:"-"`
 	Extensions `json:"-"`
+	Location   *Location `json:"-"`
 }
 
 // MarshalJSON marshals JSON
@@ -58,11 +59,26 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// kind returns kindCallback
-func (*Callbacks) kind() kind { return kindCallbacks }
+// kind returns KindCallback
+func (*Callbacks) Kind() Kind { return KindCallbacks }
+
+func (c *Callbacks) setLocation(loc Location) error {
+	if c == nil {
+		return nil
+	}
+	c.Location = &loc
+	for _, kv := range c.Items {
+		if err := kv.Component.Object.setLocation(loc.Append(kv.Key)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // CallbackMap is a map of reusable Callback Objects.
 type CallbackMap = ComponentMap[*Callbacks]
+
+var _ node = (*Callbacks)(nil)
 
 // func (c *Callbacks) resolve(p string) (node, error) {
 // 	ptr, err := jsonpointer.Parse(p)

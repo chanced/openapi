@@ -15,12 +15,12 @@ type resolver struct {
 	uri             *uri.URI
 	document        *Document
 	// id rather have map[string]*Callback and so on, but that causes a circular dependency
-	// and I have no idea why
-	nodesByKind map[kind]map[string]node
+	// and I have no idea transcodefmt
+	nodesByKind map[Kind]map[string]node
 	nodes       map[string]node
 }
 
-func (r *resolver) resolve(ctx context.Context, kind kind, u *uri.URI) (node, error) {
+func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI) (node, error) {
 	if u.Fragment != "" {
 		nu := *u
 		nu.Fragment = ""

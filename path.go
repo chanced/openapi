@@ -57,10 +57,10 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 // are available.
 type PathItem struct {
 	// An optional, string summary, intended to apply to all operations in this path.
-	Summary string `json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
 	// An optional, string description, intended to apply to all operations in
 	// this path. CommonMark syntax MAY be used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// A definition of a GET operation on this path.
 	Get *Operation `json:"get,omitempty"`
 	// A definition of a PUT operation on this path.
@@ -85,8 +85,16 @@ type PathItem struct {
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters *ParameterSet `json:"parameters,omitempty"`
+	Parameters ParameterSet `json:"parameters,omitempty"`
+	Location   *Location     `json:"-"`
 	Extensions `json:"-"`
+}
+
+// setLocation implements node
+func (p *PathItem) setLocation(loc Location) error {
+	p.Location = &loc
+	p.
+	return nil
 }
 
 // MarshalJSON marshals p into JSON
@@ -107,4 +115,6 @@ func (p *PathItem) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (*PathItem) kind() kind { return kindPath }
+func (*PathItem) Kind() Kind { return KindPathItem }
+
+var _ node = (*PathItem)(nil)

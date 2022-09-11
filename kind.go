@@ -1,28 +1,40 @@
 package openapi
 
-type kind uint
+type Kind uint16
 
 const (
-	kindUnknown        kind = iota
-	kindDocument            // OpenAPI Document
-	kindExample             // Example
-	kindSchema              // Schema
-	kindHeader              // Header
-	kindLink                // Link
-	kindPath                // Path
-	kindResponse            // Response
-	kindParameter           // Parameter
-	kindRequestBody         // RequestBody
-	kindCallbacks           // Callbacks
-	kindSecurityScheme      // SecurityScheme
-	kindOperation           // Operation
-	kindLicense             // License
-	kindTag                 // Tag
-	kindPaths               // Paths
-	kindMediaType           // MediaType
-	kindInfo                // Info
-	kindContact             // Contact
-	kindEncoding            // Encoding
-	kindExternalDocs        // ExternalDocs
-	kindReference           // Reference
+	KindUndefined         Kind = iota
+	KindDocument               // *Document
+	KindExample                // *Example
+	KindExampleMap             // *ExampleMap
+	KindSchema                 // *Schema
+	KindSchemaSet              // *SchemaSet
+	KindSchemaMap              // *SchemaMap
+	KindHeader                 // *Header
+	KindHeaderMap              // HeaderMap
+	KindLink                   // *Link
+	KindLinkMap                // LinkMap
+	KindResponse               // *Response
+	KindResponseMap            // ResponseMap
+	KindParameter              // *Parameter
+	KindParameterSet           // ParameterSet
+	KindParameterMap           // ParameterMap
+	KindPaths                  // Paths
+	KindPathItem               // *PathItem
+	KindPathItemMap            // PathItemMap
+	KindRequestBody            // RequestBody
+	KindRequestBodyMap         // RequestBodyMap
+	KindCallbacks              // *Callbacks
+	KindCallbackMap            // CallbackMap
+	KindSecurityScheme         // SecurityScheme
+	KindSecuritySchemeMap      // SecuritySchemeMap
+	KindOperation              // *Operation
+	KindLicense                // *License
+	KindTag                    // *Tag
+	KindMediaType              // *MediaType
+	KindInfo                   // *Info
+	KindContact                // *Contact
+	KindEncoding               // *Encoding
+	KindExternalDocs           // *ExternalDocs
+	KindReference              // *Reference
 )

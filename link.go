@@ -30,11 +30,11 @@ type Link struct {
 	// Operation Object. Relative operationRef values MAY be used to locate an
 	// existing Operation Object in the OpenAPI definition. See the rules for
 	// resolving Relative References.
-	OperationRef string `json:"operationRef,omitempty"`
+	OperationRef Text `json:"operationRef,omitempty"`
 	// The name of an existing, resolvable OAS operation, as defined with a
 	// unique operationId. This field is mutually exclusive of the operationRef
 	// field.
-	OperationID string `json:"operationId,omitempty"`
+	OperationID Text `json:"operationId,omitempty"`
 	// A map representing parameters to pass to an operation as specified with
 	// operationId or identified via operationRef. The key is the parameter name
 	// to be used, whereas the value can be a constant or an expression to be
@@ -47,8 +47,10 @@ type Link struct {
 	RequestBody json.RawMessage `json:"requestBody,omitempty"`
 	// A description of the link. CommonMark syntax MAY be used for rich text
 	// representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	Extensions  `json:"-"`
+
+	Location *Location `json:"-"`
 }
 
 // MarshalJSON marshals JSON
@@ -75,7 +77,7 @@ func (l *Link) DecodeRequestBody(dst interface{}) error {
 	return json.Unmarshal(l.RequestBody, dst)
 }
 
-func (*Link) kind() kind { return kindLink }
+func (*Link) Kind() Kind { return KindLink }
 
 // LinkParameters is a map representing parameters to pass to an operation as
 // specified with operationId or identified via operationRef. The key is the
@@ -129,3 +131,11 @@ func (lp *LinkParameters) Set(key string, value interface{}) error {
 func (lp *LinkParameters) SetEncoded(key string, value []byte) {
 	(*lp)[key] = json.RawMessage(value)
 }
+
+// setLocation implements node
+func (l *Link) setLocation(loc Location) error {
+	l.Location = &loc
+	return nil
+}
+
+var _ node = (*Link)(nil)

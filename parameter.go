@@ -169,7 +169,7 @@ type Parameter struct {
 	// used by the in property.
 	//
 	//  *required*
-	Name string `json:"name"`
+	Name Text `json:"name"`
 	// The location of the parameter. Possible values are "query", "header",
 	// "path" or "cookie".
 	//
@@ -177,7 +177,7 @@ type Parameter struct {
 	In In `json:"in"`
 	// A brief description of the parameter. This could contain examples of use.
 	// CommonMark syntax MAY be used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// Determines whether this parameter is mandatory. If the parameter location
 	// is "path", this property is REQUIRED and its value MUST be true.
 	// Otherwise, the property MAY be included and its default value is false.
@@ -199,7 +199,7 @@ type Parameter struct {
 	// 	- for path - simple;
 	// 	- for header - simple;
 	// 	- for cookie - form.
-	Style string `json:"style,omitempty"`
+	Style Text `json:"style,omitempty"`
 	// When this is true, parameter values of type array or object generate
 	// separate parameters for each value of the array or key-value pair of the
 	// map. For other types of parameters this property has no effect. When
@@ -226,7 +226,7 @@ type Parameter struct {
 	// schema property, or a content property, but not both. When example or
 	// examples are provided in conjunction with the schema object, the example
 	// MUST follow the prescribed serialization strategy for the parameter.
-	Content    Content `json:"content,omitempty"`
+	Content    ContentMap `json:"content,omitempty"`
 	Extensions `json:"-"`
 }
 
@@ -248,7 +248,10 @@ func (p *Parameter) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (*Parameter) kind() kind { return kindParameter }
+func (*Parameter) Kind() Kind { return KindParameter }
+
+func (p *Parameter) setLocation(loc Location) error {
+}
 
 func unmarshalParameterJSON(data []byte) (Component[*Parameter], error) {
 	var err error
@@ -262,3 +265,5 @@ func unmarshalParameterJSON(data []byte) (Component[*Parameter], error) {
 		return newComponent(nil, &v), err
 	}
 }
+
+var _ node = (*Parameter)(nil)

@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"math/big"
 	"strconv"
+
+	"github.com/chanced/caps/text"
 )
+
+type Text = text.Text
 
 // A Number represents a JSON / YAML number literal.
 type Number json.Number

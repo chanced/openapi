@@ -151,13 +151,13 @@ type Schema struct {
 	// Always will be assigned if the schema value is a boolean
 	Always *bool `json:"-"`
 
-	Schema string `json:"$schema,omitempty"`
+	Schema *uri.URI `json:"$schema,omitempty"`
 	// The value of $id is a URI-reference without a fragment that resolves
 	// against the Retrieval URI. The resulting URI is the base URI for the
 	// schema.
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=id#id
-	ID string `json:"$id,omitempty"`
+	ID *uri.URI `json:"$id,omitempty"`
 	// At its core, JSON *SchemaObj defines the following basic types:
 	//
 	// 	"string", "number", "integer", "object", "array", "boolean", "null"
@@ -189,7 +189,7 @@ type Schema struct {
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
 	Definitions SchemaMap `json:"$defs,omitempty"`
-	// The format keyword allows for basic semantic identification of certain kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
+	// The format keyword allows for basic semantic identification of certain Kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
 	//
 	// Optionally, validator implementations can provide a configuration option to
 	// enable format to function as an assertion rather than just an annotation.
@@ -199,8 +199,8 @@ type Schema struct {
 	// Expressions can do.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/string.html#format
-	Format        string `json:"format,omitempty"`
-	DynamicAnchor string `json:"$dynamicAnchor,omitempty"`
+	Format        Text `json:"format,omitempty"`
+	DynamicAnchor Text `json:"$dynamicAnchor,omitempty"`
 	// The "$dynamicRef" keyword is an applicator that allows for deferring the
 	// full resolution until runtime, at which point it is resolved each time it
 	// is encountered while evaluating an instance.
@@ -213,7 +213,7 @@ type Schema struct {
 	// letters, digits, -, _, :, or ..
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=anchor#anchor
-	Anchor string `json:"$anchor,omitempty"`
+	Anchor Text `json:"$anchor,omitempty"`
 	// The const keyword is used to restrict a value to a single value.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#constant-values
@@ -232,7 +232,7 @@ type Schema struct {
 	// of the schema.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#comments
-	Comments string `json:"$comment,omitempty"`
+	Comments Text `json:"$comment,omitempty"`
 
 	// The not keyword declares that an instance validates if it doesn’t
 	// validate against the given subschema.
@@ -303,22 +303,22 @@ type Schema struct {
 	MinLength        *Number           `json:"minLength,omitempty"`
 	MaxLength        *Number           `json:"maxLength,omitempty"`
 	Pattern          *Regexp           `json:"pattern,omitempty"`
-	ContentEncoding  string            `json:"contentEncoding,omitempty"`
-	ContentMediaType string            `json:"contentMediaType,omitempty"`
+	ContentEncoding  Text              `json:"contentEncoding,omitempty"`
+	ContentMediaType Text              `json:"contentMediaType,omitempty"`
 	Minimum          *Number           `json:"minimum,omitempty"`
 	ExclusiveMinimum *Number           `json:"exclusiveMinimum,omitempty"`
 	Maximum          *Number           `json:"maximum,omitempty"`
 	ExclusiveMaximum *Number           `json:"exclusiveMaximum,omitempty"`
 	MultipleOf       *Number           `json:"multipleOf,omitempty"`
-	Title            string            `json:"title,omitempty"`
-	Description      string            `json:"description,omitempty"`
+	Title            Text              `json:"title,omitempty"`
+	Description      Text              `json:"description,omitempty"`
 	Default          json.RawMessage   `json:"default,omitempty"`
 	ReadOnly         *bool             `json:"readOnly,omitempty"`
 	WriteOnly        *bool             `json:"writeOnly,omitempty"`
 	Examples         []json.RawMessage `json:"examples,omitempty"`
 	Example          json.RawMessage   `json:"example,omitempty"`
 	Deprecated       *bool             `json:"deprecated,omitempty"`
-	ExternalDocs     string            `json:"externalDocs,omitempty"`
+	ExternalDocs     Text              `json:"externalDocs,omitempty"`
 	// Deprecated: renamed to dynamicAnchor
 	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
 	// Deprecated: renamed to dynamicRef
@@ -331,7 +331,7 @@ type Schema struct {
 	XML        *XML `json:"xml,omitempty"`
 	Extensions `json:"-"`
 	Keywords   map[string]json.RawMessage `json:"-"`
-	Location   Location                   `json:"-"`
+	Location   *Location                  `json:"-"`
 }
 
 // MarshalJSON marshals JSON
@@ -561,7 +561,7 @@ func (*Schema) init(ctx context.Context, resolver *resolver) error {
 }
 
 // kind implements node
-func (*Schema) kind() kind { return kindSchema }
+func (*Schema) Kind() Kind { return KindSchema }
 
 // resolve implements node
 func (*Schema) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
@@ -570,7 +570,10 @@ func (*Schema) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Po
 
 // setLocation implements node
 func (s *Schema) setLocation(loc Location) error {
-	s.Location = loc
+	if s.Location != nil {
+		return nil
+	}
+	s.Location = &loc
 
 	if err := s.Ref.setLocation(loc.Append("ref")); err != nil {
 		return err

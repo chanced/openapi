@@ -39,17 +39,17 @@ type OAuthFlow struct {
 	// Applies to: OAuth2 ("implicit", "authorizationCode")
 	//
 	// 	*required*
-	AuthorizationURL string `json:"authorizationUrl,omitempty"`
+	AuthorizationURL Text `json:"authorizationUrl,omitempty"`
 	// The token URL to be used for this flow. This MUST be in the form of a
 	// URL. The OAuth2 standard requires the use of TLS.
 	//
 	// Applies to: OAuth2Flow ("password", "clientCredentials", "authorizationCode")
 	//
 	// 	*required*
-	TokenURL string `json:"tokenUrl,omitempty"`
+	TokenURL Text `json:"tokenUrl,omitempty"`
 	// The URL to be used for obtaining refresh tokens. This MUST be in the form
 	// of a URL. The OAuth2 standard requires the use of TLS.
-	RefreshURL string `json:"refreshUrl,omitempty"`
+	RefreshURL Text `json:"refreshUrl,omitempty"`
 	// The available scopes for the OAuth2 security scheme. A map between the
 	// scope name and a short description for it. The map MAY be empty.
 	//

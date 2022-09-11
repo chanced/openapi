@@ -1,21 +1,15 @@
 package openapi
 
-import (
-	"context"
-
-	"github.com/chanced/jsonpointer"
-)
-
 // Operation describes a single API operation on a path.
 type Operation struct {
 	// A list of tags for API documentation control. Tags can be used for
 	// logical grouping of operations by resources or any other qualifier.
 	Tags []string `json:"tags,omitempty"`
 	// A short summary of what the operation does.
-	Summary string `json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
 	// A verbose explanation of the operation behavior. CommonMark syntax MAY be
 	// used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// externalDocs	Additional external documentation.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 	// Unique string used to identify the operation. The id MUST be unique among
@@ -23,14 +17,14 @@ type Operation struct {
 	// case-sensitive. Tools and libraries MAY use the operationId to uniquely
 	// identify an operation, therefore, it is RECOMMENDED to follow common
 	// programming naming conventions.
-	OperationID string `json:"operationId,omitempty"`
+	OperationID Text `json:"operationId,omitempty"`
 	// A list of parameters that are applicable for this operation. If a
 	// parameter is already defined at the Path Item, the new definition will
 	// override it but can never remove it. The list MUST NOT include duplicated
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters *ParameterSet `json:"parameters,omitempty"`
+	Parameters ParameterSet `json:"parameters,omitempty"`
 
 	// The request body applicable for this operation. The requestBody is fully
 	// supported in HTTP methods where the HTTP 1.1 specification RFC7231 has
@@ -91,16 +85,13 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (*Operation) kind() kind { return kindOperation }
+func (*Operation) Kind() Kind { return KindOperation }
 
-// init implements node
-func (o *Operation) init(ctx context.Context, resolver *resolver, location Location) error {
-	panic("not done")
-}
-
-// resolve implements node
-func (*Operation) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
-	panic("unimplemented")
+// setLocation implements node
+func (o *Operation) setLocation(loc Location) error {
+	o.Location = &loc
+	o.Callbacks.setLocation(loc.Append("callbacks"))
+	o.Parameters.setLocation(loc.Append("parameters"))
 }
 
 var _ node = (*Operation)(nil)

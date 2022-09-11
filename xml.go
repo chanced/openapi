@@ -12,12 +12,12 @@ type XML struct {
 	// individual XML elements within the list. When defined alongside type
 	// being array (outside the items), it will affect the wrapping element and
 	// only if wrapped is true. If wrapped is false, it will be ignored.
-	Name string `json:"name,omitempty"`
+	Name Text `json:"name,omitempty"`
 	// The URI of the namespace definition. This MUST be in the form of an
 	// absolute URI.
-	Namespace string `json:"namespace,omitempty"`
+	Namespace Text `json:"namespace,omitempty"`
 	// The prefix to be used for the name.
-	Prefix string `json:"prefix,omitempty"`
+	Prefix Text `json:"prefix,omitempty"`
 	// Declares whether the property definition translates to an attribute
 	// instead of an element. Default value is false.
 	Attribute bool `json:"attribute,omitempty"`
@@ -27,7 +27,7 @@ type XML struct {
 	// only when defined alongside type being array (outside the items).
 	Wrapped    bool `json:"wrapped,omitempty"`
 	Extensions `json:"-"`
-	Location   Location `json:"-"`
+	Location   *Location `json:"-"`
 }
 
 func (xml *XML) setLocation(loc Location) error {

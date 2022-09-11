@@ -1,13 +1,15 @@
+github.com/chanced/caps v0.7.11 h1:I9RckhEe2T3+VdYVy451ufgr/tFjX8E3Kdd13IngvMQ=
+github.com/chanced/caps v0.7.11/go.mod h1:SJhRzeYLKJ3OmzyQXhdZ7Etj7lqqWoPtQ1zcSJRtQjs=
 github.com/chanced/jay v0.0.3 h1:yaftWp+NvIIXc8vMAmwOiFp7zJdK1ffFl6sNpL1BC4A=
 github.com/chanced/jay v0.0.3/go.mod h1:0hPHwA6ni5KdorNTIOK33aH+e4F0n3RJWSw85o3iasI=
 github.com/chanced/jsonpointer v0.0.5 h1:N9SewxwFmdJ6QejrAhvPKjW42Olv383JeWk7PrDSd5o=
 github.com/chanced/jsonpointer v0.0.5/go.mod h1:dw54fmixEiDkp4PqNO5579oBEkwCgjrDHS3cmR70SW0=
 github.com/chanced/maps v0.0.2 h1:Lpixr8bK1ZKdVWC9+dtfO3AFDpfPdh08nrRrSbIFdXQ=
 github.com/chanced/maps v0.0.2/go.mod h1:+gAhsn8IHMw6nS10PwKiqowwrM3aKLkiLKF4IYzdKQU=
+github.com/chanced/transcodefmt v0.0.6 h1:UDMu7sSpA+OMe0CrM2E8z3JGyWZcRWHbTqYKX5nlBZ4=
+github.com/chanced/transcodefmt v0.0.6/go.mod h1:dqsAZO3CyfAIlUrJwUFB/oD21MfNO17zWtFk+eiJVyU=
 github.com/chanced/uri v0.0.1 h1:8OWoG1gfFSinoM8jvCqSWxXmlZ/uoKJAEp2TIc4oaZQ=
 github.com/chanced/uri v0.0.1/go.mod h1:rQ71Mb+hLjOz5r1f8IcvyBJTbfnBE0pfRoP0flwxPPU=
-github.com/chanced/why v0.0.3 h1:IaneNlKQP60zDMbIpFARhYn253UebOY2TKw8MsZzXnM=
-github.com/chanced/why v0.0.3/go.mod h1:vC20ivWScZwWOQTuOSOQ4Gg/j0HIHyDZOE+Bf0/9L3w=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

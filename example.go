@@ -15,10 +15,10 @@ type ExampleMap = ComponentMap[*Example]
 // incompatible.
 type Example struct {
 	// Short description for the example.
-	Summary string `json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
 	// Long description for the example. CommonMark syntax MAY be used for rich
 	// text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
 	// Any embedded literal example. The value field and externalValue field are
 	// mutually exclusive. To represent examples of media types that cannot
 	// naturally represented in JSON or YAML, use a string value to contain the
@@ -28,10 +28,12 @@ type Example struct {
 	// reference examples that cannot easily be included in JSON or YAML
 	// documents. The value field and externalValue field are mutually
 	// exclusive. See the rules for resolving Relative References.
-	ExternalValue string `json:"externalValue,omitempty"`
+	ExternalValue Text `json:"externalValue,omitempty"`
 	Extensions    `json:"-"`
-	Location      Location `json:"-"`
+	Location      *Location `json:"-"`
 }
+
+// setLocation implements node
 
 // MarshalJSON marshals JSON
 func (e Example) MarshalJSON() ([]byte, error) {
@@ -51,5 +53,15 @@ func (e *Example) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// kind returns kindExample
-func (*Example) kind() kind { return kindExample }
+// kind returns KindExample
+func (*Example) Kind() Kind { return KindExample }
+
+func (e *Example) setLocation(loc Location) error {
+	if e == nil {
+		return nil
+	}
+	e.Location = &loc
+	return nil
+}
+
+var _ node = (*Example)(nil)

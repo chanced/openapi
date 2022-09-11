@@ -2,8 +2,9 @@ package openapi
 
 import (
 	"encoding/json"
+	"strconv"
 
-	"github.com/chanced/why"
+	"github.com/chanced/transcodefmt"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"gopkg.in/yaml.v3"
@@ -45,8 +46,29 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (c *Component[T]) setLocation(loc Location) error {
+	if c == nil {
+		return nil
+	}
+	if c.Reference != nil {
+		return c.Reference.setLocation(loc)
+	} else if (any)(c.Object) != nil {
+		return c.Object.setLocation(loc)
+	}
+	return nil
+}
+
 // ComponentSet is a slice of Components of type T
 type ComponentSet[T node] []Component[T]
+
+func (cs ComponentSet[T]) setLocation(loc Location) error {
+	for i, c := range cs {
+		if err := c.setLocation(loc.Append(strconv.Itoa(i))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // ComponentEntry is an entry in a ComponentMap consisting of a Key/Value pair for
 // an object consiting of Component[T]s
@@ -124,7 +146,7 @@ func (cm *ComponentMap[T]) Set(key string, value Component[T]) {
 	})
 }
 
-func (cm *ComponentMap[T]) Delete(key string) {
+func (cm *ComponentMap[T]) Del(key string) {
 	for i, v := range *cm {
 		if v.Key == key {
 			*cm = append((*cm)[:i], (*cm)[i+1:]...)
@@ -138,16 +160,25 @@ func (cm *ComponentMap[T]) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return why.JSONToYAML(j)
+	return transcodefmt.JSONToYAML(j)
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler
 func (cm *ComponentMap[T]) UnmarshalYAML(value *yaml.Node) error {
-	j, err := why.YAMLToJSON([]byte(value.Value))
+	j, err := transcodefmt.YAMLToJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(j, cm)
+}
+
+func (cm ComponentMap[T]) setLocation(loc Location) error {
+	for _, kv := range cm {
+		if err := kv.Component.setLocation(loc); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ComponentMap is a pseudo map consisting of Components with type T.
@@ -164,27 +195,17 @@ func newComponent[T node](ref *Reference, obj T) Component[T] {
 // API unless they are explicitly referenced from properties outside the
 // components object.
 type Components struct {
-	// An object to hold reusable Schema Objects.
-	Schemas *SchemaMap `json:"schemas,omitempty"`
-	// An object to hold reusable Response Objects.
-	Responses *ResponseMap `json:"responses,omitempty"`
-	// An object to hold reusable Parameter Objects.
-	Parameters *ParameterMap `json:"parameters,omitempty"`
-	// An object to hold reusable Example Objects.
-	Examples *ExampleMap `json:"examples,omitempty"`
-	// An object to hold reusable Request Body Objects.
-	RequestBodies *RequestBodyMap `json:"requestBodies,omitempty"`
-	// An object to hold reusable Header Objects.
-	Headers *HeaderMap `json:"headers,omitempty"`
-	// An object to hold reusable Security Scheme Objects.
+	Schemas         *SchemaMap         `json:"schemas,omitempty"`
+	Responses       *ResponseMap       `json:"responses,omitempty"`
+	Parameters      *ParameterMap      `json:"parameters,omitempty"`
+	Examples        *ExampleMap        `json:"examples,omitempty"`
+	RequestBodies   *RequestBodyMap    `json:"requestBodies,omitempty"`
+	Headers         *HeaderMap         `json:"headers,omitempty"`
 	SecuritySchemes *SecuritySchemeMap `json:"securitySchemes,omitempty"`
-	// An object to hold reusable Link Objects.
-	Links *LinkMap `json:"links,omitempty"`
-	// An object to hold reusable Callback Objects.
-	Callbacks *CallbackMap `json:"callbacks,omitempty"`
-	// An object to hold reusable Path Item Object.
-	PathItems  *PathItemMap `json:"pathItems,omitempty"`
-	Extensions `json:"-"`
+	Links           *LinkMap           `json:"links,omitempty"`
+	Callbacks       *CallbackMap       `json:"callbacks,omitempty"`
+	PathItems       *PathItemMap       `json:"pathItems,omitempty"`
+	Extensions      `json:"-"`
 }
 
 // MarshalJSON marshals JSON
