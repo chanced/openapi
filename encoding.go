@@ -1,5 +1,11 @@
 package openapi
 
+// EncodingMap is a ComponentMap between a property name and its encoding information. The
+// key, being the property name, MUST exist in the schema as a property. The
+// encoding object SHALL only apply to requestBody objects when the media type
+// is multipart or application/x-www-form-urlencoded.
+type EncodingMap = ComponentMap[*Encoding]
+
 // Encoding definition applied to a single schema property.
 type Encoding struct {
 	// The Content-Type for encoding a specific property. Default value depends
@@ -44,6 +50,19 @@ type Encoding struct {
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 
 	Extensions `json:"-"`
+	Location   *Location `json:"-"`
+}
+
+func (*Encoding) Kind() Kind      { return KindEncoding }
+func (*Encoding) mapKind() Kind   { return KindEncodingMap }
+func (*Encoding) sliceKind() Kind { return KindUndefined }
+
+func (e *Encoding) setLocation(loc Location) error {
+	if e == nil {
+		return nil
+	}
+	e.Location = &loc
+	return e.Headers.setLocation(loc.Append("headers"))
 }
 
 // MarshalJSON marshals e into JSON
@@ -63,8 +82,4 @@ func (e *Encoding) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Encodings is a map between a property name and its encoding information. The
-// key, being the property name, MUST exist in the schema as a property. The
-// encoding object SHALL only apply to requestBody objects when the media type
-// is multipart or application/x-www-form-urlencoded.
-type Encodings map[string]*Encoding
+var _ node = (*Encoding)(nil)

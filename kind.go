@@ -8,7 +8,7 @@ const (
 	KindExample                // *Example
 	KindExampleMap             // *ExampleMap
 	KindSchema                 // *Schema
-	KindSchemaSet              // *SchemaSet
+	KindSchemaSlice            // *SchemaSlice
 	KindSchemaMap              // *SchemaMap
 	KindHeader                 // *Header
 	KindHeaderMap              // HeaderMap
@@ -17,7 +17,7 @@ const (
 	KindResponse               // *Response
 	KindResponseMap            // ResponseMap
 	KindParameter              // *Parameter
-	KindParameterSet           // ParameterSet
+	KindParameterSlice         // ParameterSlice
 	KindParameterMap           // ParameterMap
 	KindPaths                  // Paths
 	KindPathItem               // *PathItem
@@ -25,16 +25,27 @@ const (
 	KindRequestBody            // RequestBody
 	KindRequestBodyMap         // RequestBodyMap
 	KindCallbacks              // *Callbacks
-	KindCallbackMap            // CallbackMap
+	KindCallbacksMap           // CallbacksMap
 	KindSecurityScheme         // SecurityScheme
 	KindSecuritySchemeMap      // SecuritySchemeMap
 	KindOperation              // *Operation
 	KindLicense                // *License
 	KindTag                    // *Tag
+	KindTagSlice               // TagSlice
 	KindMediaType              // *MediaType
+	KindMediaTypeMap           // MediaTypeMap
 	KindInfo                   // *Info
 	KindContact                // *Contact
 	KindEncoding               // *Encoding
+	KindEncodingMap            // EncodingMap
 	KindExternalDocs           // *ExternalDocs
 	KindReference              // *Reference
+	KindServer                 // *Server
+	KindServerSlice            // ServerSlice
+	KindServerVariable         // *ServerVariable
+	KindServerVariableMap      // ServerVariableMap
+	KindOAuthFlow              // *OAuthFlow
+	KindOAuthFlows             // *OAuthFlows
+	KindXML                    // *XML
+
 )

@@ -70,7 +70,7 @@ func (e *Extensions) marshalExtensionsInto(json []byte) ([]byte, error) {
 }
 
 // Decode decodes all extensions into dst.
-func (e Extensions) Decode(dst interface{}) error {
+func (e Extensions) DecodeExtensions(dst interface{}) error {
 	b, err := json.Marshal(e)
 	if err != nil {
 		return err

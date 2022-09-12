@@ -1,5 +1,10 @@
 package openapi
 
+type (
+	ServerSlice       = ComponentSlice[*Server]
+	ServerVariableMap = ComponentMap[*ServerVariable]
+)
+
 // Server represention of a Server.
 type Server struct {
 	// A URL to the target host. This URL supports Server Variables and MAY be
@@ -12,18 +17,33 @@ type Server struct {
 	Description Text `json:"description,omitempty"`
 	// A map between a variable name and its value. The value is used for
 	// substitution in the server's URL template.
-	Variables  map[string]*ServerVariable `json:"variables,omitempty"`
+	Variables  ServerVariableMap `json:"variables,omitempty"`
+	Location   *Location         `json:"-"`
 	Extensions `json:"-"`
 }
-type server Server
+
+func (*Server) Kind() Kind      { return KindServer }
+func (*Server) mapKind() Kind   { return KindUndefined }
+func (*Server) sliceKind() Kind { return KindServerSlice }
+
+// setLocation implements node
+func (s *Server) setLocation(loc Location) error {
+	if s == nil {
+		return nil
+	}
+	s.Location = &loc
+	return s.Variables.setLocation(loc.Append("variables"))
+}
 
 // MarshalJSON marshals JSON
 func (s Server) MarshalJSON() ([]byte, error) {
+	type server Server
 	return marshalExtendedJSON(server(s))
 }
 
 // UnmarshalJSON unmarshals JSON
 func (s *Server) UnmarshalJSON(data []byte) error {
+	type server Server
 	var v server
 	err := unmarshalExtendedJSON(data, &v)
 	*s = Server(v)
@@ -46,20 +66,36 @@ type ServerVariable struct {
 	// An optional description for the server variable. CommonMark syntax MAY be
 	// used for rich text representation.
 	Description Text `json:"description,omitempty"`
-	Extensions  `json:"-"`
+
+	Location   *Location `json:"-"`
+	Extensions `json:"-"`
 }
 
-type servervariable ServerVariable
+func (*ServerVariable) Kind() Kind      { return KindServerVariable }
+func (*ServerVariable) mapKind() Kind   { return KindServerVariableMap }
+func (*ServerVariable) sliceKind() Kind { return KindUndefined }
+
+func (sv *ServerVariable) setLocation(loc Location) error {
+	sv.Location = &loc
+	return nil
+}
 
 // MarshalJSON marshals JSON
 func (sv ServerVariable) MarshalJSON() ([]byte, error) {
+	type servervariable ServerVariable
 	return marshalExtendedJSON(servervariable(sv))
 }
 
 // UnmarshalJSON unmarshals JSON
 func (sv *ServerVariable) UnmarshalJSON(data []byte) error {
+	type servervariable ServerVariable
 	var v servervariable
 	err := unmarshalExtendedJSON(data, &v)
 	*sv = ServerVariable(v)
 	return err
 }
+
+var (
+	_ node = (*Server)(nil)
+	_ node = (*ServerVariable)(nil)
+)

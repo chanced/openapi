@@ -10,7 +10,8 @@ import (
 
 var ErrCallbackNotFound = fmt.Errorf("callback not found")
 
-type CallbackItemMap = ComponentMap[*PathItem]
+// CallbacksMap is a map of reusable Callback Objects.
+type CallbacksMap = ComponentMap[*Callbacks]
 
 // Callbacks is map of possible out-of band callbacks related to the parent
 // operation. Each value in the map is a Path Item Object that describes a set
@@ -22,7 +23,7 @@ type CallbackItemMap = ComponentMap[*PathItem]
 // To describe incoming requests from the API provider independent from another
 // API call, use the webhooks field.
 type Callbacks struct {
-	Items      PathItemMap `json:"-"`
+	Items      PathItemObjs `json:"-"`
 	Extensions `json:"-"`
 	Location   *Location `json:"-"`
 }
@@ -42,6 +43,7 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 	*c = Callbacks{
 		Extensions: Extensions{},
 	}
+
 	var err error
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		if strings.HasPrefix(key.String(), "x-") {
@@ -49,10 +51,7 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)
-			c.Items = append(c.Items, ComponentEntry[*PathItem]{
-				Key:       key.String(),
-				Component: Component[*PathItem]{Object: &v},
-			})
+			c.Items.Set(Text(key.String()), &v)
 		}
 		return err == nil
 	})
@@ -60,38 +59,16 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 }
 
 // kind returns KindCallback
-func (*Callbacks) Kind() Kind { return KindCallbacks }
+func (*Callbacks) Kind() Kind     { return KindCallbacks }
+func (*Callbacks) mapKind() Kind  { return KindCallbacksMap }
+func (Callbacks) sliceKind() Kind { return KindUndefined }
 
 func (c *Callbacks) setLocation(loc Location) error {
 	if c == nil {
 		return nil
 	}
 	c.Location = &loc
-	for _, kv := range c.Items {
-		if err := kv.Component.Object.setLocation(loc.Append(kv.Key)); err != nil {
-			return err
-		}
-	}
-	return nil
+	return c.Items.setLocation(loc)
 }
 
-// CallbackMap is a map of reusable Callback Objects.
-type CallbackMap = ComponentMap[*Callbacks]
-
 var _ node = (*Callbacks)(nil)
-
-// func (c *Callbacks) resolve(p string) (node, error) {
-// 	ptr, err := jsonpointer.Parse(p)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("unable to resolve p: %q: %w", p, err)
-// 	}
-// 	np, t, ok := ptr.Next()
-// 	if !ok {
-// 		return c, nil
-// 	}
-// 	pi, ok := c.Items.Get(string(t))
-// 	if !ok {
-// 		return nil, fmt.Errorf("%w: %q", ErrCallbackNotFound, t)
-// 	}
-// 	return pi.resolve(np.String())
-// }

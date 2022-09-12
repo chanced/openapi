@@ -13,4 +13,7 @@ type node interface {
 	setLocation(loc Location) error
 	// init(ctx context.Context, resolver *resolver) error
 	// resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error)
+
+	mapKind() Kind
+	sliceKind() Kind
 }

@@ -1,5 +1,7 @@
 package openapi
 
+import "strconv"
+
 // SecuritySchemeType represents the type of the security scheme.
 type SecuritySchemeType string
 
@@ -20,8 +22,33 @@ const (
 	SecuritySchemeTypeOpenIDConnect SecuritySchemeType = "openIdConnect"
 )
 
+// TODO: make SecurityRequirement an ordered slice.
+
 // SecurityRequirements is a list of SecurityRequirement
-type SecurityRequirements []SecurityRequirement
+type SecurityRequirements struct {
+	Items []*SecurityRequirement
+
+	Location *Location
+}
+
+func (sr *SecurityRequirements) setLocation(loc Location) error {
+	if sr == nil {
+		return nil
+	}
+	sr.Location = &loc
+	for i, item := range sr.Items {
+		if err := item.setLocation(loc.Append(strconv.Itoa(i))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type SecurityRequirementItem struct {
+	Key      Text
+	Value    Text
+	Location *Location
+}
 
 // SecurityRequirement lists the required security schemes to execute this
 // operation. The name used for each property MUST correspond to a security
@@ -43,7 +70,75 @@ type SecurityRequirements []SecurityRequirement
 // not require a specified scope. For other security scheme types, the array MAY
 // contain a list of role names which are required for the execution, but are
 // not otherwise defined or exchanged in-band.
-type SecurityRequirement map[string][]string
+type SecurityRequirement struct {
+	Items []*SecurityRequirementItem `json:"-"`
+
+	Location *Location `json:"-"`
+}
+
+func (sr *SecurityRequirementItem) setLocation(loc Location) error {
+	sr.Location = &loc
+	return nil
+}
+
+func (sr *SecurityRequirement) setLocation(loc Location) error {
+	if sr == nil {
+		return nil
+	}
+	sr.Location = &loc
+	for _, item := range sr.Items {
+		if err := sr.setLocation(loc.Append(item.Key.String())); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (sr SecurityRequirement) Get(key Text) *SecurityRequirementItem {
+	for _, item := range sr.Items {
+		if item.Key == key {
+			return item
+		}
+	}
+	return nil
+}
+
+func (sr SecurityRequirement) Has(key Text) bool {
+	for _, item := range sr.Items {
+		if item.Key == key {
+			return true
+		}
+	}
+	return false
+}
+
+func (sr *SecurityRequirement) Set(key Text, value Text) {
+	if sr == nil {
+		return
+	}
+	for _, item := range sr.Items {
+		if item.Key == key {
+			item.Value = value
+			return
+		}
+	}
+	sr.Items = append(sr.Items, &SecurityRequirementItem{
+		Key:   key,
+		Value: value,
+	})
+}
+
+func (sr *SecurityRequirement) Del(key Text) {
+	if sr == nil {
+		return
+	}
+	for i, item := range sr.Items {
+		if item.Key == key {
+			sr.Items = append(sr.Items[:i], sr.Items[i+1:]...)
+			return
+		}
+	}
+}
 
 // SecuritySchemeMap is a map of SecurityScheme
 type SecuritySchemeMap = ComponentMap[*SecurityScheme]
@@ -54,6 +149,7 @@ type SecurityScheme struct {
 	//
 	// *required
 	Type SecuritySchemeType `json:"type,omitempty"`
+
 	// Any description for security scheme. CommonMark syntax MAY be used for
 	// rich text representation.
 	Description Text `json:"description,omitempty"`
@@ -92,7 +188,17 @@ type SecurityScheme struct {
 	//
 	// 	*required*
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
-	Extensions       `json:"-"`
+
+	Extensions `json:"-"`
+	Location   *Location `json:"-"`
+}
+
+func (s *SecurityScheme) setLocation(loc Location) error {
+	if s == nil {
+		return nil
+	}
+	s.Location = &loc
+	return s.Flows.setLocation(loc.Append("flows"))
 }
 
 // UnmarshalJSON unmarshals JSON
@@ -112,4 +218,8 @@ func (ss SecurityScheme) MarshalJSON() ([]byte, error) {
 	return marshalExtendedJSON(securityscheme(ss))
 }
 
-func (*SecurityScheme) Kind() Kind { return KindSecurityScheme }
+func (*SecurityScheme) Kind() Kind      { return KindSecurityScheme }
+func (*SecurityScheme) mapKind() Kind   { return KindSecuritySchemeMap }
+func (*SecurityScheme) sliceKind() Kind { return KindUndefined }
+
+var _ node = (*SecurityScheme)(nil)

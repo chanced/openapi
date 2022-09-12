@@ -30,10 +30,34 @@ type XML struct {
 	Location   *Location `json:"-"`
 }
 
+func (*XML) Kind() Kind      { return KindXML }
+func (*XML) mapKind() Kind   { return KindUndefined }
+func (*XML) sliceKind() Kind { return KindUndefined }
+
+// MarshalJSON implements node
+func (x XML) MarshalJSON() ([]byte, error) {
+	type xml XML
+	return marshalExtendedJSON(xml(x))
+}
+
+// UnmarshalJSON implements node
+func (x *XML) UnmarshalJSON(data []byte) error {
+	type xml XML
+	var v xml
+	err := unmarshalExtendedJSON(data, &v)
+	if err != nil {
+		return err
+	}
+	*x = XML(v)
+	return nil
+}
+
 func (xml *XML) setLocation(loc Location) error {
 	if xml == nil {
 		return nil
 	}
-	xml.Location = loc
+	xml.Location = &loc
 	return nil
 }
+
+var _ node = (*XML)(nil)

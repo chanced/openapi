@@ -15,10 +15,13 @@ type RequestBody struct {
 	// Determines if the request body is required in the request. Defaults to false.
 	Required bool `json:"required,omitempty"`
 
+	Location   *Location `json:"-"`
 	Extensions `json:"-"`
 }
 
-func (*RequestBody) Kind() Kind { return KindRequestBody }
+func (*RequestBody) Kind() Kind      { return KindRequestBody }
+func (*RequestBody) mapKind() Kind   { return KindRequestBodyMap }
+func (*RequestBody) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals h into JSON
 func (rb RequestBody) MarshalJSON() ([]byte, error) {
@@ -38,8 +41,12 @@ func (rb *RequestBody) UnmarshalJSON(data []byte) error {
 }
 
 // setLocation implements node
-func (*RequestBody) setLocation(loc Location) error {
-	panic("unimplemented")
+func (rb *RequestBody) setLocation(loc Location) error {
+	rb.Location = &loc
+	if err := rb.Content.setLocation(loc.Append("content")); err != nil {
+		return err
+	}
+	return nil
 }
 
 var _ node = (*RequestBody)(nil)

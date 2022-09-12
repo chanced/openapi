@@ -7,7 +7,7 @@ import (
 // ParameterMap is a map of Parameter
 type ParameterMap = ComponentMap[*Parameter]
 
-// ParameterSet is list of parameters that are applicable for a given operation.
+// ParameterSlice is list of parameters that are applicable for a given operation.
 // If a parameter is already defined at the Path Item, the new definition will
 // override it but can never remove it. The list MUST NOT include duplicated
 // parameters. A unique parameter is defined by a combination of a name and
@@ -15,7 +15,7 @@ type ParameterMap = ComponentMap[*Parameter]
 // are defined at the OpenAPI Object's components/parameters.
 //
 // Can either be a Parameter or a Reference
-type ParameterSet = ComponentSet[*Parameter]
+type ParameterSlice = ComponentSlice[*Parameter]
 
 /*
 * Path Parameters
@@ -226,8 +226,11 @@ type Parameter struct {
 	// schema property, or a content property, but not both. When example or
 	// examples are provided in conjunction with the schema object, the example
 	// MUST follow the prescribed serialization strategy for the parameter.
-	Content    ContentMap `json:"content,omitempty"`
+	Content ContentMap `json:"content,omitempty"`
+
 	Extensions `json:"-"`
+
+	Location *Location `json:"-"`
 }
 
 // MarshalJSON marshals h into JSON
@@ -248,22 +251,23 @@ func (p *Parameter) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (*Parameter) Kind() Kind { return KindParameter }
+func (*Parameter) Kind() Kind      { return KindParameter }
+func (*Parameter) mapKind() Kind   { return KindParameterMap }
+func (*Parameter) sliceKind() Kind { return KindParameterSlice }
 
 func (p *Parameter) setLocation(loc Location) error {
-}
-
-func unmarshalParameterJSON(data []byte) (Component[*Parameter], error) {
-	var err error
-	if isRefJSON(data) {
-		var v Reference
-		err = json.Unmarshal(data, &v)
-		return newComponent[*Parameter](&v, nil), err
-	} else {
-		var v Parameter
-		err = json.Unmarshal(data, &v)
-		return newComponent(nil, &v), err
+	if p == nil {
+		return nil
 	}
+	p.Location = &loc
+	if err := p.Content.setLocation(loc.Append("content")); err != nil {
+		return err
+	}
+	if err := p.Examples.setLocation(loc.Append("examples")); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ node = (*Parameter)(nil)

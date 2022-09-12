@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/chanced/jay"
+	"github.com/chanced/jsonx"
 	"github.com/chanced/transcodefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -16,7 +16,7 @@ import (
 // Validation errors will be
 func Validate(data []byte) error {
 	var spec map[string]any
-	if jay.IsObject(data) {
+	if jsonx.IsObject(data) {
 		err := json.Unmarshal(data, &spec)
 		if err == nil {
 			return schemas.openapi31[KindDocument].Validate(spec)

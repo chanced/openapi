@@ -1,9 +1,9 @@
 github.com/chanced/caps v0.7.11 h1:I9RckhEe2T3+VdYVy451ufgr/tFjX8E3Kdd13IngvMQ=
 github.com/chanced/caps v0.7.11/go.mod h1:SJhRzeYLKJ3OmzyQXhdZ7Etj7lqqWoPtQ1zcSJRtQjs=
-github.com/chanced/jay v0.0.3 h1:yaftWp+NvIIXc8vMAmwOiFp7zJdK1ffFl6sNpL1BC4A=
-github.com/chanced/jay v0.0.3/go.mod h1:0hPHwA6ni5KdorNTIOK33aH+e4F0n3RJWSw85o3iasI=
 github.com/chanced/jsonpointer v0.0.5 h1:N9SewxwFmdJ6QejrAhvPKjW42Olv383JeWk7PrDSd5o=
 github.com/chanced/jsonpointer v0.0.5/go.mod h1:dw54fmixEiDkp4PqNO5579oBEkwCgjrDHS3cmR70SW0=
+github.com/chanced/jsonx v0.0.1 h1:tzIi/5VPzHEEK/Ti8DfHcqWXV8bT1ic9LA/g008s1ZA=
+github.com/chanced/jsonx v0.0.1/go.mod h1:5jZ6w4wNTtpUGlyxVQI/YFdITXR85ya3WL0zF3P21eI=
 github.com/chanced/maps v0.0.2 h1:Lpixr8bK1ZKdVWC9+dtfO3AFDpfPdh08nrRrSbIFdXQ=
 github.com/chanced/maps v0.0.2/go.mod h1:+gAhsn8IHMw6nS10PwKiqowwrM3aKLkiLKF4IYzdKQU=
 github.com/chanced/transcodefmt v0.0.6 h1:UDMu7sSpA+OMe0CrM2E8z3JGyWZcRWHbTqYKX5nlBZ4=

@@ -7,6 +7,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+type PathItemEntry struct {
+	Key      string
+	PathItem *PathItem
+}
+
+type PathItemObjs = ObjMap[*PathItem]
+
 // PathItemMap is a map of Paths that can either be a Path or a Reference
 type PathItemMap = ComponentMap[*PathItem]
 
@@ -16,8 +23,23 @@ type PathItemMap = ComponentMap[*PathItem]
 // (ACL) constraints.
 type Paths struct {
 	// Items are the Path
-	Items      PathItemMap `json:"-"`
+	Items      PathItemObjs `json:"-"`
+	Location   *Location    `json:"-"`
 	Extensions `json:"-"`
+}
+
+// Kind implements node
+func (*Paths) Kind() Kind      { return KindPaths }
+func (*Paths) mapKind() Kind   { return KindUndefined }
+func (*Paths) sliceKind() Kind { return KindUndefined }
+
+// setLocation implements node
+func (p *Paths) setLocation(loc Location) error {
+	if p == nil {
+		return nil
+	}
+	p.Location = &loc
+	return p.Items.setLocation(loc)
 }
 
 // MarshalJSON marshals JSON
@@ -41,10 +63,7 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)
-			p.Items = append(p.Items, ComponentEntry[*PathItem]{
-				Key:       key.String(),
-				Component: Component[*PathItem]{Object: &v},
-			})
+			p.Items.Set(Text(key.String()), &v)
 		}
 		return err == nil
 	})
@@ -78,22 +97,61 @@ type PathItem struct {
 	// A definition of a TRACE operation on this path.
 	Trace *Operation `json:"trace,omitempty"`
 	// An alternative server array to service all operations in this path.
-	Servers []*Server `json:"servers,omitempty"`
+	Servers ServerSlice `json:"servers,omitempty"`
 	// A list of parameters that are applicable for all the operations described
 	// under this path. These parameters can be overridden at the operation
 	// level, but cannot be removed there. The list MUST NOT include duplicated
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters ParameterSet `json:"parameters,omitempty"`
-	Location   *Location     `json:"-"`
+	Parameters ParameterSlice `json:"parameters,omitempty"`
+	Location   *Location      `json:"-"`
 	Extensions `json:"-"`
 }
 
+// mapKind implements node
+func (*PathItem) mapKind() Kind { return KindPathItemMap }
+
+// sliceKind implements node
+func (*PathItem) sliceKind() Kind { return KindUndefined }
+
 // setLocation implements node
 func (p *PathItem) setLocation(loc Location) error {
+	if p == nil {
+		return nil
+	}
 	p.Location = &loc
-	p.
+	if err := p.Delete.setLocation(loc.Append("delete")); err != nil {
+		return err
+	}
+	if err := p.Get.setLocation(loc.Append("get")); err != nil {
+		return err
+	}
+	if err := p.Head.setLocation(loc.Append("head")); err != nil {
+		return err
+	}
+	if err := p.Options.setLocation(loc.Append("options")); err != nil {
+		return err
+	}
+	if err := p.Patch.setLocation(loc.Append("patch")); err != nil {
+		return err
+	}
+	if err := p.Post.setLocation(loc.Append("post")); err != nil {
+		return err
+	}
+	if err := p.Put.setLocation(loc.Append("put")); err != nil {
+		return err
+	}
+	if err := p.Trace.setLocation(loc.Append("trace")); err != nil {
+		return err
+	}
+	if err := p.Parameters.setLocation(loc.Append("parameters")); err != nil {
+		return err
+	}
+	if err := p.Servers.setLocation(loc.Append("servers")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -117,4 +175,7 @@ func (p *PathItem) UnmarshalJSON(data []byte) error {
 
 func (*PathItem) Kind() Kind { return KindPathItem }
 
-var _ node = (*PathItem)(nil)
+var (
+	_ node = (*PathItem)(nil)
+	_ node = (*Paths)(nil)
+)

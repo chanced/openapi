@@ -33,6 +33,10 @@ type Example struct {
 	Location      *Location `json:"-"`
 }
 
+func (*Example) Kind() Kind      { return KindExample }
+func (*Example) mapKind() Kind   { return KindExampleMap }
+func (*Example) sliceKind() Kind { return KindUndefined }
+
 // setLocation implements node
 
 // MarshalJSON marshals JSON
@@ -52,9 +56,6 @@ func (e *Example) UnmarshalJSON(data []byte) error {
 	*e = Example(v)
 	return nil
 }
-
-// kind returns KindExample
-func (*Example) Kind() Kind { return KindExample }
 
 func (e *Example) setLocation(loc Location) error {
 	if e == nil {

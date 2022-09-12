@@ -38,6 +38,8 @@ type Response struct {
 	// of the names for Component Objects.
 	Links      LinkMap `json:"links,omitempty"`
 	Extensions `json:"-"`
+
+	Location *Location `json:"-"`
 }
 
 // MarshalJSON marshals r into JSON
@@ -55,11 +57,26 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func (*Response) Kind() Kind { return KindResponse }
+func (*Response) Kind() Kind      { return KindResponse }
+func (*Response) mapKind() Kind   { return KindResponseMap }
+func (*Response) sliceKind() Kind { return KindUndefined }
 
 // setLocation implements node
-func (*Response) setLocation(loc Location) error {
-	panic("unimplemented")
+func (r *Response) setLocation(loc Location) error {
+	if r == nil {
+		return nil
+	}
+	r.Location = &loc
+	if err := r.Headers.setLocation(loc.Append("headers")); err != nil {
+		return err
+	}
+	if err := r.Content.setLocation(loc.Append("content")); err != nil {
+		return err
+	}
+	if err := r.Links.setLocation(loc.Append("links")); err != nil {
+		return err
+	}
+	return nil
 }
 
 var _ node = (*Response)(nil)

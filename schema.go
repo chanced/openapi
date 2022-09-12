@@ -1,15 +1,13 @@
 package openapi
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/chanced/jay"
-	"github.com/chanced/jsonpointer"
+	"github.com/chanced/jsonx"
 	"github.com/chanced/uri"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -78,8 +76,8 @@ func (sm *SchemaMap) MarshalJSON() ([]byte, error) {
 }
 
 func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
-	t := jay.TypeOf(data)
-	if t != jay.TypeObject {
+	t := jsonx.TypeOf(data)
+	if t != jsonx.TypeObject {
 		return &json.UnmarshalTypeError{Value: t.String(), Type: reflect.TypeOf(sm)}
 	}
 	*sm = make(SchemaMap, 0)
@@ -93,9 +91,9 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-type SchemaSet []*Schema
+type SchemaSlice []*Schema
 
-func (ss SchemaSet) setLocation(loc Location) error {
+func (ss SchemaSlice) setLocation(loc Location) error {
 	if ss == nil {
 		return nil
 	}
@@ -109,7 +107,7 @@ func (ss SchemaSet) setLocation(loc Location) error {
 }
 
 // Schema allows the definition of input and output data types. These types can
-// be objects, but also primitives and arrays. This object is a superset of the
+// be objects, but also primitives and arrays. This object is a superSlice of the
 // [JSON Schema Specification Draft
 // 2020-12](https://tools.ietf.org/html/draft-bhutton-json-schema-00).
 //
@@ -243,16 +241,16 @@ type Schema struct {
 	// given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=anyof#anyof
-	AllOf SchemaSet `json:"allOf,omitempty"`
+	AllOf SchemaSlice `json:"allOf,omitempty"`
 	// validate against anyOf, the given data must be valid against any (one or
 	// more) of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=allof#allof
-	AnyOf SchemaSet `json:"anyOf,omitempty"`
+	AnyOf SchemaSlice `json:"anyOf,omitempty"`
 	// alidate against oneOf, the given data must be valid against exactly one of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=oneof#oneof
-	OneOf SchemaSet `json:"oneOf,omitempty"`
+	OneOf SchemaSlice `json:"oneOf,omitempty"`
 	// if, then and else keywords allow the application of a subschema based on
 	// the outcome of another schema, much like the if/then/else constructs
 	// you’ve probably seen in traditional programming languages.
@@ -296,7 +294,7 @@ type Schema struct {
 	Items            *Schema           `json:"items,omitempty"`
 	UnevaluatedObjs  *Schema           `json:"unevaluatedObjs,omitempty"`
 	AdditionalObjs   *Schema           `json:"additionalObjs,omitempty"`
-	PrefixObjs       SchemaSet         `json:"prefixObjs,omitempty"`
+	PrefixObjs       SchemaSlice       `json:"prefixObjs,omitempty"`
 	Contains         *Schema           `json:"contains,omitempty"`
 	MinContains      *Number           `json:"minContains,omitempty"`
 	MaxContains      *Number           `json:"maxContains,omitempty"`
@@ -354,11 +352,11 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals JSON
 func (s *Schema) UnmarshalJSON(data []byte) error {
-	t := jay.TypeOf(data)
+	t := jsonx.TypeOf(data)
 	switch t {
-	case jay.TypeBool:
+	case jsonx.TypeBool:
 		return s.unmarshalJSONBool(data)
-	case jay.TypeObject:
+	case jsonx.TypeObject:
 		return s.unmarshalJSONObj(data)
 	default:
 		return &json.UnmarshalTypeError{Value: t.String(), Type: reflect.TypeOf(s)}
@@ -536,7 +534,7 @@ func (sr *SchemaRef) setLocation(l Location) error {
 }
 
 func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
-	if jay.IsString(data) {
+	if jsonx.IsString(data) {
 		var u uri.URI
 		if err := json.Unmarshal(data, &u); err != nil {
 			return err
@@ -555,18 +553,9 @@ func (sr *SchemaRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sr.Ref)
 }
 
-// init implements node
-func (*Schema) init(ctx context.Context, resolver *resolver) error {
-	panic("unimplemented")
-}
-
-// kind implements node
-func (*Schema) Kind() Kind { return KindSchema }
-
-// resolve implements node
-func (*Schema) resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error) {
-	panic("unimplemented")
-}
+func (*Schema) Kind() Kind      { return KindSchema }
+func (*Schema) mapKind() Kind   { return KindSchemaMap }
+func (*Schema) sliceKind() Kind { return KindSchemaSlice }
 
 // setLocation implements node
 func (s *Schema) setLocation(loc Location) error {

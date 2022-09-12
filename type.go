@@ -3,7 +3,7 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jay"
+	"github.com/chanced/jsonx"
 )
 
 const (
@@ -143,8 +143,7 @@ func (t Types) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals JSON
 func (t *Types) UnmarshalJSON(data []byte) error {
-	d := jay.JSON(data)
-	if d.IsString() {
+	if jsonx.IsString(data) {
 		var v Type
 		err := json.Unmarshal(data, &v)
 		*t = Types{v}

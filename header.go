@@ -71,7 +71,10 @@ type Header struct {
 	Location   *Location `json:"-"`
 }
 
-// MarshalJSON marshals h into JSON
+func (*Header) Kind() Kind      { return KindHeader }
+func (*Header) mapKind() Kind   { return KindHeaderMap }
+func (*Header) sliceKind() Kind { return KindUndefined }
+
 func (h Header) MarshalJSON() ([]byte, error) {
 	type header Header
 
@@ -87,7 +90,6 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 	*h = Header(v)
 	return err
 }
-func (*Header) Kind() Kind { return KindHeader }
 
 func (h *Header) setLocation(loc Location) error {
 	h.Location = &loc

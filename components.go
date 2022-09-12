@@ -58,10 +58,10 @@ func (c *Component[T]) setLocation(loc Location) error {
 	return nil
 }
 
-// ComponentSet is a slice of Components of type T
-type ComponentSet[T node] []Component[T]
+// ComponentSlice is a slice of Components of type T
+type ComponentSlice[T node] []Component[T]
 
-func (cs ComponentSet[T]) setLocation(loc Location) error {
+func (cs ComponentSlice[T]) setLocation(loc Location) error {
 	for i, c := range cs {
 		if err := c.setLocation(loc.Append(strconv.Itoa(i))); err != nil {
 			return err
@@ -73,7 +73,7 @@ func (cs ComponentSet[T]) setLocation(loc Location) error {
 // ComponentEntry is an entry in a ComponentMap consisting of a Key/Value pair for
 // an object consiting of Component[T]s
 type ComponentEntry[V node] struct {
-	Key       string
+	Key       Text
 	Component Component[V]
 }
 
@@ -92,7 +92,7 @@ func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
 
 		err = comp.UnmarshalJSON([]byte(value.Raw))
 		*cm = append(*cm, ComponentEntry[T]{
-			Key:       key.String(),
+			Key:       Text(key.String()),
 			Component: comp,
 		})
 		return err == nil
@@ -108,7 +108,7 @@ func (cm ComponentMap[T]) MarshalJSON() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err = sjson.SetBytes(b, field.Key, field.Component)
+		b, err = sjson.SetBytes(b, field.Key.String(), field.Component)
 		_ = b
 		if err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func (cm ComponentMap[T]) MarshalJSON() ([]byte, error) {
 	return b, nil
 }
 
-func (cm *ComponentMap[T]) Get(key string) (Component[T], bool) {
+func (cm *ComponentMap[T]) Get(key Text) (Component[T], bool) {
 	for _, v := range *cm {
 		if v.Key == key {
 			return v.Component, true
@@ -127,7 +127,7 @@ func (cm *ComponentMap[T]) Get(key string) (Component[T], bool) {
 }
 
 // Set sets the value of the key in the ComponentMap
-func (cm *ComponentMap[T]) Set(key string, value Component[T]) {
+func (cm *ComponentMap[T]) Set(key Text, value Component[T]) {
 	if cm == nil {
 		*cm = ComponentMap[T]{{Key: key, Component: value}}
 		return
@@ -146,7 +146,7 @@ func (cm *ComponentMap[T]) Set(key string, value Component[T]) {
 	})
 }
 
-func (cm *ComponentMap[T]) Del(key string) {
+func (cm *ComponentMap[T]) Del(key Text) {
 	for i, v := range *cm {
 		if v.Key == key {
 			*cm = append((*cm)[:i], (*cm)[i+1:]...)
@@ -203,9 +203,51 @@ type Components struct {
 	Headers         *HeaderMap         `json:"headers,omitempty"`
 	SecuritySchemes *SecuritySchemeMap `json:"securitySchemes,omitempty"`
 	Links           *LinkMap           `json:"links,omitempty"`
-	Callbacks       *CallbackMap       `json:"callbacks,omitempty"`
+	Callbacks       *CallbacksMap      `json:"callbacks,omitempty"`
 	PathItems       *PathItemMap       `json:"pathItems,omitempty"`
-	Extensions      `json:"-"`
+
+	Extensions `json:"-"`
+	Location   *Location `json:"-"`
+}
+
+func (c *Components) setLocation(loc Location) error {
+	if c == nil {
+		return nil
+	}
+	c.Location = &loc
+	var err error
+	if err = c.Schemas.setLocation(loc.Append("schemas")); err != nil {
+		return err
+	}
+	if err = c.Responses.setLocation(loc.Append("responses")); err != nil {
+		return err
+	}
+	if err = c.Parameters.setLocation(loc.Append("parameters")); err != nil {
+		return err
+	}
+	if err = c.Examples.setLocation(loc.Append("examples")); err != nil {
+		return err
+	}
+	if err = c.RequestBodies.setLocation(loc.Append("requestBodies")); err != nil {
+		return err
+	}
+	if err = c.Headers.setLocation(loc.Append("headers")); err != nil {
+		return err
+	}
+	if err = c.SecuritySchemes.setLocation(loc.Append("securitySchemes")); err != nil {
+		return err
+	}
+	if err = c.Links.setLocation(loc.Append("links")); err != nil {
+		return err
+	}
+	if err = c.Callbacks.setLocation(loc.Append("callbacks")); err != nil {
+		return err
+	}
+	if err = c.PathItems.setLocation(loc.Append("pathItems")); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MarshalJSON marshals JSON

@@ -18,7 +18,7 @@ package openapi_test
 // 	j := []string{
 // 		`{
 // 			"historyMetadata": {
-// 			  "contentType": "application/xml; charset=utf-8"
+// 			  "contentType": "application/xml; charSlice=utf-8"
 // 			},
 // 			"profileImage": {
 // 			  "contentType": "image/png, image/jpeg",

@@ -3,8 +3,9 @@ module github.com/chanced/openapi
 go 1.18
 
 require (
-	github.com/chanced/jay v0.0.3
+	github.com/chanced/caps v0.7.11
 	github.com/chanced/jsonpointer v0.0.5
+	github.com/chanced/jsonx v0.0.1
 	github.com/chanced/maps v0.0.2
 	github.com/chanced/transcodefmt v0.0.6
 	github.com/chanced/uri v0.0.1
@@ -15,7 +16,6 @@ require (
 )
 
 require (
-	github.com/chanced/caps v0.7.11 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 )

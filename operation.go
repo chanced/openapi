@@ -4,7 +4,7 @@ package openapi
 type Operation struct {
 	// A list of tags for API documentation control. Tags can be used for
 	// logical grouping of operations by resources or any other qualifier.
-	Tags []string `json:"tags,omitempty"`
+	Tags []Text `json:"tags,omitempty"`
 	// A short summary of what the operation does.
 	Summary Text `json:"summary,omitempty"`
 	// A verbose explanation of the operation behavior. CommonMark syntax MAY be
@@ -24,7 +24,7 @@ type Operation struct {
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters ParameterSet `json:"parameters,omitempty"`
+	Parameters ParameterSlice `json:"parameters,omitempty"`
 
 	// The request body applicable for this operation. The requestBody is fully
 	// supported in HTTP methods where the HTTP 1.1 specification RFC7231 has
@@ -41,7 +41,7 @@ type Operation struct {
 	// The key is a unique identifier for the Callback Object. Each value in the
 	// map is a Callback Object that describes a request that may be initiated
 	// by the API provider and the expected responses.
-	Callbacks CallbackMap `json:"callbacks,omitempty"`
+	Callbacks CallbacksMap `json:"callbacks,omitempty"`
 	// Declares this operation to be deprecated. Consumers SHOULD refrain from
 	// usage of the declared operation. Default value is false.
 	Deprecated bool `json:"deprecated,omitempty"`
@@ -56,7 +56,7 @@ type Operation struct {
 	// An alternative server array to service this operation. If an alternative
 	// server object is specified at the Path Item Object or Root level, it will
 	// be overridden by this value.
-	Servers []*Server `json:"servers,omitempty"`
+	Servers ServerSlice `json:"servers,omitempty"`
 
 	// Location contains information about the location of the node in the
 	// document or referenced resource
@@ -85,13 +85,39 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (*Operation) Kind() Kind { return KindOperation }
+func (*Operation) Kind() Kind      { return KindOperation }
+func (*Operation) mapKind() Kind   { return KindUndefined }
+func (*Operation) sliceKind() Kind { return KindUndefined }
 
 // setLocation implements node
 func (o *Operation) setLocation(loc Location) error {
+	if o == nil {
+		return nil
+	}
 	o.Location = &loc
-	o.Callbacks.setLocation(loc.Append("callbacks"))
-	o.Parameters.setLocation(loc.Append("parameters"))
+
+	if err := o.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
+		return err
+	}
+	if err := o.Parameters.setLocation(loc.Append("parameters")); err != nil {
+		return err
+	}
+	if err := o.RequestBody.setLocation(loc.Append("requestBody")); err != nil {
+		return err
+	}
+	if err := o.Responses.setLocation(loc.Append("responses")); err != nil {
+		return err
+	}
+	if err := o.Callbacks.setLocation(loc.Append("callbacks")); err != nil {
+		return err
+	}
+	if err := o.Security.setLocation(loc.Append("security")); err != nil {
+		return err
+	}
+	if err := o.Servers.setLocation(loc.Append("servers")); err != nil {
+		return err
+	}
+	return nil
 }
 
 var _ node = (*Operation)(nil)
