@@ -1,8 +1,11 @@
 package openapi
 
 import (
+	"encoding/json"
 	"errors"
 
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/uri"
 	"github.com/tidwall/gjson"
 )
 
@@ -22,7 +25,7 @@ type Reference struct {
 	// The reference identifier. This MUST be in the form of a URI.
 	//
 	// 	*required*
-	Ref Text `yaml:"$ref" json:"$ref"`
+	Ref *uri.URI `yaml:"$ref" json:"$ref"`
 	// A short summary which by default SHOULD override that of the referenced
 	// component. If the referenced object-type does not allow a summary field,
 	// then this field has no effect.
@@ -33,20 +36,58 @@ type Reference struct {
 	// field has no effect.
 	Description Text `json:"description,omitempty"`
 	// Location of the Reference
-	Location *Location `json:"-"`
+	Location `json:"-"`
+}
+
+func (r *Reference) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return r.resolve(ptr)
+}
+
+func (r *Reference) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return r, nil
+	}
+	tok, _ := ptr.NextToken()
+	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+}
+
+func (r *Reference) MarshalJSON() ([]byte, error) {
+	type reference Reference
+	return json.Marshal(reference(*r))
+}
+
+func (r *Reference) UnmarshalJSON(data []byte) error {
+	type reference Reference
+	var v reference
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	*r = Reference(v)
+	return nil
+}
+
+func (r *Reference) String() string {
+	return r.Ref.String()
 }
 
 func (r *Reference) setLocation(loc Location) error {
 	if r == nil {
 		return nil
 	}
-	r.Location = &loc
+	r.Location = loc
 	return nil
 }
 
-func (r *Reference) Kind() Kind { return KindReference }
+func (r *Reference) Kind() Kind    { return KindReference }
+func (*Reference) mapKind() Kind   { return KindUndefined }
+func (*Reference) sliceKind() Kind { return KindUndefined }
 
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")
 	return r.Str != ""
 }
+
+var _ node = (*Reference)(nil)

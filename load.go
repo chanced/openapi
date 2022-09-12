@@ -16,23 +16,39 @@ type resolver struct {
 	document        *Document
 	// id rather have map[string]*Callback and so on, but that causes a circular dependency
 	// and I have no idea transcodefmt
-	nodesByKind map[Kind]map[string]node
-	nodes       map[string]node
+	components componentNodes
+	nodes      map[string]node
 }
 
-func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI) (node, error) {
+func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node) (node, error) {
 	if u.Fragment != "" {
 		nu := *u
 		nu.Fragment = ""
 		if n, ok := r.nodes[nu.String()]; ok {
-			// return n.resolve(ctx, r, u.Fragment)
-			_ = n
-			_ = ok
-		} else {
-			// return nil, fmt.Errorf("failed to resolve %s: %w", u)
+			if u.Fragment == "" {
+				return n, nil
+			}
+			panic("not done")
+
 		}
+
 	}
 	panic("not done")
+}
+
+func resolveComponent[T node](ctx context.Context, c *Component[T], r resolver) error {
+	if c.Reference == nil || (any)(c.Object) != nil {
+		return nil
+	}
+	if c.Reference.Ref == nil || c.Reference.Ref.String() == "" {
+		return fmt.Errorf("%w: %s", ErrEmptyRef, c.Reference.Location)
+	}
+	t, err := r.resolve(ctx, c.Object.Kind(), c.Reference.Ref, c.Object)
+	if err != nil {
+		return err
+	}
+	c.Object = (any)(t).(T)
+	return nil
 }
 
 // NewLoader returns a new Loader where documentURI is the URI of root OpenAPI document

@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 // XML is a metadata object that allows for more fine-tuned XML model
 // definitions.
 //
@@ -7,6 +9,9 @@ package openapi
 // forms) and the name property SHOULD be used to add that information. See
 // examples for expected behavior.
 type XML struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// Replaces the name of the element/attribute used for the described schema
 	// property. When defined within items, it will affect the name of the
 	// individual XML elements within the list. When defined alongside type
@@ -25,22 +30,33 @@ type XML struct {
 	// wrapped (for example, <books><book/><book/></books>) or unwrapped
 	// (<book/><book/>). Default value is false. The definition takes effect
 	// only when defined alongside type being array (outside the items).
-	Wrapped    bool `json:"wrapped,omitempty"`
-	Extensions `json:"-"`
-	Location   *Location `json:"-"`
+	Wrapped bool `json:"wrapped,omitempty"`
+}
+
+func (x *XML) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return x.resolve(ptr)
+}
+
+func (x *XML) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return x, nil
+	}
+	tok, _ := ptr.NextToken()
+	return nil, newErrNotResolvable(x.Location.AbsoluteLocation(), tok)
 }
 
 func (*XML) Kind() Kind      { return KindXML }
 func (*XML) mapKind() Kind   { return KindUndefined }
 func (*XML) sliceKind() Kind { return KindUndefined }
 
-// MarshalJSON implements node
 func (x XML) MarshalJSON() ([]byte, error) {
 	type xml XML
 	return marshalExtendedJSON(xml(x))
 }
 
-// UnmarshalJSON implements node
 func (x *XML) UnmarshalJSON(data []byte) error {
 	type xml XML
 	var v xml
@@ -56,7 +72,7 @@ func (xml *XML) setLocation(loc Location) error {
 	if xml == nil {
 		return nil
 	}
-	xml.Location = &loc
+	xml.Location = loc
 	return nil
 }
 

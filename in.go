@@ -22,3 +22,7 @@ type In string
 func (in In) String() string {
 	return string(in)
 }
+
+func (in In) Text() Text {
+	return Text(in)
+}

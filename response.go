@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 // ResponseMap is a container for the expected responses of an operation. The
 // container maps a HTTP response code to the expected response.
 //
@@ -27,19 +29,67 @@ type Response struct {
 	// Maps a header name to its definition. RFC7230 states header names are
 	// case insensitive. If a response header is defined with the name
 	// "Content-Type", it SHALL be ignored.
-	Headers HeaderMap `json:"headers,omitempty"`
+	Headers *HeaderMap `json:"headers,omitempty"`
 	// A map containing descriptions of potential response payloads. The key is
 	// a media type or media type range and the value describes it. For
 	// responses that match multiple keys, only the most specific key is
 	// applicable. e.g. text/plain overrides text/*
-	Content ContentMap `json:"content,omitempty"`
+	Content *ContentMap `json:"content,omitempty"`
 	// A map of operations links that can be followed from the response. The key
 	// of the map is a short name for the link, following the naming constraints
 	// of the names for Component Objects.
-	Links      LinkMap `json:"links,omitempty"`
+	Links      *LinkMap `json:"links,omitempty"`
 	Extensions `json:"-"`
 
-	Location *Location `json:"-"`
+	Location `json:"-"`
+}
+
+// Resolves a Node by a jsonpointer. It validates the pointer and then
+// attempts to resolve the Node.
+//
+// # Errors
+//
+// - [ErrNotFound] indicates that the component was not found
+//
+// - [ErrNotResolvable] indicates that the pointer path can not resolve to a
+// Node
+//
+// - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
+// is malformed
+//
+// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
+// and does not start with a slash
+func (r *Response) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	err := ptr.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return r.resolve(ptr)
+}
+
+func (r *Response) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return r, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "headers":
+		node = r.Headers
+	case "content":
+		node = r.Content
+	case "links":
+		node = r.Links
+	default:
+		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+	if node == nil {
+		return nil, newErrNotFound(r.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
 }
 
 // MarshalJSON marshals r into JSON
@@ -61,12 +111,11 @@ func (*Response) Kind() Kind      { return KindResponse }
 func (*Response) mapKind() Kind   { return KindResponseMap }
 func (*Response) sliceKind() Kind { return KindUndefined }
 
-// setLocation implements node
 func (r *Response) setLocation(loc Location) error {
 	if r == nil {
 		return nil
 	}
-	r.Location = &loc
+	r.Location = loc
 	if err := r.Headers.setLocation(loc.Append("headers")); err != nil {
 		return err
 	}

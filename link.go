@@ -3,13 +3,13 @@ package openapi
 import (
 	"encoding/json"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 )
 
 // LinkMap is a Map of either LinkMap or References to LinkMap
 type (
-	LinkMap        = ComponentMap[*Link]
-	LinkParameters = JSONObj
+	LinkMap = ComponentMap[*Link]
 )
 
 // Link represents a possible design-time link for a response. The presence of a
@@ -24,6 +24,9 @@ type (
 // expression is used for accessing values in an operation and using them as
 // parameters while invoking the linked operation.
 type Link struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// A relative or absolute URI reference to an OAS operation. This field is
 	// mutually exclusive of the operationId field, and MUST point to an
 	// Operation Object. Relative operationRef values MAY be used to locate an
@@ -40,22 +43,32 @@ type Link struct {
 	// evaluated and passed to the linked operation. The parameter name can be
 	// qualified using the parameter location [{in}.]{name} for operations that
 	// use the same parameter name in different locations (e.g. path.id).
-	Parameters LinkParameters `json:"parameters,omitempty"`
+	Parameters OrderedJSONObj `json:"parameters,omitempty"`
 	// A literal value or {expression} to use as a request body when calling the
 	// target operation.
 	RequestBody jsonx.RawMessage `json:"requestBody,omitempty"`
 	// A description of the link. CommonMark syntax MAY be used for rich text
 	// representation.
 	Description Text `json:"description,omitempty"`
-	Extensions  `json:"-"`
-
-	Location *Location `json:"-"`
 }
 
-// mapKind implements node
+func (l *Link) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return l.resolve(ptr)
+}
+
+func (l *Link) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return l, nil
+	}
+	tok, _ := ptr.NextToken()
+	return nil, newErrNotResolvable(l.Location.AbsoluteLocation(), tok)
+}
+
 func (*Link) mapKind() Kind { return KindLinkMap }
 
-// sliceKind implements node
 func (*Link) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals JSON
@@ -84,12 +97,11 @@ func (l *Link) DecodeRequestBody(dst interface{}) error {
 
 func (*Link) Kind() Kind { return KindLink }
 
-// setLocation implements node
 func (l *Link) setLocation(loc Location) error {
 	if l == nil {
 		return nil
 	}
-	l.Location = &loc
+	l.Location = loc
 	return nil
 }
 

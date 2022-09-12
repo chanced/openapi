@@ -46,6 +46,10 @@ func (t Type) String() string {
 	return string(t)
 }
 
+func (t Type) Text() Text {
+	return Text(t.String())
+}
+
 // Types is a set of Types. A single Type marshals/unmarshals into a string
 // while 2+ marshals into an array.
 type Types []Type

@@ -1,7 +1,8 @@
 package openapi
 
 import (
-	"encoding/json"
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/jsonx"
 )
 
 // ExampleMap is an object to hold reusable ExampleMap.
@@ -23,21 +24,35 @@ type Example struct {
 	// mutually exclusive. To represent examples of media types that cannot
 	// naturally represented in JSON or YAML, use a string value to contain the
 	// example, escaping where necessary.
-	Value json.RawMessage `json:"value,omitempty"`
+	Value jsonx.RawMessage `json:"value,omitempty"`
 	// A URI that points to the literal example. This provides the capability to
 	// reference examples that cannot easily be included in JSON or YAML
 	// documents. The value field and externalValue field are mutually
 	// exclusive. See the rules for resolving Relative References.
 	ExternalValue Text `json:"externalValue,omitempty"`
-	Extensions    `json:"-"`
-	Location      *Location `json:"-"`
+
+	Extensions `json:"-"`
+	Location   `json:"-"`
+}
+
+func (e *Example) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return e.resolve(ptr)
+}
+
+func (e *Example) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return e, nil
+	}
+	tok, _ := ptr.NextToken()
+	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
 }
 
 func (*Example) Kind() Kind      { return KindExample }
 func (*Example) mapKind() Kind   { return KindExampleMap }
 func (*Example) sliceKind() Kind { return KindUndefined }
-
-// setLocation implements node
 
 // MarshalJSON marshals JSON
 func (e Example) MarshalJSON() ([]byte, error) {
@@ -61,8 +76,11 @@ func (e *Example) setLocation(loc Location) error {
 	if e == nil {
 		return nil
 	}
-	e.Location = &loc
+	e.Location = loc
 	return nil
 }
 
-var _ node = (*Example)(nil)
+var (
+	_ node = (*Example)(nil)
+	_ node = (*ExampleMap)(nil)
+)

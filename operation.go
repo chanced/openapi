@@ -1,7 +1,14 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 // Operation describes a single API operation on a path.
 type Operation struct {
+	// Location contains information about the location of the node in the
+	// document or referenced resource
+	Location   `json:"-"`
+	Extensions `json:"-"`
+
 	// A list of tags for API documentation control. Tags can be used for
 	// logical grouping of operations by resources or any other qualifier.
 	Tags []Text `json:"tags,omitempty"`
@@ -24,7 +31,7 @@ type Operation struct {
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters ParameterSlice `json:"parameters,omitempty"`
+	Parameters *ParameterSlice `json:"parameters,omitempty"`
 
 	// The request body applicable for this operation. The requestBody is fully
 	// supported in HTTP methods where the HTTP 1.1 specification RFC7231 has
@@ -32,16 +39,16 @@ type Operation struct {
 	// HTTP spec is vague (such as GET, HEAD and DELETE), requestBody is
 	// permitted but does not have well-defined semantics and SHOULD be avoided
 	// if possible.
-	RequestBody Component[*RequestBody] `json:"requestBody,omitempty"`
+	RequestBody *Component[*RequestBody] `json:"requestBody,omitempty"`
 	// The list of possible responses as they are returned from executing this
 	// operation.
-	Responses ResponseMap `json:"responses,omitempty"`
+	Responses *ResponseMap `json:"responses,omitempty"`
 
 	// A map of possible out-of band callbacks related to the parent operation.
 	// The key is a unique identifier for the Callback Object. Each value in the
 	// map is a Callback Object that describes a request that may be initiated
 	// by the API provider and the expected responses.
-	Callbacks CallbacksMap `json:"callbacks,omitempty"`
+	Callbacks *CallbacksMap `json:"callbacks,omitempty"`
 	// Declares this operation to be deprecated. Consumers SHOULD refrain from
 	// usage of the declared operation. Default value is false.
 	Deprecated bool `json:"deprecated,omitempty"`
@@ -52,16 +59,54 @@ type Operation struct {
 	// an empty security requirement ({}) can be included in the array. This
 	// definition overrides any declared top-level security. To remove a
 	// top-level security declaration, an empty array can be used.
-	Security SecurityRequirements `json:"security,omitempty"`
+	Security *SecurityRequirements `json:"security,omitempty"`
 	// An alternative server array to service this operation. If an alternative
 	// server object is specified at the Path Item Object or Root level, it will
 	// be overridden by this value.
-	Servers ServerSlice `json:"servers,omitempty"`
+	Servers *ServerSlice `json:"servers,omitempty"`
+}
 
-	// Location contains information about the location of the node in the
-	// document or referenced resource
-	Location   *Location `json:"-"`
-	Extensions `json:"-"`
+// Resolves a Node by a json pointer
+func (o *Operation) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	err := ptr.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return o.resolve(ptr)
+}
+
+func (o *Operation) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return o, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch nxt {
+	case "externalDocs":
+		node = o.ExternalDocs
+	case "parameters":
+		node = o.Parameters
+	case "requestBody":
+		node = o.RequestBody
+	case "responses":
+		node = o.Responses
+	case "callbacks":
+		node = o.Callbacks
+	case "security":
+		node = o.Security
+	case "servers":
+		node = o.Servers
+	default:
+		return nil, newErrNotResolvable(o.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, newErrNotFound(o.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(ptr)
 }
 
 // MarshalJSON marshals JSON
@@ -89,12 +134,11 @@ func (*Operation) Kind() Kind      { return KindOperation }
 func (*Operation) mapKind() Kind   { return KindUndefined }
 func (*Operation) sliceKind() Kind { return KindUndefined }
 
-// setLocation implements node
 func (o *Operation) setLocation(loc Location) error {
 	if o == nil {
 		return nil
 	}
-	o.Location = &loc
+	o.Location = loc
 
 	if err := o.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
 		return err

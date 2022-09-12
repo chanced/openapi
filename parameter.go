@@ -1,7 +1,8 @@
 package openapi
 
 import (
-	"encoding/json"
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/jsonx"
 )
 
 // ParameterMap is a map of Parameter
@@ -120,42 +121,13 @@ type ParameterSlice = ComponentSlice[*Parameter]
 * +-----------------------+------------------------------------------------------------------------------------------------------------------------------------------+
  */
 
-// Style describes how the parameter value will be serialized depending
-// on the type of the parameter value.
-type Style string
-
-func (s Style) String() string {
-	return string(s)
-}
-
-const (
-	// StyleForm for
-	StyleForm Style = "form"
-	// StyleSimple comma-separated values. Corresponds to the
-	// {param_name} URI template.
-	StyleSimple Style = "simple"
-	// StyleMatrix is semicolon-prefixed values, also known as path-style
-	// expansion. Corresponds to the {;param_name} URI template.
-	StyleMatrix Style = "matrix"
-	// StyleLabel dot-prefixed values, also known as label expansion.
-	// Corresponds to the {.param_name} URI template.
-	StyleLabel Style = "label"
-	// StyleDeepObject a simple way of rendering nested objects using
-	// form parameters (applies to objects only).
-	StyleDeepObject Style = "deepObject"
-	// StylePipeDelimited is pipeline-separated array values.
-	//
-	// Same as collectionFormat: pipes in OpenAPI 2.0. Has effect only for
-	// non-exploded arrays (explode: false), that is, the pipe separates the
-	// array values if the array is a single parameter, as in
-	// 	arr=a|b|c
-	StylePipeDelimited Style = "pipeDelimited"
-)
-
 // Parameter describes a single operation parameter.
 //
 // A unique parameter is defined by a combination of a name and location.
 type Parameter struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// The name of the parameter. Parameter names are case sensitive:
 	//
 	// - If In is "path", the name field MUST correspond to a template
@@ -218,19 +190,47 @@ type Parameter struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples ExampleMap      `json:"examples,omitempty"`
-	Example  json.RawMessage `json:"example,omitempty"`
+	Examples *ExampleMap      `json:"examples,omitempty"`
+	Example  jsonx.RawMessage `json:"example,omitempty"`
 
 	// For more complex scenarios, the content property can define the media
 	// type and schema of the parameter. A parameter MUST contain either a
 	// schema property, or a content property, but not both. When example or
 	// examples are provided in conjunction with the schema object, the example
 	// MUST follow the prescribed serialization strategy for the parameter.
-	Content ContentMap `json:"content,omitempty"`
+	Content *ContentMap `json:"content,omitempty"`
+}
 
-	Extensions `json:"-"`
+func (p *Parameter) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return p.resolve(ptr)
+}
 
-	Location *Location `json:"-"`
+func (p *Parameter) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return p, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "schema":
+		node = p.Schema
+	case "content":
+		node = p.Content
+	case "examples":
+		node = p.Examples
+	default:
+		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+	if node == nil {
+		return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
 }
 
 // MarshalJSON marshals h into JSON
@@ -259,7 +259,7 @@ func (p *Parameter) setLocation(loc Location) error {
 	if p == nil {
 		return nil
 	}
-	p.Location = &loc
+	p.Location = loc
 	if err := p.Content.setLocation(loc.Append("content")); err != nil {
 		return err
 	}

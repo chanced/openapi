@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/chanced/jsonx"
 	"github.com/chanced/maps"
 	"github.com/tidwall/sjson"
 )
@@ -45,7 +46,7 @@ import (
 // This is different from hiding the path itself from the Paths Object, because
 // the user will be aware of its existence. This allows the documentation
 // provider to finely control what the viewer can see.
-type Extensions map[string]json.RawMessage
+type Extensions map[string]jsonx.RawMessage
 
 type extended interface {
 	exts() Extensions
@@ -133,7 +134,7 @@ func unmarshalExtendedJSON(data []byte, dst extender) error {
 	}
 	for key, d := range jm {
 		if strings.HasPrefix(key, "x-") {
-			ev[key] = d
+			ev[key] = jsonx.RawMessage(d)
 		}
 	}
 	dst.setExts(ev)

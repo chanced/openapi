@@ -1,7 +1,8 @@
 package openapi
 
 import (
-	"encoding/json"
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/jsonx"
 )
 
 // HeaderMap holds reusable HeaderMap.
@@ -14,6 +15,10 @@ type HeaderMap = ComponentMap[*Header]
 //   - All traits that are affected by the location MUST be applicable to a
 //     location of header (for example, style).
 type Header struct {
+	// OpenAPI extensions
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// A brief description of the parameter. This could contain examples of use.
 	// CommonMark syntax MAY be used for rich text representation.
 	Description Text `json:"description,omitempty"`
@@ -38,7 +43,7 @@ type Header struct {
 	// 	- for path - simple;
 	// 	- for header - simple;
 	// 	- for cookie - form.
-	Style Text `json:"style,omitempty"`
+	Style Style `json:"style,omitempty"`
 	// When this is true, parameter values of type array or object generate
 	// separate parameters for each value of the array or key-value pair of the
 	// map. For other types of parameters this property has no effect. When
@@ -57,7 +62,7 @@ type Header struct {
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples ExampleMap `json:"examples,omitempty"`
+	Examples *ExampleMap `json:"examples,omitempty"`
 	// Example of the parameter's potential value. The example SHOULD match the
 	// specified schema and encoding properties if present. The example field is
 	// mutually exclusive of the examples field. Furthermore, if referencing a
@@ -65,10 +70,38 @@ type Header struct {
 	// example provided by the schema. To represent examples of media types that
 	// cannot naturally be represented in JSON or YAML, a string value can
 	// contain the example with escaping where necessary.
-	Example json.RawMessage `json:"example,omitempty"`
-	// OpenAPI extensions
-	Extensions `json:"-"`
-	Location   *Location `json:"-"`
+	Example jsonx.RawMessage `json:"example,omitempty"`
+}
+
+func (h *Header) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return h.resolve(ptr)
+}
+
+func (h *Header) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return h, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch nxt {
+	case "schema":
+		node = h.Schema
+	case "examples":
+		node = h.Examples
+	default:
+		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(ptr)
 }
 
 func (*Header) Kind() Kind      { return KindHeader }
@@ -92,7 +125,7 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 }
 
 func (h *Header) setLocation(loc Location) error {
-	h.Location = &loc
+	h.Location = loc
 	if err := h.Examples.setLocation(loc.Append("examples")); err != nil {
 		return err
 	}

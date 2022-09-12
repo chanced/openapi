@@ -4,107 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
-	"strconv"
 	"strings"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/uri"
-	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
-
-type SchemaEntry struct {
-	Key    string
-	Schema *Schema
-}
-
-// SchemaMap is a psuedo, ordered map of Schemas
-//
-// Under the hood, SchemaMap is a slice of SchemaEntry
-type SchemaMap []SchemaEntry
-
-func (sm *SchemaMap) Set(key string, s *Schema) {
-	se := SchemaEntry{
-		Key:    key,
-		Schema: s,
-	}
-	for i, v := range *sm {
-		if v.Key == key {
-			(*sm)[i] = se
-			return
-		}
-	}
-	(*sm) = append((*sm), se)
-}
-
-func (sm SchemaMap) setLocation(loc Location) error {
-	if sm == nil {
-		return nil
-	}
-	for _, e := range sm {
-		err := e.Schema.setLocation(loc.Append(e.Key))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (sm SchemaMap) Get(key string) *Schema {
-	for _, v := range sm {
-		if v.Key == key {
-			return v.Schema
-		}
-	}
-	return nil
-}
-
-func (sm *SchemaMap) MarshalJSON() ([]byte, error) {
-	b := []byte("{}")
-	var err error
-	for _, v := range *sm {
-		b, err = json.Marshal(v.Schema)
-		if err != nil {
-			return b, err
-		}
-		b, err = sjson.SetBytes(b, v.Key, b)
-		if err != nil {
-			return b, err
-		}
-	}
-	return b, nil
-}
-
-func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
-	t := jsonx.TypeOf(data)
-	if t != jsonx.TypeObject {
-		return &json.UnmarshalTypeError{Value: t.String(), Type: reflect.TypeOf(sm)}
-	}
-	*sm = make(SchemaMap, 0)
-	var err error
-	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
-		var s Schema
-		err = json.Unmarshal([]byte(value.Raw), &s)
-		*sm = append(*sm, SchemaEntry{Key: key.String(), Schema: &s})
-		return err == nil
-	})
-	return err
-}
-
-type SchemaSlice []*Schema
-
-func (ss SchemaSlice) setLocation(loc Location) error {
-	if ss == nil {
-		return nil
-	}
-	for i, s := range ss {
-		err := s.setLocation(loc.Append(strconv.Itoa(i)))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 // Schema allows the definition of input and output data types. These types can
 // be objects, but also primitives and arrays. This object is a superSlice of the
@@ -186,7 +92,7 @@ type Schema struct {
 	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
-	Definitions SchemaMap `json:"$defs,omitempty"`
+	Definitions *SchemaMap `json:"$defs,omitempty"`
 	// The format keyword allows for basic semantic identification of certain Kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
 	//
 	// Optionally, validator implementations can provide a configuration option to
@@ -215,7 +121,7 @@ type Schema struct {
 	// The const keyword is used to restrict a value to a single value.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#constant-values
-	Const json.RawMessage `json:"const,omitempty"`
+	Const jsonx.RawMessage `json:"const,omitempty"`
 	// The enum keyword is used to restrict a value to a fixed set of values. It
 	// must be an array with at least one element, where each element is unique.
 	//
@@ -241,16 +147,16 @@ type Schema struct {
 	// given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=anyof#anyof
-	AllOf SchemaSlice `json:"allOf,omitempty"`
+	AllOf *SchemaSlice `json:"allOf,omitempty"`
 	// validate against anyOf, the given data must be valid against any (one or
 	// more) of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=allof#allof
-	AnyOf SchemaSlice `json:"anyOf,omitempty"`
+	AnyOf *SchemaSlice `json:"anyOf,omitempty"`
 	// alidate against oneOf, the given data must be valid against exactly one of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=oneof#oneof
-	OneOf SchemaSlice `json:"oneOf,omitempty"`
+	OneOf *SchemaSlice `json:"oneOf,omitempty"`
 	// if, then and else keywords allow the application of a subschema based on
 	// the outcome of another schema, much like the if/then/else constructs
 	// you’ve probably seen in traditional programming languages.
@@ -260,15 +166,15 @@ type Schema struct {
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
 	Then *Schema `json:"then,omitempty"`
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Else                 *Schema   `json:"else,omitempty"`
-	MinProperties        *Number   `json:"minProperties,omitempty"`
-	MaxProperties        *Number   `json:"maxProperties,omitempty"`
-	Required             []string  `json:"required,omitempty"`
-	Properties           SchemaMap `json:"properties,omitempty"`
-	PropertyNames        *Schema   `json:"propertyNames,omitempty"`
-	RegexProperties      *bool     `json:"regexProperties,omitempty"`
-	PatternProperties    SchemaMap `json:"patternProperties,omitempty"`
-	AdditionalProperties *Schema   `json:"additionalProperties,omitempty"`
+	Else                 *Schema    `json:"else,omitempty"`
+	MinProperties        *Number    `json:"minProperties,omitempty"`
+	MaxProperties        *Number    `json:"maxProperties,omitempty"`
+	Required             []string   `json:"required,omitempty"`
+	Properties           *SchemaMap `json:"properties,omitempty"`
+	PropertyNames        *Schema    `json:"propertyNames,omitempty"`
+	RegexProperties      *bool      `json:"regexProperties,omitempty"`
+	PatternProperties    *SchemaMap `json:"patternProperties,omitempty"`
+	AdditionalProperties *Schema    `json:"additionalProperties,omitempty"`
 	// The dependentRequired keyword conditionally requires that certain
 	// properties must be present if a given property is present in an object.
 	// For example, suppose we have a schema representing a customer. If you
@@ -284,39 +190,39 @@ type Schema struct {
 	// given property is present. This schema is applied in the same way allOf
 	// applies schemas. Nothing is merged or extended. Both schemas apply
 	// independently.
-	DependentSchemas      SchemaMap `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties *Schema   `json:"unevaluatedProperties,omitempty"`
-	UniqueObjs            *bool     `json:"uniqueObjs,omitempty"`
+	DependentSchemas      *SchemaMap `json:"dependentSchemas,omitempty"`
+	UnevaluatedProperties *Schema    `json:"unevaluatedProperties,omitempty"`
+	UniqueObjs            *bool      `json:"uniqueObjs,omitempty"`
 	// List validation is useful for arrays of arbitrary length where each item
 	// matches the same schema. For this kind of array, set the items keyword to
 	// a single schema that will be used to validate all of the items in the
 	// array.
-	Items            *Schema           `json:"items,omitempty"`
-	UnevaluatedObjs  *Schema           `json:"unevaluatedObjs,omitempty"`
-	AdditionalObjs   *Schema           `json:"additionalObjs,omitempty"`
-	PrefixObjs       SchemaSlice       `json:"prefixObjs,omitempty"`
-	Contains         *Schema           `json:"contains,omitempty"`
-	MinContains      *Number           `json:"minContains,omitempty"`
-	MaxContains      *Number           `json:"maxContains,omitempty"`
-	MinLength        *Number           `json:"minLength,omitempty"`
-	MaxLength        *Number           `json:"maxLength,omitempty"`
-	Pattern          *Regexp           `json:"pattern,omitempty"`
-	ContentEncoding  Text              `json:"contentEncoding,omitempty"`
-	ContentMediaType Text              `json:"contentMediaType,omitempty"`
-	Minimum          *Number           `json:"minimum,omitempty"`
-	ExclusiveMinimum *Number           `json:"exclusiveMinimum,omitempty"`
-	Maximum          *Number           `json:"maximum,omitempty"`
-	ExclusiveMaximum *Number           `json:"exclusiveMaximum,omitempty"`
-	MultipleOf       *Number           `json:"multipleOf,omitempty"`
-	Title            Text              `json:"title,omitempty"`
-	Description      Text              `json:"description,omitempty"`
-	Default          json.RawMessage   `json:"default,omitempty"`
-	ReadOnly         *bool             `json:"readOnly,omitempty"`
-	WriteOnly        *bool             `json:"writeOnly,omitempty"`
-	Examples         []json.RawMessage `json:"examples,omitempty"`
-	Example          json.RawMessage   `json:"example,omitempty"`
-	Deprecated       *bool             `json:"deprecated,omitempty"`
-	ExternalDocs     Text              `json:"externalDocs,omitempty"`
+	Items            *Schema            `json:"items,omitempty"`
+	UnevaluatedObjs  *Schema            `json:"unevaluatedObjs,omitempty"`
+	AdditionalObjs   *Schema            `json:"additionalObjs,omitempty"`
+	PrefixObjs       *SchemaSlice       `json:"prefixObjs,omitempty"`
+	Contains         *Schema            `json:"contains,omitempty"`
+	MinContains      *Number            `json:"minContains,omitempty"`
+	MaxContains      *Number            `json:"maxContains,omitempty"`
+	MinLength        *Number            `json:"minLength,omitempty"`
+	MaxLength        *Number            `json:"maxLength,omitempty"`
+	Pattern          *Regexp            `json:"pattern,omitempty"`
+	ContentEncoding  Text               `json:"contentEncoding,omitempty"`
+	ContentMediaType Text               `json:"contentMediaType,omitempty"`
+	Minimum          *Number            `json:"minimum,omitempty"`
+	ExclusiveMinimum *Number            `json:"exclusiveMinimum,omitempty"`
+	Maximum          *Number            `json:"maximum,omitempty"`
+	ExclusiveMaximum *Number            `json:"exclusiveMaximum,omitempty"`
+	MultipleOf       *Number            `json:"multipleOf,omitempty"`
+	Title            Text               `json:"title,omitempty"`
+	Description      Text               `json:"description,omitempty"`
+	Default          jsonx.RawMessage   `json:"default,omitempty"`
+	ReadOnly         *bool              `json:"readOnly,omitempty"`
+	WriteOnly        *bool              `json:"writeOnly,omitempty"`
+	Examples         []jsonx.RawMessage `json:"examples,omitempty"`
+	Example          jsonx.RawMessage   `json:"example,omitempty"`
+	Deprecated       *bool              `json:"deprecated,omitempty"`
+	ExternalDocs     Text               `json:"externalDocs,omitempty"`
 	// Deprecated: renamed to dynamicAnchor
 	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
 	// Deprecated: renamed to dynamicRef
@@ -326,10 +232,85 @@ type Schema struct {
 	// This MAY be used only on properties schemas. It has no effect on root
 	// schemas. Adds additional metadata to describe the XML representation of
 	// this property.
-	XML        *XML `json:"xml,omitempty"`
+	XML      *XML                        `json:"xml,omitempty"`
+	Keywords map[string]jsonx.RawMessage `json:"-"`
+
 	Extensions `json:"-"`
-	Keywords   map[string]json.RawMessage `json:"-"`
-	Location   *Location                  `json:"-"`
+	Location   `json:"-"`
+}
+
+func (s *Schema) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return s.resolve(ptr)
+}
+
+func (s *Schema) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	var node node
+	if ptr.IsRoot() {
+		return s, nil
+	}
+	nxt, tok, _ := ptr.Next()
+
+	switch tok {
+	case "ref":
+		node = s.Ref
+	case "definitions":
+		node = s.Definitions
+	case "dynamicRef":
+		node = s.DynamicRef
+	case "not":
+		node = s.Not
+	case "allOf":
+		node = s.AllOf
+	case "anyOf":
+		node = s.AnyOf
+	case "oneOf":
+		node = s.OneOf
+	case "if":
+		node = s.If
+	case "then":
+		node = s.Then
+	case "else":
+		node = s.Else
+	case "properties":
+		node = s.Properties
+	case "propertyNames":
+		node = s.PropertyNames
+	case "patternProperties":
+		node = s.PatternProperties
+	case "additionalProperties":
+		node = s.AdditionalProperties
+	case "dependentSchemas":
+		node = s.DependentSchemas
+	case "unevaluatedProperties":
+		node = s.UnevaluatedProperties
+	case "items":
+		node = s.Items
+	case "unevaluatedObjs":
+		node = s.UnevaluatedObjs
+	case "additionalObjs":
+		node = s.AdditionalObjs
+	case "prefixObjs":
+		node = s.PrefixObjs
+	case "contains":
+		node = s.Contains
+	case "recursiveRef":
+		node = s.RecursiveRef
+	case "xml":
+		node = s.XML
+	default:
+		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, NewError(ErrNotFound, s.Location.AbsoluteLocation())
+	}
+	return node.resolve(nxt)
 }
 
 // MarshalJSON marshals JSON
@@ -373,10 +354,9 @@ func (s *Schema) unmarshalJSONBool(data []byte) error {
 func (s *Schema) unmarshalJSONObj(data []byte) error {
 	res := Schema{
 		Extensions: make(Extensions),
-		Keywords:   make(map[string]json.RawMessage),
 	}
 
-	d := map[string]json.RawMessage{}
+	d := map[string]jsonx.RawMessage{}
 	err := json.Unmarshal(data, &d)
 	if err != nil {
 		return err
@@ -391,6 +371,9 @@ func (s *Schema) unmarshalJSONObj(data []byte) error {
 		} else if strings.HasPrefix(k, "x-") {
 			res.Extensions[k] = v
 		} else {
+			if res.Keywords == nil {
+				res.Keywords = make(map[string]jsonx.RawMessage)
+			}
 			res.Keywords[k] = v
 		}
 	}
@@ -510,59 +493,12 @@ func (s *Schema) fields() map[string]interface{} {
 	}
 }
 
-type SchemaRef struct {
-	Ref      *uri.URI `json:"-"`
-	Resolved *Schema  `json:"-"`
-}
-
-func (sr *SchemaRef) setLocation(l Location) error {
-	if sr == nil {
-		return nil
-	}
-	if sr.Resolved != nil {
-		if sr.Ref != nil {
-			nl, err := NewLocation(sr.Ref)
-			if err != nil {
-				return err
-			}
-			sr.Resolved.setLocation(nl)
-			return nil
-		}
-		return sr.Resolved.setLocation(l)
-	}
-	return nil
-}
-
-func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
-	if jsonx.IsString(data) {
-		var u uri.URI
-		if err := json.Unmarshal(data, &u); err != nil {
-			return err
-		}
-		sr.Ref = &u
-		return nil
-	}
-
-	var s Schema
-	err := json.Unmarshal(data, &s)
-	sr.Resolved = &s
-	return err
-}
-
-func (sr *SchemaRef) MarshalJSON() ([]byte, error) {
-	return json.Marshal(sr.Ref)
-}
-
 func (*Schema) Kind() Kind      { return KindSchema }
 func (*Schema) mapKind() Kind   { return KindSchemaMap }
 func (*Schema) sliceKind() Kind { return KindSchemaSlice }
 
-// setLocation implements node
 func (s *Schema) setLocation(loc Location) error {
-	if s.Location != nil {
-		return nil
-	}
-	s.Location = &loc
+	s.Location = loc
 
 	if err := s.Ref.setLocation(loc.Append("ref")); err != nil {
 		return err

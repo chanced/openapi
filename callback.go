@@ -2,13 +2,11 @@ package openapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/tidwall/gjson"
 )
-
-var ErrCallbackNotFound = fmt.Errorf("callback not found")
 
 // CallbacksMap is a map of reusable Callback Objects.
 type CallbacksMap = ComponentMap[*Callbacks]
@@ -23,9 +21,33 @@ type CallbacksMap = ComponentMap[*Callbacks]
 // To describe incoming requests from the API provider independent from another
 // API call, use the webhooks field.
 type Callbacks struct {
-	Items      PathItemObjs `json:"-"`
 	Extensions `json:"-"`
-	Location   *Location `json:"-"`
+	Location   `json:"-"`
+	Items      PathItemObjs `json:"-"`
+}
+
+// Resolve performs a l
+func (c *Callbacks) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return c.resolve(ptr)
+}
+
+func (c *Callbacks) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return c, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	item := c.Items.Get(Text(tok))
+	if item == nil {
+		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+	}
+	return item.resolve(nxt)
+}
+
+func (c *Callbacks) location() Location {
+	return c.Location
 }
 
 // MarshalJSON marshals JSON
@@ -67,7 +89,7 @@ func (c *Callbacks) setLocation(loc Location) error {
 	if c == nil {
 		return nil
 	}
-	c.Location = &loc
+	c.Location = loc
 	return c.Items.setLocation(loc)
 }
 

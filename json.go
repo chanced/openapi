@@ -14,9 +14,9 @@ type JSONObjEntry struct {
 	Value jsonx.RawMessage
 }
 
-type JSONObj []JSONObjEntry
+type OrderedJSONObj []JSONObjEntry
 
-func (j JSONObj) MarshalJSON() ([]byte, error) {
+func (j OrderedJSONObj) MarshalJSON() ([]byte, error) {
 	b := strings.Builder{}
 	b.WriteByte('{')
 	for _, e := range j {
@@ -34,9 +34,9 @@ func (j JSONObj) MarshalJSON() ([]byte, error) {
 	return []byte(b.String()), nil
 }
 
-func (j *JSONObj) UnmarshalJSON(data []byte) error {
+func (j *OrderedJSONObj) UnmarshalJSON(data []byte) error {
 	t := jsonx.TypeOf(data)
-	var v JSONObj
+	var v OrderedJSONObj
 	switch t {
 	case jsonx.TypeNull:
 		*j = nil
@@ -55,7 +55,7 @@ func (j *JSONObj) UnmarshalJSON(data []byte) error {
 	}
 }
 
-func (j JSONObj) Get(key Text) jsonx.RawMessage {
+func (j OrderedJSONObj) Get(key Text) jsonx.RawMessage {
 	for _, v := range j {
 		if v.Key == key {
 			return v.Value
@@ -65,7 +65,7 @@ func (j JSONObj) Get(key Text) jsonx.RawMessage {
 }
 
 // Has returns true if key exists in j
-func (j JSONObj) Has(key Text) bool {
+func (j OrderedJSONObj) Has(key Text) bool {
 	for _, v := range j {
 		if v.Key == Text(key) {
 			return true
@@ -74,7 +74,7 @@ func (j JSONObj) Has(key Text) bool {
 	return false
 }
 
-func (j JSONObj) Map() map[string]jsonx.RawMessage {
+func (j OrderedJSONObj) Map() map[string]jsonx.RawMessage {
 	m := make(map[string]jsonx.RawMessage, len(j))
 	for _, v := range j {
 		m[v.Key.String()] = v.Value
@@ -83,7 +83,7 @@ func (j JSONObj) Map() map[string]jsonx.RawMessage {
 }
 
 // Set concrete object to lp. To add JSON, use SetEncoded
-func (j *JSONObj) Set(key Text, value interface{}) error {
+func (j *OrderedJSONObj) Set(key Text, value interface{}) error {
 	var data []byte
 	var ok bool
 	var err error
@@ -105,7 +105,7 @@ func (j *JSONObj) Set(key Text, value interface{}) error {
 }
 
 // DecodeValue decodes a given parameter by key.
-func (j JSONObj) DecodeValue(key Text, dst interface{}) error {
+func (j OrderedJSONObj) DecodeValue(key Text, dst interface{}) error {
 	if g := j.Get(key); g != nil {
 		return json.Unmarshal(g, dst)
 	} else {
@@ -116,7 +116,7 @@ func (j JSONObj) DecodeValue(key Text, dst interface{}) error {
 // Decode decodes all of j into dst
 //
 // For field-level decoding, use DecodeValue
-func (j JSONObj) Decode(dst interface{}) error {
+func (j OrderedJSONObj) Decode(dst interface{}) error {
 	b, err := json.Marshal(j.Map())
 	if err != nil {
 		return err

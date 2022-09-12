@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 type TagSlice = ComponentSlice[*Tag]
 
 // Tag adds metadata that is used by the Operation Object.
@@ -7,6 +9,8 @@ type TagSlice = ComponentSlice[*Tag]
 // It is not mandatory to have a Tag Object per tag defined in the Operation
 // Object instances.
 type Tag struct {
+	Location   `json:"-"`
+	Extensions `json:"-"`
 	// The name of the tag.
 	//
 	// 	*required*
@@ -19,9 +23,32 @@ type Tag struct {
 	Description Text `json:"description,omitempty"`
 	// Additional external documentation for this tag.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
+}
 
-	Location   *Location `json:"-"`
-	Extensions `json:"-"`
+func (t *Tag) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return t.resolve(ptr)
+}
+
+func (t *Tag) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return t, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	switch tok {
+	case "externalDocs":
+		if nxt.IsRoot() {
+			return t.ExternalDocs, nil
+		}
+		if t.ExternalDocs == nil {
+			return nil, newErrNotFound(t.Location.AbsoluteLocation(), tok)
+		}
+		return t.ExternalDocs.resolve(nxt)
+	default:
+		return nil, newErrNotResolvable(t.Location.AbsoluteLocation(), tok)
+	}
 }
 
 func (*Tag) Kind() Kind      { return KindTag }
@@ -32,7 +59,7 @@ func (t *Tag) setLocation(loc Location) error {
 	if t == nil {
 		return nil
 	}
-	t.Location = &loc
+	t.Location = loc
 	return t.ExternalDocs.setLocation(loc.Append("externalDocs"))
 }
 

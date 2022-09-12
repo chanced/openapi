@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/tidwall/gjson"
 )
 
@@ -22,23 +23,41 @@ type PathItemMap = ComponentMap[*PathItem]
 // to construct the full URL. The Paths MAY be empty, due to Access Control List
 // (ACL) constraints.
 type Paths struct {
-	// Items are the Path
-	Items      PathItemObjs `json:"-"`
-	Location   *Location    `json:"-"`
+	Location   `json:"-"`
 	Extensions `json:"-"`
+
+	// Items are the Path
+	Items PathItemObjs `json:"-"`
 }
 
-// Kind implements node
+func (p *Paths) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return p.resolve(ptr)
+}
+
+func (p *Paths) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return p, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	v := p.Items.Get(Text(tok))
+	if v == nil {
+		return nil, newErrNotFound(p.Location.AbsoluteLocation(), tok)
+	}
+	return v.resolve(nxt)
+}
+
 func (*Paths) Kind() Kind      { return KindPaths }
 func (*Paths) mapKind() Kind   { return KindUndefined }
 func (*Paths) sliceKind() Kind { return KindUndefined }
 
-// setLocation implements node
 func (p *Paths) setLocation(loc Location) error {
 	if p == nil {
 		return nil
 	}
-	p.Location = &loc
+	p.Location = loc
 	return p.Items.setLocation(loc)
 }
 
@@ -97,30 +116,75 @@ type PathItem struct {
 	// A definition of a TRACE operation on this path.
 	Trace *Operation `json:"trace,omitempty"`
 	// An alternative server array to service all operations in this path.
-	Servers ServerSlice `json:"servers,omitempty"`
+	Servers *ServerSlice `json:"servers,omitempty"`
 	// A list of parameters that are applicable for all the operations described
 	// under this path. These parameters can be overridden at the operation
 	// level, but cannot be removed there. The list MUST NOT include duplicated
 	// parameters. A unique parameter is defined by a combination of a name and
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
-	Parameters ParameterSlice `json:"parameters,omitempty"`
-	Location   *Location      `json:"-"`
+	Parameters *ParameterSlice `json:"parameters,omitempty"`
+	Location   `json:"-"`
 	Extensions `json:"-"`
 }
 
-// mapKind implements node
+func (pi *PathItem) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+
+	return pi.resolve(ptr)
+}
+
+func (pi *PathItem) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return pi, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "get":
+		node = pi.Get
+	case "put":
+		node = pi.Put
+	case "post":
+		node = pi.Post
+	case "delete":
+		node = pi.Delete
+	case "options":
+		node = pi.Options
+	case "head":
+		node = pi.Head
+	case "patch":
+		node = pi.Patch
+	case "trace":
+		node = pi.Trace
+	case "servers":
+		node = pi.Servers
+	case "parameters":
+		node = pi.Parameters
+	default:
+		return nil, newErrNotResolvable(pi.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
+}
+
 func (*PathItem) mapKind() Kind { return KindPathItemMap }
 
-// sliceKind implements node
 func (*PathItem) sliceKind() Kind { return KindUndefined }
 
-// setLocation implements node
 func (p *PathItem) setLocation(loc Location) error {
 	if p == nil {
 		return nil
 	}
-	p.Location = &loc
+	p.Location = loc
 	if err := p.Delete.setLocation(loc.Append("delete")); err != nil {
 		return err
 	}

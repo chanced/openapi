@@ -1,7 +1,12 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 // OAuthFlows allows configuration of the supported OAuth Flows.
 type OAuthFlows struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// Configuration for the OAuth Implicit flow
 	Implicit *OAuthFlow `json:"implicit,omitempty"`
 	// Configuration for the OAuth Resource Owner Password flow
@@ -11,8 +16,41 @@ type OAuthFlows struct {
 	ClientCredentials *OAuthFlow `json:"clientCredentials,omitempty"`
 	// Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0.
 	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty"`
-	Extensions        `json:"-"`
-	Location          *Location `json:"-"`
+}
+
+func (f *OAuthFlows) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return f.resolve(ptr)
+}
+
+func (f *OAuthFlows) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return f, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "implicit":
+		node = f.Implicit
+	case "password":
+		node = f.Password
+	case "clientCredentials":
+		node = f.ClientCredentials
+	case "authorizationCode":
+		node = f.AuthorizationCode
+	default:
+		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
 }
 
 func (*OAuthFlows) Kind() Kind      { return KindOAuthFlows }
@@ -23,7 +61,7 @@ func (o *OAuthFlows) setLocation(loc Location) error {
 	if o == nil {
 		return nil
 	}
-	o.Location = &loc
+	o.Location = loc
 	if err := o.Implicit.setLocation(loc.Append("implicit")); err != nil {
 		return err
 	}
@@ -47,18 +85,21 @@ func (o OAuthFlows) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals json
-func (oaf *OAuthFlows) UnmarshalJSON(data []byte) error {
+func (f *OAuthFlows) UnmarshalJSON(data []byte) error {
 	type oauthflows OAuthFlows
 	var v oauthflows
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
-	*oaf = OAuthFlows(v)
+	*f = OAuthFlows(v)
 	return nil
 }
 
 // OAuthFlow configuration details for a supported OAuth Flow
 type OAuthFlow struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// The authorization URL to be used for this flow. This MUST be in the form
 	// of a URL. The OAuth2 standard requires the use of TLS.
 	//
@@ -80,9 +121,36 @@ type OAuthFlow struct {
 	// scope name and a short description for it. The map MAY be empty.
 	//
 	// 	*required*
-	Scopes     map[string]string `json:"scopes"`
-	Extensions `json:"-"`
-	Location   *Location `json:"-"`
+	Scopes *Scopes `json:"scopes"`
+}
+
+func (f *OAuthFlow) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return f.resolve(ptr)
+}
+
+func (f *OAuthFlow) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return f, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "scopes":
+		node = f.Scopes
+	default:
+		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
 }
 
 func (*OAuthFlow) Kind() Kind      { return KindOAuthFlow }
@@ -93,7 +161,8 @@ func (o *OAuthFlow) setLocation(loc Location) error {
 	if o == nil {
 		return nil
 	}
-	o.Location = &loc
+	o.Location = loc
+	o.Scopes.setLocation(loc.Append("scopes"))
 	return nil
 }
 

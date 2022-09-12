@@ -4,21 +4,52 @@ import (
 	"encoding/json"
 	"reflect"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
 type ObjMapEntry[T node] struct {
+	Location
 	Key    Text
 	Object T
 }
 
 // ObjMap is a map of OpenAPI Objects of type T
-type ObjMap[T node] []ObjMapEntry[T]
+type ObjMap[T node] struct {
+	Location
+	Items []ObjMapEntry[T]
+}
+
+func (*ObjMap[T]) Kind() Kind {
+	var t T
+	return t.Kind()
+}
+func (*ObjMap[T]) mapKind() Kind   { return KindUndefined }
+func (*ObjMap[T]) sliceKind() Kind { return KindUndefined }
+
+func (om *ObjMap[T]) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return om.resolve(ptr)
+}
+
+func (om *ObjMap[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return om, nil
+	}
+	tok, _ := ptr.NextToken()
+	v := om.Get(Text(tok))
+	if (any)(v) == nil {
+		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
+	}
+	return nil, nil
+}
 
 func (om ObjMap[T]) setLocation(loc Location) error {
-	for _, kv := range om {
+	for _, kv := range om.Items {
 		if err := kv.Object.setLocation(loc); err != nil {
 			return err
 		}
@@ -28,7 +59,7 @@ func (om ObjMap[T]) setLocation(loc Location) error {
 
 func (om *ObjMap[T]) Get(key Text) T {
 	var t T
-	for _, kv := range *om {
+	for _, kv := range om.Items {
 		if kv.Key == key {
 			t = kv.Object
 			break
@@ -38,13 +69,21 @@ func (om *ObjMap[T]) Get(key Text) T {
 }
 
 func (om *ObjMap[T]) Set(key Text, obj T) {
-	for i, kv := range *om {
+	for i, kv := range om.Items {
 		if kv.Key == key {
-			(*om)[i] = ObjMapEntry[T]{key, obj}
+			om.Items[i] = ObjMapEntry[T]{
+				Location: om.Location.Append(key.String()),
+				Key:      key,
+				Object:   obj,
+			}
 			return
 		}
 	}
-	*om = append(*om, ObjMapEntry[T]{key, obj})
+	om.Items = append(om.Items, ObjMapEntry[T]{
+		Location: om.Location.Append(key.String()),
+		Key:      key,
+		Object:   obj,
+	})
 }
 
 func (om *ObjMap[T]) UnmarshalJSON(data []byte) error {
@@ -65,7 +104,7 @@ func (om *ObjMap[T]) UnmarshalJSON(data []byte) error {
 		if err = t.UnmarshalJSON([]byte(value.Raw)); err != nil {
 			return false
 		}
-		m = append(m, ObjMapEntry[T]{Key: Text(key.String()), Object: pi})
+		m.Items = append(m.Items, ObjMapEntry[T]{Key: Text(key.String()), Object: pi})
 		return true
 	})
 	return err
@@ -75,7 +114,7 @@ func (om *ObjMap[T]) MarshalJSON() ([]byte, error) {
 	data := []byte("{}")
 	var err error
 	var j []byte
-	for _, entry := range *om {
+	for _, entry := range om.Items {
 		j, err = entry.Object.MarshalJSON()
 		if err != nil {
 			return nil, err
@@ -87,3 +126,5 @@ func (om *ObjMap[T]) MarshalJSON() ([]byte, error) {
 	}
 	return data, err
 }
+
+var _ (node) = (*ObjMap[*Server])(nil)

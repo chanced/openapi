@@ -6,6 +6,9 @@ package openapi
 // schema which is used to inform the consumer of the document of an alternative
 // schema based on the value associated with it.
 type Discriminator struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// The name of the property in the payload that will hold the discriminator
 	// value.
 	//
@@ -14,16 +17,13 @@ type Discriminator struct {
 	// An object to hold mappings between payload values and schema names or
 	// references.
 	Mapping map[string]string `json:"mapping,omitempty"`
-
-	Extensions `json:"-"`
-	Location   *Location `json:"-"`
 }
 
 func (d *Discriminator) setLocation(loc Location) error {
 	if d == nil {
 		return nil
 	}
-	d.Location = &loc
+	d.Location = loc
 	return nil
 }
 

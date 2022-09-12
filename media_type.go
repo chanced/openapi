@@ -1,17 +1,26 @@
 package openapi
 
-import "github.com/chanced/jsonx"
+import (
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/jsonx"
+)
 
-// ContentMap is a map containing descriptions of potential response payloads. The key is
+// ContentMap / MediaTypeMap is a map containing descriptions of potential response payloads. The key is
 // a media type or media type range and the value describes it. For
 // responses that match multiple keys, only the most specific key is
 // applicable. e.g. text/plain overrides text/*
-type ContentMap = ComponentMap[*MediaType]
-type MediaTypeMap = ComponentMap[*MediaType]
+type (
+	ContentMap   = ObjMap[*MediaType]
+	MediaTypeMap = ObjMap[*MediaType]
+)
 
-// MediaType  provides schema and examples for the media type identified by its key.
+// MediaType  provides schema and examples for the media type identified by its
+// key.
 type MediaType struct {
-	//  The schema defining the content of the request, response, or parameter.
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
+	// The schema defining the content of the request, response, or parameter.
 	Schema *Schema `json:"schema,omitempty"`
 	// Example of the media type. The example object SHOULD be in the correct
 	// format as specified by the media type. The example field is mutually
@@ -24,14 +33,45 @@ type MediaType struct {
 	// exclusive of the example field. Furthermore, if referencing a schema
 	// which contains an example, the examples value SHALL override the example
 	// provided by the schema.
-	Examples ExampleMap `json:"examples,omitempty"`
+	Examples *ExampleMap `json:"examples,omitempty"`
 	// A map between a property name and its encoding information. The key,
 	// being the property name, MUST exist in the schema as a property. The
 	// encoding object SHALL only apply to requestBody objects when the media
 	// type is multipart or application/x-www-form-urlencoded.
-	Encoding   EncodingMap `json:"encoding,omitempty"`
-	Extensions `json:"-"`
-	Location   *Location
+	Encoding *EncodingMap `json:"encoding,omitempty"`
+}
+
+func (mt *MediaType) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return mt.resolve(ptr)
+}
+
+func (mt *MediaType) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return mt, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "schema":
+		node = mt.Schema
+	case "examples":
+		node = mt.Examples
+	case "encoding":
+		node = mt.Encoding
+	default:
+		return nil, newErrNotResolvable(mt.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+
+	if node == nil {
+		return nil, newErrNotFound(mt.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
 }
 
 // MarshalJSON marshals mt into JSON
@@ -56,7 +96,7 @@ func (mt *MediaType) setLocation(loc Location) error {
 	if mt == nil {
 		return nil
 	}
-	mt.Location = &loc
+	mt.Location = loc
 	if err := mt.Schema.setLocation(loc.Append("schema")); err != nil {
 		return err
 	}

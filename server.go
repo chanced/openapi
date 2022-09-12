@@ -1,8 +1,10 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 type (
 	ServerSlice       = ComponentSlice[*Server]
-	ServerVariableMap = ComponentMap[*ServerVariable]
+	ServerVariableMap = ObjMap[*ServerVariable]
 )
 
 // Server represention of a Server.
@@ -17,21 +19,48 @@ type Server struct {
 	Description Text `json:"description,omitempty"`
 	// A map between a variable name and its value. The value is used for
 	// substitution in the server's URL template.
-	Variables  ServerVariableMap `json:"variables,omitempty"`
-	Location   *Location         `json:"-"`
+	Variables  *ServerVariableMap `json:"variables,omitempty"`
+	Location   `json:"-"`
 	Extensions `json:"-"`
+}
+
+func (s *Server) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return s.resolve(ptr)
+}
+
+func (s *Server) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return s, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	var node node
+	switch tok {
+	case "variables":
+		node = s.Variables
+	default:
+		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+	}
+	if nxt.IsRoot() {
+		return node, nil
+	}
+	if node == nil {
+		return nil, newErrNotFound(s.Location.AbsoluteLocation(), tok)
+	}
+	return node.resolve(nxt)
 }
 
 func (*Server) Kind() Kind      { return KindServer }
 func (*Server) mapKind() Kind   { return KindUndefined }
 func (*Server) sliceKind() Kind { return KindServerSlice }
 
-// setLocation implements node
 func (s *Server) setLocation(loc Location) error {
 	if s == nil {
 		return nil
 	}
-	s.Location = &loc
+	s.Location = loc
 	return s.Variables.setLocation(loc.Append("variables"))
 }
 
@@ -67,8 +96,23 @@ type ServerVariable struct {
 	// used for rich text representation.
 	Description Text `json:"description,omitempty"`
 
-	Location   *Location `json:"-"`
+	Location   `json:"-"`
 	Extensions `json:"-"`
+}
+
+func (sv *ServerVariable) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return sv.resolve(ptr)
+}
+
+func (sv *ServerVariable) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return sv, nil
+	}
+	tok, _ := ptr.NextToken()
+	return nil, newErrNotResolvable(sv.Location.AbsoluteLocation(), tok)
 }
 
 func (*ServerVariable) Kind() Kind      { return KindServerVariable }
@@ -76,7 +120,7 @@ func (*ServerVariable) mapKind() Kind   { return KindServerVariableMap }
 func (*ServerVariable) sliceKind() Kind { return KindUndefined }
 
 func (sv *ServerVariable) setLocation(loc Location) error {
-	sv.Location = &loc
+	sv.Location = loc
 	return nil
 }
 

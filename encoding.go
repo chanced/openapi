@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 // EncodingMap is a ComponentMap between a property name and its encoding information. The
 // key, being the property name, MUST exist in the schema as a property. The
 // encoding object SHALL only apply to requestBody objects when the media type
@@ -8,6 +10,9 @@ type EncodingMap = ComponentMap[*Encoding]
 
 // Encoding definition applied to a single schema property.
 type Encoding struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// The Content-Type for encoding a specific property. Default value depends
 	// on the property type:
 	//
@@ -22,7 +27,7 @@ type Encoding struct {
 	// example Content-Disposition. Content-Type is described separately and
 	// SHALL be ignored in this section. This property SHALL be ignored if the
 	// request body media type is not a multipart.
-	Headers HeaderMap `json:"headers,omitempty"`
+	Headers *HeaderMap `json:"headers,omitempty"`
 	// Describes how a specific property value will be serialized depending on
 	// its type. See Parameter Object for details on the style property. The
 	// behavior follows the same values as query parameters, including default
@@ -48,9 +53,30 @@ type Encoding struct {
 	// explicitly defined, then the value of contentType (implicit or explicit)
 	// SHALL be ignored.
 	AllowReserved *bool `json:"allowReserved,omitempty"`
+}
 
-	Extensions `json:"-"`
-	Location   *Location `json:"-"`
+func (e *Encoding) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+	err := ptr.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return e.resolve(ptr)
+}
+
+func (e *Encoding) resolve(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return e, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	switch nxt {
+	case "headers":
+		if e.Headers == nil {
+			return nil, newErrNotFound(e.Location.AbsoluteLocation(), tok)
+		}
+		return e.Headers.resolve(nxt)
+	default:
+		return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+	}
 }
 
 func (*Encoding) Kind() Kind      { return KindEncoding }
@@ -61,7 +87,7 @@ func (e *Encoding) setLocation(loc Location) error {
 	if e == nil {
 		return nil
 	}
-	e.Location = &loc
+	e.Location = loc
 	return e.Headers.setLocation(loc.Append("headers"))
 }
 
