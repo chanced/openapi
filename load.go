@@ -55,13 +55,14 @@ const (
 	SrcSchema
 )
 
-func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri.URI) (Src, []byte, error)) (*Document, error) {
+func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(context.Context, *uri.URI) (Src, []byte, error)) (*Document, error) {
 	if fn == nil {
 		panic("fn cannot be nil")
 	}
 	if documentURI == "" {
 		return nil, fmt.Errorf("documentURI cannot be empty")
 	}
+
 	var h http.Request
 	h.Context()
 	docURI, err := uri.Parse(documentURI)
@@ -105,8 +106,6 @@ func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node)
 			if u.Fragment == "" {
 				return n, nil
 			}
-			panic("not done")
-
 		}
 	}
 	panic("not done")

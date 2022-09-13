@@ -3,14 +3,23 @@ package openapi
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"path/filepath"
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/tidwall/gjson"
 )
+
+type Validator interface {
+	Validate(data interface{}) error
+}
+
+type Compiler interface {
+	AddResource(id string, r io.Reader) error
+	Compile(url string) Validator
+}
 
 //go:embed schema
 var schemaDir embed.FS
@@ -20,10 +29,19 @@ type internalSchemas struct {
 	openapi31    map[Kind]*jsonschema.Schema
 }
 
-var schemas internalSchemas
+func setupCompiler(compiler Compiler) (Compiler, error) {
+	if compiler == nil {
+		return nil, fmt.Errorf("error: compiler is nil")
+	}
+	err := addCompilerResources(compiler)
+	if err != nil {
+		return nil, err
+	}
+	return compiler, nil
+}
 
 // AddCompilerResources adds the schemas for OpenAPI 3.1 & JSON Schema 2020-12 to compiler
-func AddCompilerResources(compiler *jsonschema.Compiler) error {
+func addCompilerResources(compiler Compiler) error {
 	return fs.WalkDir(schemaDir, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -50,16 +68,15 @@ func AddCompilerResources(compiler *jsonschema.Compiler) error {
 	})
 }
 
-// CompileSchemas compiles the schemas for OpenAPI3.1 & JSON Schema 2020-12
-// used to validate OpenAPI documents & schemas
-func CompileSchemas(compiler *jsonschema.Compiler) error {
+func compileSchemas(compiler *jsonschema.Compiler) (internalSchemas, error) {
 	var err error
+	schemas := internalSchemas{}
 	schemas.schema202012, err = compiler.Compile("https://json-schema.org/draft/2020-12/schema")
 	if err != nil {
-		return err
+		return schemas, err
 	}
 	schemas.openapi31, err = compileOpenAPI31Schemas(compiler)
-	return err
+	return schemas, err
 }
 
 func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschema.Schema, error) {
@@ -191,23 +208,4 @@ func compileOpenAPI31Schemas(compiler *jsonschema.Compiler) (map[Kind]*jsonschem
 		KindReference:      reference,
 	}
 	return o, nil
-}
-
-func init() {
-	log.SetFlags(0)
-	compiler := jsonschema.NewCompiler()
-	compiler.Draft = jsonschema.Draft2020
-	err := AddCompilerResources(compiler)
-	if err != nil {
-		log.Fatalf("error loading schemas: %v", err)
-	}
-	err = CompileSchemas(compiler)
-	if err != nil {
-		log.Fatalf("error compiling schemas: %v", err)
-	}
-}
-
-type internalSchema struct {
-	schemas map[string]string
-	id      string
 }

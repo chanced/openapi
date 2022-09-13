@@ -2,24 +2,21 @@ package openapi_test
 
 import (
 	"embed"
-	"io/fs"
 	"testing"
-
-	"github.com/chanced/openapi"
 )
 
 //go:embed testdata
 var testdata embed.FS
 
 func TestValidate(t *testing.T) {
-	ps, err := fs.ReadFile(testdata, "testdata/petstore.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = openapi.Validate(ps)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ps, err := fs.ReadFile(testdata, "testdata/petstore.yaml")
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// err = openapi.Validate(ps)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 }
 
 // import (
