@@ -17,18 +17,19 @@ type Scope struct {
 	Value    Text `json:"-"`
 }
 
-func (*Scope) Kind() Kind      { return KindScope }
-func (*Scope) mapKind() Kind   { return KindUndefined }
-func (*Scope) sliceKind() Kind { return KindUndefined }
+func (*Scope) Anchors() (*Anchors, error) { return nil, nil }
+func (*Scope) Kind() Kind                 { return KindScope }
+func (*Scope) mapKind() Kind              { return KindUndefined }
+func (*Scope) sliceKind() Kind            { return KindUndefined }
 
-func (s *Scope) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (s *Scope) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return s.resolve(ptr)
+	return s.resolveNodeByPointer(ptr)
 }
 
-func (s *Scope) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (s *Scope) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return s, nil
 	}
@@ -96,14 +97,14 @@ func (*Scopes) Kind() Kind      { return KindScopes }
 func (*Scopes) mapKind() Kind   { return KindUndefined }
 func (*Scopes) sliceKind() Kind { return KindUndefined }
 
-func (s *Scopes) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (s *Scopes) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return s.resolve(ptr)
+	return s.resolveNodeByPointer(ptr)
 }
 
-func (s *Scopes) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return s, nil
 	}
@@ -114,7 +115,7 @@ func (s *Scopes) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	tk := Text(tok)
 	for _, v := range s.Items {
 		if v.Key == tk {
-			return v.Resolve(ptr)
+			return v.ResolveNodeByPointer(ptr)
 		}
 	}
 	return nil, newErrNotFound(s.AbsoluteLocation(), tok)

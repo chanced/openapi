@@ -27,14 +27,28 @@ func (*SchemaMap) Kind() Kind      { return KindSchemaMap }
 func (*SchemaMap) sliceKind() Kind { return KindUndefined }
 func (*SchemaMap) mapKind() Kind   { return KindUndefined }
 
-func (sm *SchemaMap) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (sm *SchemaMap) Anchors() (*Anchors, error) {
+	if sm == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	for _, e := range sm.Items {
+		if anchors, err = e.Schema.Anchors(); err != nil {
+			return nil, err
+		}
+	}
+	return anchors, nil
+}
+
+func (sm *SchemaMap) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return sm.resolve(ptr)
+	return sm.resolveNodeByPointer(ptr)
 }
 
-func (sm *SchemaMap) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (sm *SchemaMap) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return sm, nil
 	}
@@ -43,7 +57,7 @@ func (sm *SchemaMap) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	if v == nil {
 		return nil, newErrNotFound(sm.Location.AbsoluteLocation(), tok)
 	}
-	return v.Resolve(ptr)
+	return v.resolveNodeByPointer(ptr)
 }
 
 func (sm *SchemaMap) Set(key Text, s *Schema) {

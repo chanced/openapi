@@ -12,8 +12,8 @@ import (
 
 type ObjMapEntry[T node] struct {
 	Location
-	Key    Text
-	Object T
+	Key   Text
+	Value T
 }
 
 // ObjMap is a map of OpenAPI Objects of type T
@@ -29,14 +29,14 @@ func (*ObjMap[T]) Kind() Kind {
 func (*ObjMap[T]) mapKind() Kind   { return KindUndefined }
 func (*ObjMap[T]) sliceKind() Kind { return KindUndefined }
 
-func (om *ObjMap[T]) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return om.resolve(ptr)
+	return om.resolveNodeByPointer(ptr)
 }
 
-func (om *ObjMap[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return om, nil
 	}
@@ -50,7 +50,7 @@ func (om *ObjMap[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
 
 func (om ObjMap[T]) setLocation(loc Location) error {
 	for _, kv := range om.Items {
-		if err := kv.Object.setLocation(loc); err != nil {
+		if err := kv.Value.setLocation(loc); err != nil {
 			return err
 		}
 	}
@@ -61,11 +61,11 @@ func (om *ObjMap[T]) Get(key Text) T {
 	var t T
 	for _, kv := range om.Items {
 		if kv.Key == key {
-			t = kv.Object
+			t = kv.Value
 			break
 		}
 	}
-	return nil
+	return t
 }
 
 func (om *ObjMap[T]) Set(key Text, obj T) {
@@ -74,7 +74,7 @@ func (om *ObjMap[T]) Set(key Text, obj T) {
 			om.Items[i] = ObjMapEntry[T]{
 				Location: om.Location.Append(key.String()),
 				Key:      key,
-				Object:   obj,
+				Value:    obj,
 			}
 			return
 		}
@@ -82,7 +82,7 @@ func (om *ObjMap[T]) Set(key Text, obj T) {
 	om.Items = append(om.Items, ObjMapEntry[T]{
 		Location: om.Location.Append(key.String()),
 		Key:      key,
-		Object:   obj,
+		Value:    obj,
 	})
 }
 
@@ -104,7 +104,7 @@ func (om *ObjMap[T]) UnmarshalJSON(data []byte) error {
 		if err = t.UnmarshalJSON([]byte(value.Raw)); err != nil {
 			return false
 		}
-		m.Items = append(m.Items, ObjMapEntry[T]{Key: Text(key.String()), Object: pi})
+		m.Items = append(m.Items, ObjMapEntry[T]{Key: Text(key.String()), Value: pi})
 		return true
 	})
 	return err
@@ -115,7 +115,7 @@ func (om *ObjMap[T]) MarshalJSON() ([]byte, error) {
 	var err error
 	var j []byte
 	for _, entry := range om.Items {
-		j, err = entry.Object.MarshalJSON()
+		j, err = entry.Value.MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
@@ -125,6 +125,22 @@ func (om *ObjMap[T]) MarshalJSON() ([]byte, error) {
 		}
 	}
 	return data, err
+}
+
+func (om *ObjMap[T]) Anchors() (*Anchors, error) {
+	if om == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	for _, e := range om.Items {
+		anchors, err = anchors.merge(e.Value.Anchors())
+		if err != nil {
+			return anchors, err
+		}
+	}
+	//∆
+	return anchors, nil
 }
 
 var _ (node) = (*ObjMap[*Server])(nil)

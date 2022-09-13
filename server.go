@@ -24,14 +24,14 @@ type Server struct {
 	Extensions `json:"-"`
 }
 
-func (s *Server) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (s *Server) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return s.resolve(ptr)
+	return s.resolveNodeByPointer(ptr)
 }
 
-func (s *Server) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (s *Server) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return s, nil
 	}
@@ -41,7 +41,7 @@ func (s *Server) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if s.Variables == nil {
 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
-		return s.Variables.resolve(nxt)
+		return s.Variables.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
 	}
@@ -50,6 +50,8 @@ func (s *Server) resolve(ptr jsonpointer.Pointer) (Node, error) {
 func (*Server) Kind() Kind      { return KindServer }
 func (*Server) mapKind() Kind   { return KindUndefined }
 func (*Server) sliceKind() Kind { return KindServerSlice }
+
+func (*Server) Anchors() (*Anchors, error) { return nil, nil }
 
 func (s *Server) setLocation(loc Location) error {
 	if s == nil {
@@ -95,14 +97,14 @@ type ServerVariable struct {
 	Extensions `json:"-"`
 }
 
-func (sv *ServerVariable) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (sv *ServerVariable) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return sv.resolve(ptr)
+	return sv.resolveNodeByPointer(ptr)
 }
 
-func (sv *ServerVariable) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (sv *ServerVariable) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return sv, nil
 	}
@@ -132,6 +134,10 @@ func (sv *ServerVariable) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*sv = ServerVariable(v)
 	return err
+}
+
+func (sv *ServerVariable) Anchors() (*Anchors, error) {
+	return nil, nil
 }
 
 var (

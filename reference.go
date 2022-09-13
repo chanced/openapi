@@ -39,14 +39,16 @@ type Reference struct {
 	Location `json:"-"`
 }
 
-func (r *Reference) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (r *Reference) Anchors() (*Anchors, error) { return nil, nil }
+
+func (r *Reference) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return r.resolve(ptr)
+	return r.resolveNodeByPointer(ptr)
 }
 
-func (r *Reference) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return r, nil
 	}

@@ -66,16 +66,46 @@ type Operation struct {
 	Servers *ServerSlice `json:"servers,omitempty"`
 }
 
-// Resolves a Node by a json pointer
-func (o *Operation) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (o *Operation) Anchors() (*Anchors, error) {
+	if o == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(o.ExternalDocs.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(o.Parameters.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(o.RequestBody.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(o.Responses.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(o.Callbacks.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(o.Security.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(o.Servers.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+// ResolveNodeByPointers a Node by a json pointer
+func (o *Operation) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	err := ptr.Validate()
 	if err != nil {
 		return nil, err
 	}
-	return o.resolve(ptr)
+	return o.resolveNodeByPointer(ptr)
 }
 
-func (o *Operation) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (o *Operation) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return o, nil
 	}
@@ -85,37 +115,37 @@ func (o *Operation) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if o.ExternalDocs == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.ExternalDocs.resolve(nxt)
+		return o.ExternalDocs.resolveNodeByPointer(nxt)
 	case "parameters":
 		if o.Parameters == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.Parameters.resolve(nxt)
+		return o.Parameters.resolveNodeByPointer(nxt)
 	case "requestBody":
 		if o.RequestBody == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.RequestBody.resolve(nxt)
+		return o.RequestBody.resolveNodeByPointer(nxt)
 	case "responses":
 		if o.Responses == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.Responses.resolve(nxt)
+		return o.Responses.resolveNodeByPointer(nxt)
 	case "callbacks":
 		if o.Callbacks == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.Callbacks.resolve(nxt)
+		return o.Callbacks.resolveNodeByPointer(nxt)
 	case "security":
 		if o.Security == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.Security.resolve(nxt)
+		return o.Security.resolveNodeByPointer(nxt)
 	case "servers":
 		if o.Servers == nil {
 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
 		}
-		return o.Servers.resolve(nxt)
+		return o.Servers.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(o.Location.AbsoluteLocation(), tok)
 	}

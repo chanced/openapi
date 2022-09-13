@@ -72,3 +72,21 @@ func (d *Document) UnmarshalJSON(data []byte) error {
 	*d = Document(v)
 	return err
 }
+
+func (d *Document) Anchors() (*Anchors, error) {
+	if d == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(d.Paths.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(d.Components.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(d.Webhooks.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}

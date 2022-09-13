@@ -21,14 +21,21 @@ type RequestBody struct {
 	Required bool `json:"required,omitempty"`
 }
 
-func (rb *RequestBody) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (rb *RequestBody) Anchors() (*Anchors, error) {
+	if rb == nil {
+		return nil, nil
+	}
+	return rb.Content.Anchors()
+}
+
+func (rb *RequestBody) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return rb.resolve(ptr)
+	return rb.resolveNodeByPointer(ptr)
 }
 
-func (rb *RequestBody) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (rb *RequestBody) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return rb, nil
 	}
@@ -38,7 +45,7 @@ func (rb *RequestBody) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if rb.Content == nil {
 			return nil, newErrNotFound(rb.AbsoluteLocation(), tok)
 		}
-		return rb.Content.resolve(nxt)
+		return rb.Content.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(rb.Location.AbsoluteLocation(), tok)
 	}

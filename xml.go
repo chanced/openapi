@@ -33,14 +33,16 @@ type XML struct {
 	Wrapped bool `json:"wrapped,omitempty"`
 }
 
-func (x *XML) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (*XML) Anchors() (*Anchors, error) { return nil, nil }
+
+func (x *XML) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return x.resolve(ptr)
+	return x.resolveNodeByPointer(ptr)
 }
 
-func (x *XML) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (x *XML) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return x, nil
 	}

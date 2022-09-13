@@ -18,15 +18,15 @@ func (ComponentSlice[T]) Kind() Kind {
 	return t.Kind()
 }
 
-func (cs ComponentSlice[T]) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (cs ComponentSlice[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
 
-	return cs.resolve(ptr)
+	return cs.resolveNodeByPointer(ptr)
 }
 
-func (cs *ComponentSlice[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (cs *ComponentSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return cs, nil
 	}
@@ -38,7 +38,7 @@ func (cs *ComponentSlice[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	if idx < 0 || idx >= len(cs.Items) {
 		return nil, newErrNotFound(cs.Location.AbsoluteLocation(), tok)
 	}
-	return cs.Items[idx].resolve(nxt)
+	return cs.Items[idx].resolveNodeByPointer(nxt)
 }
 
 func (cs ComponentSlice[T]) MarshalJSON() ([]byte, error) {
@@ -71,6 +71,20 @@ func (cs *ComponentSlice[T]) setLocation(loc Location) error {
 		}
 	}
 	return nil
+}
+
+func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
+	if cs == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	for _, item := range cs.Items {
+		if anchors, err = item.Anchors(); err != nil {
+			return nil, err
+		}
+	}
+	return anchors, nil
 }
 
 var _ node = (*ComponentSlice[*Server])(nil)

@@ -201,14 +201,32 @@ type Parameter struct {
 	Content *ContentMap `json:"content,omitempty"`
 }
 
-func (p *Parameter) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (p *Parameter) Anchors() (*Anchors, error) {
+	if p == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(p.Schema.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(p.Content.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(p.Examples.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+func (p *Parameter) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return p.resolve(ptr)
+	return p.resolveNodeByPointer(ptr)
 }
 
-func (p *Parameter) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (p *Parameter) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return p, nil
 	}
@@ -218,17 +236,17 @@ func (p *Parameter) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if p.Schema == nil {
 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
 		}
-		return p.Schema.resolve(nxt)
+		return p.Schema.resolveNodeByPointer(nxt)
 	case "content":
 		if p.Content == nil {
 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
 		}
-		return p.Content.resolve(nxt)
+		return p.Content.resolveNodeByPointer(nxt)
 	case "examples":
 		if p.Examples == nil {
 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
 		}
-		return p.Examples.resolve(nxt)
+		return p.Examples.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
 	}

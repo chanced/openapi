@@ -25,14 +25,16 @@ type Tag struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
 }
 
-func (t *Tag) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (*Tag) Anchors() (*Anchors, error) { return nil, nil }
+
+func (t *Tag) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return t.resolve(ptr)
+	return t.resolveNodeByPointer(ptr)
 }
 
-func (t *Tag) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return t, nil
 	}
@@ -45,7 +47,7 @@ func (t *Tag) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if t.ExternalDocs == nil {
 			return nil, newErrNotFound(t.Location.AbsoluteLocation(), tok)
 		}
-		return t.ExternalDocs.resolve(nxt)
+		return t.ExternalDocs.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(t.Location.AbsoluteLocation(), tok)
 	}

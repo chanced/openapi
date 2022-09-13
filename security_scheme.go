@@ -75,14 +75,22 @@ type SecurityScheme struct {
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
 }
 
-func (ss *SecurityScheme) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (ss *SecurityScheme) Anchors() (*Anchors, error) {
+	if ss == nil {
+		return nil, nil
+	}
+
+	return ss.Flows.Anchors()
+}
+
+func (ss *SecurityScheme) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return ss.resolve(ptr)
+	return ss.resolveNodeByPointer(ptr)
 }
 
-func (ss *SecurityScheme) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return ss, nil
 	}
@@ -95,7 +103,7 @@ func (ss *SecurityScheme) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if ss.Flows == nil {
 			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
 		}
-		return ss.Flows.resolve(nxt)
+		return ss.Flows.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
 	}

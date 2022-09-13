@@ -4,7 +4,7 @@ import "github.com/chanced/jsonpointer"
 
 type Node interface {
 	Kind() Kind
-	// Resolves a Node by a jsonpointer. It validates the pointer and then
+	// ResolveNodeByPointers a Node by a jsonpointer. It validates the pointer and then
 	// attempts to resolve the Node.
 	//
 	// # Errors
@@ -19,7 +19,9 @@ type Node interface {
 	//
 	// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
 	// and does not start with a slash
-	Resolve(ptr jsonpointer.Pointer) (Node, error)
+	ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
+
+	Anchors() (*Anchors, error)
 }
 
 type node interface {
@@ -31,12 +33,10 @@ type node interface {
 
 	setLocation(loc Location) error
 	// init(ctx context.Context, resolver *resolver) error
-	// resolve(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error)
+	// resolveNodeByPointer(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error)
 	mapKind() Kind
 	sliceKind() Kind
 
-	resolve(ptr jsonpointer.Pointer) (Node, error)
+	resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	location() Location
 }
-
-type componentNodes map[Kind]map[string]node

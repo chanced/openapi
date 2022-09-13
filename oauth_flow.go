@@ -18,14 +18,35 @@ type OAuthFlows struct {
 	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty"`
 }
 
-func (f *OAuthFlows) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (f *OAuthFlows) Anchors() (*Anchors, error) {
+	if f == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(f.Implicit.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(f.Password.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(f.ClientCredentials.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(f.AuthorizationCode.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+func (f *OAuthFlows) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return f.resolve(ptr)
+	return f.resolveNodeByPointer(ptr)
 }
 
-func (f *OAuthFlows) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (f *OAuthFlows) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return f, nil
 	}
@@ -35,22 +56,22 @@ func (f *OAuthFlows) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if f.Implicit == nil {
 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
-		return f.Implicit.resolve(nxt)
+		return f.Implicit.resolveNodeByPointer(nxt)
 	case "password":
 		if f.Password == nil {
 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
-		return f.Password.resolve(nxt)
+		return f.Password.resolveNodeByPointer(nxt)
 	case "clientCredentials":
 		if f.ClientCredentials == nil {
 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
-		return f.ClientCredentials.resolve(nxt)
+		return f.ClientCredentials.resolveNodeByPointer(nxt)
 	case "authorizationCode":
 		if f.AuthorizationCode == nil {
 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
-		return f.AuthorizationCode.resolve(nxt)
+		return f.AuthorizationCode.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
 	}
@@ -127,14 +148,21 @@ type OAuthFlow struct {
 	Scopes *Scopes `json:"scopes"`
 }
 
-func (f *OAuthFlow) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (f *OAuthFlow) Anchors() (*Anchors, error) {
+	if f == nil {
+		return nil, nil
+	}
+	return f.Scopes.Anchors()
+}
+
+func (f *OAuthFlow) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return f.resolve(ptr)
+	return f.resolveNodeByPointer(ptr)
 }
 
-func (f *OAuthFlow) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (f *OAuthFlow) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return f, nil
 	}
@@ -144,7 +172,7 @@ func (f *OAuthFlow) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if f.Scopes == nil {
 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
-		return f.Scopes.resolve(nxt)
+		return f.Scopes.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
 	}

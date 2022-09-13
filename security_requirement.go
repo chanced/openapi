@@ -19,6 +19,8 @@ type SecurityRequirementItem struct {
 	Value []Text
 }
 
+func (sri *SecurityRequirementItem) Anchors() (*Anchors, error) { return nil, nil }
+
 func (sri *SecurityRequirementItem) setLocation(loc Location) error {
 	sri.Location = loc
 	return nil
@@ -28,14 +30,14 @@ func (*SecurityRequirementItem) Kind() Kind      { return KindSecurityRequiremen
 func (*SecurityRequirementItem) mapKind() Kind   { return KindSecurityRequirement }
 func (*SecurityRequirementItem) sliceKind() Kind { return KindUndefined }
 
-func (sri *SecurityRequirementItem) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (sri *SecurityRequirementItem) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return sri.resolve(ptr)
+	return sri.resolveNodeByPointer(ptr)
 }
 
-func (sri *SecurityRequirementItem) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (sri *SecurityRequirementItem) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return sri, nil
 	}

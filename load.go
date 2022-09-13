@@ -5,57 +5,57 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/uri"
 )
 
 type resolver struct {
 	primaryResource []byte
 	resources       map[string][]byte
-	fn              func(context.Context, *uri.URI) ([]byte, error)
+	fn              func(context.Context, *uri.URI) (Src, []byte, error)
 	uri             *uri.URI
 	document        *Document
 	// id rather have map[string]*Callback and so on, but that causes a circular dependency
 	// and I have no idea transcodefmt
-	components componentNodes
+	components map[Kind]map[string]node
 	nodes      map[string]node
 }
 
-func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node) (node, error) {
-	if u.Fragment != "" {
-		nu := *u
-		nu.Fragment = ""
-		if n, ok := r.nodes[nu.String()]; ok {
-			if u.Fragment == "" {
-				return n, nil
-			}
-			panic("not done")
-
-		}
-
-	}
-	panic("not done")
-}
-
-func resolveComponent[T node](ctx context.Context, c *Component[T], r resolver) error {
-	if c.Reference == nil || (any)(c.Object) != nil {
-		return nil
-	}
-	if c.Reference.Ref == nil || c.Reference.Ref.String() == "" {
-		return fmt.Errorf("%w: %s", ErrEmptyRef, c.Reference.Location)
-	}
-	t, err := r.resolve(ctx, c.Object.Kind(), c.Reference.Ref, c.Object)
-	if err != nil {
-		return err
-	}
-	c.Object = (any)(t).(T)
-	return nil
-}
-
-// NewLoader returns a new Loader where documentURI is the URI of root OpenAPI document
-// to load.
+// Src identifies source data's shape (e.g. JSON Schema or a second
+// OpenAPI Document).
 //
-// NewLoader panics if fn is nil
-func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri.URI) ([]byte, error)) (*Document, error) {
+// Load will never ask for resolution of a URI with fragment. This only pertains
+// to the data at the absolute, non fragmented URI.
+//
+// This is incredibly useful when loading data from a source as the result of a
+// a reference (i.e. $ref, $dynamicRef) with a fragment (e.g.
+// example.json#/$defs/foo). In this scenario, we know what $defs/foo is
+// expected to be, but we may not know what example.json is yet, if ever.
+//
+// This hint especially helps aleviate scenarios where we resolve
+// "example.json#/foo/bar" and then later encounter a $ref to
+// "example.json#/foo". Without Src being defined, we would have to extract out
+// "example.json#/foo/bar" from the raw json/yaml, and then reparse "#/foo" when
+// we hit the second $ref. As a result, there would then exist two references to
+// the same object within the graph.
+//
+// Finally, this is necessary for anchors (i.e. $anchor, $dynamicAnchor,
+// $recursiveAnchor) above referenced external resources. For example, if we
+// have a reference to "example.json#/foo/bar" which has an anchor "#baz", that
+// is located at the root of "example.json", it will not be found and an error
+// will be returned upon parsing.
+//
+// Src is not required and can be left as SrcKindUnspecified if anchors are not
+// a factor and duplicate data is not a concern. It is encouraged though.
+type Src uint8
+
+const (
+	SrcUnspecified Src = iota
+	SrcOpenAPIDocument
+	SrcSchema
+)
+
+func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri.URI) (Src, []byte, error)) (*Document, error) {
 	if fn == nil {
 		panic("fn cannot be nil")
 	}
@@ -70,10 +70,13 @@ func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri
 	}
 
 	if docURI.Fragment != "" {
-		return nil, fmt.Errorf("documentURI must not contain a fragment: received \"%s\"", docURI)
+		return nil, fmt.Errorf("documentURI may not contain a fragment: received \"%s\"", docURI)
 	}
 
-	data, err := fn(ctx, docURI)
+	src, data, err := fn(ctx, docURI)
+
+	_ = src
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI Document: %w", err)
 	}
@@ -92,4 +95,44 @@ func Load(ctx context.Context, documentURI string, fn func(context.Context, *uri
 	_ = loader
 	panic("not done")
 	// return loader, nil
+}
+
+func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node) (node, error) {
+	if u.Fragment != "" {
+		nu := *u
+		nu.Fragment = ""
+		if n, ok := r.nodes[nu.String()]; ok {
+			if u.Fragment == "" {
+				return n, nil
+			}
+			panic("not done")
+
+		}
+	}
+	panic("not done")
+}
+
+func (r *resolver) findTopMostNode(u *uri.URI) (node, error) {
+	if u.Fragment != "" {
+		// see if its a jsonpointer first
+		ptr, err := jsonpointer.Parse(u.Fragment)
+		_ = ptr
+		if err != nil {
+			// not a jsonpointer, so it might be an anchor
+			// check to see if the top-level schema exists first
+			c := *u
+			c.Fragment = ""
+			c.RawFragment = ""
+
+			n, ok := r.nodes[c.String()]
+			if ok {
+				// if it isn't a schema, then we can't resolve it
+				if n.Kind() != KindSchema {
+					return nil, fmt.Errorf("error: the reference URI fragment contains an anchor %q but the top-level Node is not a Schema", u.Fragment)
+				}
+			}
+			return nil, fmt.Errorf("failed to find node with id \"%s\"", u.Fragment)
+		}
+	}
+	panic("not done")
 }

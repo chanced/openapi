@@ -55,15 +55,22 @@ type Encoding struct {
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 }
 
-func (e *Encoding) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (e *Encoding) Anchors() (*Anchors, error) {
+	if e == nil {
+		return nil, nil
+	}
+	return e.Headers.Anchors()
+}
+
+func (e *Encoding) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	err := ptr.Validate()
 	if err != nil {
 		return nil, err
 	}
-	return e.resolve(ptr)
+	return e.resolveNodeByPointer(ptr)
 }
 
-func (e *Encoding) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return e, nil
 	}
@@ -73,7 +80,7 @@ func (e *Encoding) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if e.Headers == nil {
 			return nil, newErrNotFound(e.Location.AbsoluteLocation(), tok)
 		}
-		return e.Headers.resolve(nxt)
+		return e.Headers.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
 	}

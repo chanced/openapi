@@ -30,6 +30,46 @@ type Components struct {
 	PathItems       *PathItemMap       `json:"pathItems,omitempty"`
 }
 
+func (c *Components) Anchors() (*Anchors, error) {
+	if c == nil {
+		return nil, nil
+	}
+	var err error
+	var anchors *Anchors
+	if anchors, err = anchors.merge(c.Schemas.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.Responses.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.Parameters.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.Examples.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.RequestBodies.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.Headers.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.SecuritySchemes.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.Links.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.Callbacks.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(c.PathItems.Anchors()); err != nil {
+		return nil, err
+	}
+
+	return anchors, nil
+}
+
 func (c *Components) setLocation(loc Location) error {
 	if c == nil {
 		return nil

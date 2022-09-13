@@ -44,14 +44,14 @@ func (c *Component[T]) location() Location {
 	return c.Object.location()
 }
 
-func (c *Component[T]) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return c.resolve(ptr)
+	return c.resolveNodeByPointer(ptr)
 }
 
-func (c *Component[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return c, nil
 	}
@@ -65,7 +65,7 @@ func (c *Component[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	default:
 		// TODO: this may need to change. Not sure when I need to perform these
 		// resolutions just yet. If before population, Object may be nil at this call.
-		return c.Object.resolve(nxt)
+		return c.Object.resolveNodeByPointer(nxt)
 	}
 }
 
@@ -120,6 +120,13 @@ func (c *Component[T]) setLocation(loc Location) error {
 		return c.Object.setLocation(loc)
 	}
 	return nil
+}
+
+func (c *Component[T]) Anchors() (*Anchors, error) {
+	if c.Reference != nil {
+		return nil, nil
+	}
+	return c.Object.Anchors()
 }
 
 var _ node = (*Component[*Server])(nil)

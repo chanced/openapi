@@ -11,7 +11,7 @@ func TestReference(t *testing.T) {
 	// 	Ref: r,
 	// }
 	// ran := false
-	// v.ResolveCallback(func(ref string) (*openapi.Callback, error) {
+	// v.ResolveNodeByPointerCallback(func(ref string) (*openapi.Callback, error) {
 	// 	ran = true
 	// 	assert.Equal(r, ref)
 	// 	return &openapi.Callback{}, nil

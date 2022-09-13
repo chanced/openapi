@@ -20,7 +20,9 @@ func (*ExternalDocs) Kind() Kind      { return KindExternalDocs }
 func (*ExternalDocs) mapKind() Kind   { return KindUndefined }
 func (*ExternalDocs) sliceKind() Kind { return KindUndefined }
 
-// Resolves a Node by a jsonpointer. It validates the pointer and then
+func (*ExternalDocs) Anchors() (*Anchors, error) { return nil, nil }
+
+// ResolveNodeByPointers a Node by a jsonpointer. It validates the pointer and then
 // attempts to resolve the Node.
 //
 // # Errors
@@ -35,15 +37,15 @@ func (*ExternalDocs) sliceKind() Kind { return KindUndefined }
 //
 // - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
 // and does not start with a slash
-func (ed *ExternalDocs) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (ed *ExternalDocs) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	err := ptr.Validate()
 	if err != nil {
 		return nil, err
 	}
-	return ed.resolve(ptr)
+	return ed.resolveNodeByPointer(ptr)
 }
 
-func (ed *ExternalDocs) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (ed *ExternalDocs) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	tok, _ := ptr.NextToken()
 	if !ptr.IsRoot() {
 		return nil, newErrNotResolvable(ed.Location.AbsoluteLocation(), tok)

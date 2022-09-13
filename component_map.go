@@ -60,14 +60,14 @@ func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func (cm ComponentMap[T]) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return cm.resolve(ptr)
+	return cm.resolveNodeByPointer(ptr)
 }
 
-func (c *ComponentMap[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return c, nil
 	}
@@ -89,7 +89,7 @@ func (c *ComponentMap[T]) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	if n == nil {
 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
 	}
-	return n.resolve(nxt)
+	return n.resolveNodeByPointer(nxt)
 }
 
 // MarshalJSON marshals JSON
@@ -163,13 +163,28 @@ func (cm *ComponentMap[T]) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, cm)
 }
 
-func (cm ComponentMap[T]) setLocation(loc Location) error {
+func (cm *ComponentMap[T]) setLocation(loc Location) error {
 	for _, kv := range cm.Items {
 		if err := kv.Component.setLocation(loc); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (cm *ComponentMap[T]) Anchors() (*Anchors, error) {
+	if cm == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+
+	for _, kv := range cm.Items {
+		if anchors, err = kv.Component.Anchors(); err != nil {
+			return nil, err
+		}
+	}
+	return anchors, nil
 }
 
 var _ node = (*ComponentMap[*Server])(nil)

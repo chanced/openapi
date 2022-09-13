@@ -12,17 +12,31 @@ type SchemaSlice struct {
 	Items []*Schema
 }
 
+func (ss *SchemaSlice) Anchors() (*Anchors, error) {
+	if ss == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	for _, s := range ss.Items {
+		if anchors, err = anchors.merge(s.Anchors()); err != nil {
+			return nil, err
+		}
+	}
+	return anchors, nil
+}
+
 func (*SchemaSlice) Kind() Kind { return KindSchemaSlice }
 
-func (ss *SchemaSlice) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (ss *SchemaSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
 
-	return ss.resolve(ptr)
+	return ss.resolveNodeByPointer(ptr)
 }
 
-func (ss *SchemaSlice) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return ss, nil
 	}
@@ -37,7 +51,7 @@ func (ss *SchemaSlice) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	if idx >= len(ss.Items) {
 		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
 	}
-	return ss.Items[idx].resolve(nxt)
+	return ss.Items[idx].resolveNodeByPointer(nxt)
 }
 
 func (ss SchemaSlice) MarshalJSON() ([]byte, error) {

@@ -5,12 +5,32 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/uri"
 )
 
 // LinkMap is a Map of either LinkMap or References to LinkMap
 type (
 	LinkMap = ComponentMap[*Link]
 )
+
+type OperationRef struct {
+	Location
+	Ref       *uri.URI
+	Operation *Operation
+}
+
+func (or OperationRef) MarshalJSON() ([]byte, error) {
+	return json.Marshal(or.Ref)
+}
+
+func (or *OperationRef) UnmarshalJSON(data []byte) error {
+	var uri uri.URI
+	if err := json.Unmarshal(data, &uri); err != nil {
+		return err
+	}
+	or.Ref = &uri
+	return nil
+}
 
 // Link represents a possible design-time link for a response. The presence of a
 // link does not guarantee the caller's ability to successfully invoke it,
@@ -32,7 +52,7 @@ type Link struct {
 	// Operation Object. Relative operationRef values MAY be used to locate an
 	// existing Operation Object in the OpenAPI definition. See the rules for
 	// resolving Relative References.
-	OperationRef Text `json:"operationRef,omitempty"`
+	OperationRef *OperationRef `json:"operationRef,omitempty"`
 	// The name of an existing, resolvable OAS operation, as defined with a
 	// unique operationId. This field is mutually exclusive of the operationRef
 	// field.
@@ -52,14 +72,16 @@ type Link struct {
 	Description Text `json:"description,omitempty"`
 }
 
-func (l *Link) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (l *Link) Anchors() (*Anchors, error) { return nil, nil }
+
+func (l *Link) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return l.resolve(ptr)
+	return l.resolveNodeByPointer(ptr)
 }
 
-func (l *Link) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (l *Link) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return l, nil
 	}
@@ -102,6 +124,9 @@ func (l *Link) setLocation(loc Location) error {
 		return nil
 	}
 	l.Location = loc
+	if l.OperationRef != nil {
+		l.OperationRef.Location = loc.Append("operationRef")
+	}
 	return nil
 }
 

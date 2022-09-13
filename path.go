@@ -30,14 +30,21 @@ type Paths struct {
 	Items PathItemObjs `json:"-"`
 }
 
-func (p *Paths) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (p *Paths) Anchors() (*Anchors, error) {
+	if p == nil {
+		return nil, nil
+	}
+	return p.Items.Anchors()
+}
+
+func (p *Paths) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return p.resolve(ptr)
+	return p.resolveNodeByPointer(ptr)
 }
 
-func (p *Paths) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (p *Paths) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return p, nil
 	}
@@ -46,7 +53,7 @@ func (p *Paths) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	if v == nil {
 		return nil, newErrNotFound(p.Location.AbsoluteLocation(), tok)
 	}
-	return v.resolve(nxt)
+	return v.resolveNodeByPointer(nxt)
 }
 
 func (*Paths) Kind() Kind      { return KindPaths }
@@ -128,15 +135,54 @@ type PathItem struct {
 	Extensions `json:"-"`
 }
 
-func (pi *PathItem) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (pi *PathItem) Anchors() (*Anchors, error) {
+	if pi == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(pi.Get.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Put.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Post.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Delete.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Options.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Head.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Patch.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Trace.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Servers.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(pi.Parameters.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, err
+}
+
+func (pi *PathItem) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
 
-	return pi.resolve(ptr)
+	return pi.resolveNodeByPointer(ptr)
 }
 
-func (pi *PathItem) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (pi *PathItem) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return pi, nil
 	}
@@ -146,52 +192,52 @@ func (pi *PathItem) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if pi.Get == nil {
 			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 		}
-		return pi.resolve(nxt)
+		return pi.resolveNodeByPointer(nxt)
 	case "put":
 		if pi.Put == nil {
 			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 		}
-		return pi.Put.resolve(nxt)
+		return pi.Put.resolveNodeByPointer(nxt)
 	case "post":
 		if pi.Post == nil {
 			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 		}
-		return pi.Post.resolve(nxt)
+		return pi.Post.resolveNodeByPointer(nxt)
 	case "delete":
 		if pi.Delete == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Delete.resolve(nxt)
+		return pi.Delete.resolveNodeByPointer(nxt)
 	case "options":
 		if pi.Options == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Options.resolve(nxt)
+		return pi.Options.resolveNodeByPointer(nxt)
 	case "head":
 		if pi.Head == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Head.resolve(nxt)
+		return pi.Head.resolveNodeByPointer(nxt)
 	case "patch":
 		if pi.Patch == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Patch.resolve(nxt)
+		return pi.Patch.resolveNodeByPointer(nxt)
 	case "trace":
 		if pi.Trace == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Trace.resolve(nxt)
+		return pi.Trace.resolveNodeByPointer(nxt)
 	case "servers":
 		if pi.Servers == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Servers.resolve(nxt)
+		return pi.Servers.resolveNodeByPointer(nxt)
 	case "parameters":
 		if pi.Parameters == nil {
 			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
-		return pi.Parameters.resolve(nxt)
+		return pi.Parameters.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(pi.Location.AbsoluteLocation(), tok)
 	}

@@ -35,14 +35,16 @@ type Example struct {
 	Location   `json:"-"`
 }
 
-func (e *Example) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (e *Example) Anchors() (*Anchors, error) { return nil, nil }
+
+func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return e.resolve(ptr)
+	return e.resolveNodeByPointer(ptr)
 }
 
-func (e *Example) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return e, nil
 	}

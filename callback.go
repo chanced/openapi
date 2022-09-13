@@ -26,15 +26,23 @@ type Callbacks struct {
 	Items      PathItemObjs `json:"-"`
 }
 
-// Resolve performs a l
-func (c *Callbacks) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+// anchors implements node
+func (c *Callbacks) Anchors() (*Anchors, error) {
+	if c == nil {
+		return nil, nil
+	}
+	return c.Items.Anchors()
+}
+
+// ResolveNodeByPointer performs a l
+func (c *Callbacks) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return c.resolve(ptr)
+	return c.resolveNodeByPointer(ptr)
 }
 
-func (c *Callbacks) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (c *Callbacks) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return c, nil
 	}
@@ -43,7 +51,7 @@ func (c *Callbacks) resolve(ptr jsonpointer.Pointer) (Node, error) {
 	if item == nil {
 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
 	}
-	return item.resolve(nxt)
+	return item.resolveNodeByPointer(nxt)
 }
 
 func (c *Callbacks) location() Location {

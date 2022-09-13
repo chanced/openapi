@@ -41,14 +41,32 @@ type MediaType struct {
 	Encoding *EncodingMap `json:"encoding,omitempty"`
 }
 
-func (mt *MediaType) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (mt *MediaType) Anchors() (*Anchors, error) {
+	if mt == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = mt.Schema.Anchors(); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(mt.Examples.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(mt.Encoding.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+func (mt *MediaType) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return mt.resolve(ptr)
+	return mt.resolveNodeByPointer(ptr)
 }
 
-func (mt *MediaType) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (mt *MediaType) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return mt, nil
 	}
@@ -58,17 +76,17 @@ func (mt *MediaType) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if mt.Schema == nil {
 			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
 		}
-		return mt.Schema.resolve(nxt)
+		return mt.Schema.resolveNodeByPointer(nxt)
 	case "examples":
 		if mt.Examples == nil {
 			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
 		}
-		return mt.Examples.resolve(nxt)
+		return mt.Examples.resolveNodeByPointer(nxt)
 	case "encoding":
 		if mt.Encoding == nil {
 			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
 		}
-		return mt.Encoding.resolve(nxt)
+		return mt.Encoding.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(mt.Location.AbsoluteLocation(), tok)
 

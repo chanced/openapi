@@ -73,14 +73,29 @@ type Header struct {
 	Example jsonx.RawMessage `json:"example,omitempty"`
 }
 
-func (h *Header) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (h *Header) Anchors() (*Anchors, error) {
+	if h == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = h.Schema.Anchors(); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(h.Examples.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+func (h *Header) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
-	return h.resolve(ptr)
+	return h.resolveNodeByPointer(ptr)
 }
 
-func (h *Header) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return h, nil
 	}
@@ -90,12 +105,12 @@ func (h *Header) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if h.Schema == nil {
 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
 		}
-		return h.Schema.resolve(nxt)
+		return h.Schema.resolveNodeByPointer(nxt)
 	case "examples":
 		if h.Examples == nil {
 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
 		}
-		return h.Examples.resolve(nxt)
+		return h.Examples.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
 	}

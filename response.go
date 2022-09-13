@@ -44,7 +44,25 @@ type Response struct {
 	Location `json:"-"`
 }
 
-// Resolves a Node by a jsonpointer. It validates the pointer and then
+func (r *Response) Anchors() (*Anchors, error) {
+	if r == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(r.Headers.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(r.Content.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(r.Links.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+// ResolveNodeByPointers a Node by a jsonpointer. It validates the pointer and then
 // attempts to resolve the Node.
 //
 // # Errors
@@ -59,15 +77,15 @@ type Response struct {
 //
 // - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
 // and does not start with a slash
-func (r *Response) Resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (r *Response) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	err := ptr.Validate()
 	if err != nil {
 		return nil, err
 	}
-	return r.resolve(ptr)
+	return r.resolveNodeByPointer(ptr)
 }
 
-func (r *Response) resolve(ptr jsonpointer.Pointer) (Node, error) {
+func (r *Response) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return r, nil
 	}
@@ -77,17 +95,17 @@ func (r *Response) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		if r.Headers == nil {
 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
 		}
-		return r.Headers.resolve(nxt)
+		return r.Headers.resolveNodeByPointer(nxt)
 	case "content":
 		if r.Content == nil {
 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
 		}
-		return r.Content.resolve(nxt)
+		return r.Content.resolveNodeByPointer(nxt)
 	case "links":
 		if r.Links == nil {
 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
 		}
-		return r.Links.resolve(nxt)
+		return r.Links.resolveNodeByPointer(nxt)
 	default:
 		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
 	}
