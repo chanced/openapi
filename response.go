@@ -72,24 +72,25 @@ func (r *Response) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return r, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "headers":
-		n = r.Headers
+		if r.Headers == nil {
+			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+		}
+		return r.Headers.resolve(nxt)
 	case "content":
-		n = r.Content
+		if r.Content == nil {
+			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+		}
+		return r.Content.resolve(nxt)
 	case "links":
-		n = r.Links
+		if r.Links == nil {
+			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+		}
+		return r.Links.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
-	if n == nil {
-		return nil, newErrNotFound(r.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolve(nxt)
 }
 
 // MarshalJSON marshals r into JSON

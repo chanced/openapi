@@ -36,20 +36,15 @@ func (s *Server) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return s, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "variables":
-		n = s.Variables
+		if s.Variables == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Variables.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
-	if s.Variables == nil {
-		return nil, newErrNotFound(s.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolve(nxt)
 }
 
 func (*Server) Kind() Kind      { return KindServer }

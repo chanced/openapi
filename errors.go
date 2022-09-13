@@ -19,7 +19,7 @@ type Error struct {
 	URI uri.URI
 }
 
-func NewError(err error, uri uri.URI) *Error {
+func NewError(err error, uri uri.URI) error {
 	return &Error{
 		Err: err,
 		URI: uri,

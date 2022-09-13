@@ -33,21 +33,15 @@ func (rb *RequestBody) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return rb, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "content":
-		n = rb.Content
+		if rb.Content == nil {
+			return nil, newErrNotFound(rb.AbsoluteLocation(), tok)
+		}
+		return rb.Content.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(rb.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
-
-	if rb.Content == nil {
-		return nil, newErrNotFound(rb.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolve(nxt)
 }
 
 func (*RequestBody) Kind() Kind      { return KindRequestBody }

@@ -65,7 +65,7 @@ func (om *ObjMap[T]) Get(key Text) T {
 			break
 		}
 	}
-	return t
+	return nil
 }
 
 func (om *ObjMap[T]) Set(key Text, obj T) {

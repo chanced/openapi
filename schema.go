@@ -247,7 +247,6 @@ func (s *Schema) Resolve(ptr jsonpointer.Pointer) (Node, error) {
 }
 
 func (s *Schema) resolve(ptr jsonpointer.Pointer) (Node, error) {
-	var node node
 	if ptr.IsRoot() {
 		return s, nil
 	}
@@ -255,62 +254,123 @@ func (s *Schema) resolve(ptr jsonpointer.Pointer) (Node, error) {
 
 	switch tok {
 	case "ref":
-		node = s.Ref
+		if s.Ref == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Ref.resolve(nxt)
 	case "definitions":
-		node = s.Definitions
+		if s.Definitions == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Definitions.resolve(nxt)
 	case "dynamicRef":
-		node = s.DynamicRef
+		if s.DynamicRef == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.DynamicRef.resolve(nxt)
 	case "not":
-		node = s.Not
+		if s.Not == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Not.resolve(nxt)
 	case "allOf":
-		node = s.AllOf
+		if s.AllOf == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.AllOf.resolve(nxt)
 	case "anyOf":
-		node = s.AnyOf
+		if s.AnyOf == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.AnyOf.resolve(nxt)
 	case "oneOf":
-		node = s.OneOf
+		if s.OneOf == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.OneOf.resolve(nxt)
 	case "if":
-		node = s.If
+		if s.If == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.If.resolve(nxt)
 	case "then":
-		node = s.Then
+		if s.Then == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Then.resolve(nxt)
 	case "else":
-		node = s.Else
+		if s.Else == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Else.resolve(nxt)
 	case "properties":
-		node = s.Properties
+		if s.Properties == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Properties.resolve(nxt)
 	case "propertyNames":
-		node = s.PropertyNames
+		if s.PropertyNames == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.PropertyNames.resolve(nxt)
 	case "patternProperties":
-		node = s.PatternProperties
+		if s.PatternProperties == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.PatternProperties.resolve(nxt)
 	case "additionalProperties":
-		node = s.AdditionalProperties
+		if s.AdditionalProperties == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.AdditionalProperties.resolve(nxt)
 	case "dependentSchemas":
-		node = s.DependentSchemas
+		if s.DependentSchemas == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.DependentSchemas.resolve(nxt)
 	case "unevaluatedProperties":
-		node = s.UnevaluatedProperties
+		if s.UnevaluatedProperties == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.UnevaluatedProperties.resolve(nxt)
 	case "items":
-		node = s.Items
+		if s.Items == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Items.resolve(nxt)
 	case "unevaluatedObjs":
-		node = s.UnevaluatedObjs
+		if s.UnevaluatedObjs == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.UnevaluatedObjs.resolve(nxt)
 	case "additionalObjs":
-		node = s.AdditionalObjs
+		if s.AdditionalObjs == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.AdditionalObjs.resolve(nxt)
 	case "prefixObjs":
-		node = s.PrefixObjs
+		if s.PrefixObjs == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.PrefixObjs.resolve(nxt)
 	case "contains":
-		node = s.Contains
+		if s.Contains == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.Contains.resolve(nxt)
 	case "recursiveRef":
-		node = s.RecursiveRef
+		if s.RecursiveRef == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.RecursiveRef.resolve(nxt)
 	case "xml":
-		node = s.XML
+		if s.XML == nil {
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+		}
+		return s.XML.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return node, nil
-	}
-
-	if node == nil {
-		return nil, NewError(ErrNotFound, s.Location.AbsoluteLocation())
-	}
-	return node.resolve(nxt)
 }
 
 // MarshalJSON marshals JSON

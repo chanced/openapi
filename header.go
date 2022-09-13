@@ -85,23 +85,20 @@ func (h *Header) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return h, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var node node
 	switch nxt {
 	case "schema":
-		node = h.Schema
+		if h.Schema == nil {
+			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+		}
+		return h.Schema.resolve(nxt)
 	case "examples":
-		node = h.Examples
+		if h.Examples == nil {
+			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+		}
+		return h.Examples.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return node, nil
-	}
-
-	if node == nil {
-		return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
-	}
-	return node.resolve(ptr)
 }
 
 func (*Header) Kind() Kind      { return KindHeader }

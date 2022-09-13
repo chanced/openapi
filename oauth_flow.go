@@ -30,27 +30,30 @@ func (f *OAuthFlows) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return f, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "implicit":
-		n = f.Implicit
+		if f.Implicit == nil {
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+		}
+		return f.Implicit.resolve(nxt)
 	case "password":
-		n = f.Password
+		if f.Password == nil {
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+		}
+		return f.Password.resolve(nxt)
 	case "clientCredentials":
-		n = f.ClientCredentials
+		if f.ClientCredentials == nil {
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+		}
+		return f.ClientCredentials.resolve(nxt)
 	case "authorizationCode":
-		n = f.AuthorizationCode
+		if f.AuthorizationCode == nil {
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+		}
+		return f.AuthorizationCode.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
-
-	if n == nil {
-		return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolve(nxt)
 }
 
 func (*OAuthFlows) Kind() Kind      { return KindOAuthFlows }
@@ -136,21 +139,15 @@ func (f *OAuthFlow) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return f, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "scopes":
-		n = f.Scopes
+		if f.Scopes == nil {
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+		}
+		return f.Scopes.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
-
-	if n == nil {
-		return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolve(nxt)
 }
 
 func (*OAuthFlow) Kind() Kind      { return KindOAuthFlow }

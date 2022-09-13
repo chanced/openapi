@@ -53,25 +53,26 @@ func (mt *MediaType) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return mt, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "schema":
-		n = mt.Schema
+		if mt.Schema == nil {
+			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
+		}
+		return mt.Schema.resolve(nxt)
 	case "examples":
-		n = mt.Examples
+		if mt.Examples == nil {
+			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
+		}
+		return mt.Examples.resolve(nxt)
 	case "encoding":
-		n = mt.Encoding
+		if mt.Encoding == nil {
+			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
+		}
+		return mt.Encoding.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(mt.Location.AbsoluteLocation(), tok)
-	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
 
-	if n == nil {
-		return nil, newErrNotFound(mt.Location.AbsoluteLocation(), tok)
 	}
-	return n.resolve(nxt)
 }
 
 // MarshalJSON marshals mt into JSON

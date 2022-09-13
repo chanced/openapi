@@ -141,39 +141,60 @@ func (pi *PathItem) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return pi, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var n node
 	switch tok {
 	case "get":
-		n = pi.Get
+		if pi.Get == nil {
+			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
+		}
+		return pi.resolve(nxt)
 	case "put":
-		n = pi.Put
+		if pi.Put == nil {
+			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
+		}
+		return pi.Put.resolve(nxt)
 	case "post":
-		n = pi.Post
+		if pi.Post == nil {
+			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
+		}
+		return pi.Post.resolve(nxt)
 	case "delete":
-		n = pi.Delete
+		if pi.Delete == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Delete.resolve(nxt)
 	case "options":
-		n = pi.Options
+		if pi.Options == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Options.resolve(nxt)
 	case "head":
-		n = pi.Head
+		if pi.Head == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Head.resolve(nxt)
 	case "patch":
-		n = pi.Patch
+		if pi.Patch == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Patch.resolve(nxt)
 	case "trace":
-		n = pi.Trace
+		if pi.Trace == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Trace.resolve(nxt)
 	case "servers":
-		n = pi.Servers
+		if pi.Servers == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Servers.resolve(nxt)
 	case "parameters":
-		n = pi.Parameters
+		if pi.Parameters == nil {
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
+		}
+		return pi.Parameters.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(pi.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return n, nil
-	}
-
-	if n == nil {
-		return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolve(nxt)
 }
 
 func (*PathItem) mapKind() Kind { return KindPathItemMap }

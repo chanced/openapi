@@ -80,33 +80,45 @@ func (o *Operation) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return o, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var node node
 	switch nxt {
 	case "externalDocs":
-		node = o.ExternalDocs
+		if o.ExternalDocs == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.ExternalDocs.resolve(nxt)
 	case "parameters":
-		node = o.Parameters
+		if o.Parameters == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.Parameters.resolve(nxt)
 	case "requestBody":
-		node = o.RequestBody
+		if o.RequestBody == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.RequestBody.resolve(nxt)
 	case "responses":
-		node = o.Responses
+		if o.Responses == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.Responses.resolve(nxt)
 	case "callbacks":
-		node = o.Callbacks
+		if o.Callbacks == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.Callbacks.resolve(nxt)
 	case "security":
-		node = o.Security
+		if o.Security == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.Security.resolve(nxt)
 	case "servers":
-		node = o.Servers
+		if o.Servers == nil {
+			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+		}
+		return o.Servers.resolve(nxt)
 	default:
 		return nil, newErrNotResolvable(o.Location.AbsoluteLocation(), tok)
 	}
-	if nxt.IsRoot() {
-		return node, nil
-	}
-
-	if node == nil {
-		return nil, newErrNotFound(o.Location.AbsoluteLocation(), tok)
-	}
-	return node.resolve(ptr)
 }
 
 // MarshalJSON marshals JSON
