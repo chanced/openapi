@@ -141,39 +141,39 @@ func (pi *PathItem) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return pi, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var node node
+	var n node
 	switch tok {
 	case "get":
-		node = pi.Get
+		n = pi.Get
 	case "put":
-		node = pi.Put
+		n = pi.Put
 	case "post":
-		node = pi.Post
+		n = pi.Post
 	case "delete":
-		node = pi.Delete
+		n = pi.Delete
 	case "options":
-		node = pi.Options
+		n = pi.Options
 	case "head":
-		node = pi.Head
+		n = pi.Head
 	case "patch":
-		node = pi.Patch
+		n = pi.Patch
 	case "trace":
-		node = pi.Trace
+		n = pi.Trace
 	case "servers":
-		node = pi.Servers
+		n = pi.Servers
 	case "parameters":
-		node = pi.Parameters
+		n = pi.Parameters
 	default:
 		return nil, newErrNotResolvable(pi.Location.AbsoluteLocation(), tok)
 	}
 	if nxt.IsRoot() {
-		return node, nil
+		return n, nil
 	}
 
-	if node == nil {
+	if n == nil {
 		return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 	}
-	return node.resolve(nxt)
+	return n.resolve(nxt)
 }
 
 func (*PathItem) mapKind() Kind { return KindPathItemMap }

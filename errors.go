@@ -27,7 +27,7 @@ func NewError(err error, uri uri.URI) *Error {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Err, e.URI)
+	return fmt.Sprintf("%s: %s", e.Err, e.URI.String())
 }
 
 func (e *Error) Unwrap() error {

@@ -213,24 +213,24 @@ func (p *Parameter) resolve(ptr jsonpointer.Pointer) (Node, error) {
 		return p, nil
 	}
 	nxt, tok, _ := ptr.Next()
-	var node node
+	var n node
 	switch tok {
 	case "schema":
-		node = p.Schema
+		n = p.Schema
 	case "content":
-		node = p.Content
+		n = p.Content
 	case "examples":
-		node = p.Examples
+		n = p.Examples
 	default:
 		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
 	}
 	if nxt.IsRoot() {
-		return node, nil
+		return n, nil
 	}
-	if node == nil {
+	if n == nil {
 		return nil, newErrNotFound(p.AbsoluteLocation(), tok)
 	}
-	return node.resolve(nxt)
+	return n.resolve(nxt)
 }
 
 // MarshalJSON marshals h into JSON
