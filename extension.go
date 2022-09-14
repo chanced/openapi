@@ -1,13 +1,13 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
-	"sort"
+	"fmt"
 	"strings"
 
 	"github.com/chanced/jsonx"
 	"github.com/chanced/maps"
-	"github.com/tidwall/sjson"
 )
 
 // Extensions for OpenAPI
@@ -54,20 +54,6 @@ type extended interface {
 
 type extender interface {
 	setExts(Extensions)
-}
-
-func (e *Extensions) marshalExtensionsInto(json []byte) ([]byte, error) {
-	if e == nil {
-		return json, nil
-	}
-	var err error
-	for _, kv := range maps.SortByKeys(*e) {
-		json, err = sjson.SetRawBytes(json, kv.Key, kv.Val)
-		if err != nil {
-			return json, err
-		}
-	}
-	return json, err
 }
 
 // Decode decodes all extensions into dst.
@@ -146,24 +132,31 @@ func marshalExtendedJSON(dst extended) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return marshalExtendedJSONInto(data, dst)
+	return marshalExtensionsInto(data, dst.exts())
 }
 
-func marshalExtendedJSONInto(data []byte, obj extended) ([]byte, error) {
-	var err error
-
-	exts := obj.exts()
-	keys := make([]string, 0, len(exts))
-	for k := range exts {
-		keys = append(keys, k)
+func marshalExtensionsInto(json []byte, e Extensions) ([]byte, error) {
+	if e == nil {
+		return json, nil
 	}
-	sort.Strings(keys)
+	if !jsonx.IsObject(json) {
+		return json, fmt.Errorf("error: cannot marshal extensions into non-object")
+	}
 
-	for _, k := range keys {
-		data, err = sjson.SetBytes(data, k, exts[k])
+	b := bytes.Buffer{}
+	b.Write(json[:len(json)-1])
+	var err error
+	for _, kv := range maps.SortByKeys(e) {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		jsonx.EncodeAndWriteString(&b, kv.Key)
+		b.WriteByte(':')
+		b.Write(kv.Value)
 		if err != nil {
-			return data, err
+			return json, err
 		}
 	}
-	return data, nil
+	b.WriteByte('}')
+	return json, err
 }

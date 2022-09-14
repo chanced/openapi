@@ -93,9 +93,12 @@ type Scopes struct {
 	Items []*Scope `json:"-"`
 }
 
-func (*Scopes) Kind() Kind      { return KindScopes }
-func (*Scopes) mapKind() Kind   { return KindUndefined }
-func (*Scopes) sliceKind() Kind { return KindUndefined }
+func (*Scopes) Anchors() (*Anchors, error) { return nil, nil }
+func (*Scopes) Kind() Kind                 { return KindScopes }
+func (*Scopes) mapKind() Kind              { return KindUndefined }
+func (*Scopes) sliceKind() Kind            { return KindUndefined }
+
+func (s *Scopes) isNil() bool { return s == nil }
 
 func (s *Scopes) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
@@ -227,6 +230,8 @@ func (s *Scopes) UnmarshalJSON(data []byte) error {
 	})
 	return nil
 }
+
+func (s *Scope) isNil() bool { return s == nil }
 
 var (
 	_ node = (*Scope)(nil)

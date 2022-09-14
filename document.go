@@ -1,16 +1,23 @@
 package openapi
 
-import "github.com/chanced/uri"
+import (
+	"bytes"
+	"encoding/json"
+
+	"github.com/Masterminds/semver"
+	"github.com/chanced/jsonx"
+	"github.com/chanced/uri"
+)
 
 // Document root object of the Document document.
 type Document struct {
-	// Version - OpenAPI Version
+	// OpenAPI - The OpenAPI Version
 	//
 	// This string MUST be the version number of the OpenAPI
 	// Specification that the OpenAPI document uses. The openapi field SHOULD be
 	// used by tooling to interpret the OpenAPI document. This is not related to
 	// the API info.version string.
-	Version Text `json:"openapi"`
+	OpenAPI *semver.Version `json:"openapi"`
 	// Provides metadata about the API. The metadata MAY be used by
 	// tooling as required.
 	//
@@ -58,15 +65,143 @@ type Document struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 	Extensions   `json:"-"`
 }
-type openapi Document
 
 // MarshalJSON marshals JSON
 func (d Document) MarshalJSON() ([]byte, error) {
-	return marshalExtendedJSON(openapi(d))
+	b := bytes.Buffer{}
+	b.WriteByte('{')
+	if d.OpenAPI != nil {
+		d.OpenAPI.MarshalJSON()
+		b.WriteString(`"openapi":`)
+		b.WriteString("\"" + d.OpenAPI.Original() + "\"")
+	}
+	if d.Info != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"info":`)
+		i, err := d.Info.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(i)
+		// // fmt.Println(b.String())
+	}
+	if d.JSONSchemaDialect != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+
+		b.WriteString(`"jsonSchemaDialect":`)
+		jsonx.EncodeAndWriteString(&b, d.JSONSchemaDialect.String())
+		// // fmt.Print("JSON SCHEMA DIALECT\n\n")
+	}
+
+	if d.Servers != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"servers":`)
+		s, err := d.Servers.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(s)
+		// // fmt.Print("\n\n")
+		// // fmt.Print("Servers\n\n")
+		// // fmt.Println(b.String())
+	}
+	if d.Paths != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"paths":`)
+		p, err := d.Paths.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(p)
+		// fmt.Print("\n\n")
+		// fmt.Print("Paths\n\n")
+		// fmt.Println(b.String())
+	}
+	if d.Webhooks != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"webhooks":`)
+		w, err := d.Webhooks.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(w)
+		// fmt.Print("\n\n")
+		// fmt.Println(b.String())
+	}
+
+	if d.Security != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"security":`)
+		s, err := json.Marshal(d.Security)
+		if err != nil {
+			return nil, err
+		}
+		b.Write(s)
+		// fmt.Print("\n\n")
+		// fmt.Println(b.String())
+	}
+	if d.Tags != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"tags":`)
+		t, err := d.Tags.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(t)
+		// fmt.Print("\n\n")
+		// fmt.Print("Tags\n\n")
+		// fmt.Println(b.String())
+	}
+	if d.ExternalDocs != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"externalDocs":`)
+		e, err := d.ExternalDocs.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(e)
+		// fmt.Print("\n\n")
+		// fmt.Print("ExternalDocs\n\n")
+		// fmt.Println(b.String())
+	}
+	if d.Components != nil {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		b.WriteString(`"components":`)
+		c, err := d.Components.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		b.Write(c)
+		// fmt.Print("\n\n")
+		// fmt.Print("Components\n\n")
+		// fmt.Println(b.String())
+	}
+	b.WriteByte('}')
+	// fmt.Println(b.String())
+	return b.Bytes(), nil
 }
 
 // UnmarshalJSON unmarshals JSON
 func (d *Document) UnmarshalJSON(data []byte) error {
+	type openapi Document
 	v := openapi{}
 	err := unmarshalExtendedJSON(data, &v)
 	*d = Document(v)

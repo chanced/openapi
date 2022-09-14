@@ -26,6 +26,10 @@ type Callbacks struct {
 	Items      PathItemObjs `json:"-"`
 }
 
+func (c *Callbacks) isNil() bool {
+	return c == nil
+}
+
 // anchors implements node
 func (c *Callbacks) Anchors() (*Anchors, error) {
 	if c == nil {
@@ -61,11 +65,7 @@ func (c *Callbacks) location() Location {
 // MarshalJSON marshals JSON
 func (c Callbacks) MarshalJSON() ([]byte, error) {
 	type callback Callbacks
-	b, err := json.Marshal(c.Items)
-	if err != nil {
-		return b, err
-	}
-	return marshalExtendedJSONInto(b, callback(c))
+	return marshalExtendedJSON(callback(c))
 }
 
 // UnmarshalJSON unmarshals JSON

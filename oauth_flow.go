@@ -18,6 +18,7 @@ type OAuthFlows struct {
 	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty"`
 }
 
+func (f *OAuthFlows) isNil() bool { return f == nil }
 func (f *OAuthFlows) Anchors() (*Anchors, error) {
 	if f == nil {
 		return nil, nil
@@ -208,6 +209,7 @@ func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
 	*o = OAuthFlow(v)
 	return nil
 }
+func (o *OAuthFlow) isNil() bool { return o == nil }
 
 var (
 	_ node = (*OAuthFlow)(nil)

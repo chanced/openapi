@@ -77,5 +77,6 @@ func (ed *ExternalDocs) setLocation(loc Location) error {
 	ed.Location = loc
 	return nil
 }
+func (ed *ExternalDocs) isNil() bool { return ed == nil }
 
 var _ node = (*ExternalDocs)(nil)

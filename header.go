@@ -147,5 +147,6 @@ func (h *Header) setLocation(loc Location) error {
 	}
 	return nil
 }
+func (h *Header) isNil() bool { return h == nil }
 
 var _ node = (*Header)(nil)

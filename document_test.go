@@ -2,11 +2,64 @@ package openapi_test
 
 import (
 	"embed"
+	"encoding/json"
+	"io"
+	"os"
 	"testing"
+
+	"github.com/chanced/openapi"
+	"github.com/chanced/transcodefmt"
+	"github.com/google/go-cmp/cmp"
 )
 
 //go:embed testdata
 var testdata embed.FS
+
+func TestUnmarshal(t *testing.T) {
+	f, err := testdata.Open("testdata/petstore.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ps, err := io.ReadAll(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	petstore, err := transcodefmt.YAMLToJSON(ps)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expected interface{}
+	err = json.Unmarshal(petstore, &expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var v openapi.Document
+	err = v.UnmarshalJSON(petstore)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var actual interface{}
+	err = json.Unmarshal(output, &actual)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(expected, actual) {
+		t.Error(cmp.Diff(expected, actual))
+	}
+	err = os.WriteFile("petstore.json", output, 0o644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// litter.Dump(v)
+}
 
 func TestValidate(t *testing.T) {
 	// ps, err := fs.ReadFile(testdata, "testdata/petstore.yaml")

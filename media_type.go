@@ -132,4 +132,6 @@ func (*MediaType) Kind() Kind      { return KindMediaType }
 func (*MediaType) mapKind() Kind   { return KindMediaTypeMap }
 func (*MediaType) sliceKind() Kind { return KindUndefined }
 
+func (mt *MediaType) isNil() bool { return mt == nil }
+
 var _ node = (*MediaType)(nil)

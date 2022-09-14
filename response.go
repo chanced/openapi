@@ -130,6 +130,8 @@ func (*Response) Kind() Kind      { return KindResponse }
 func (*Response) mapKind() Kind   { return KindResponseMap }
 func (*Response) sliceKind() Kind { return KindUndefined }
 
+func (r *Response) isNil() bool { return r == nil }
+
 func (r *Response) setLocation(loc Location) error {
 	if r == nil {
 		return nil

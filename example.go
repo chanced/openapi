@@ -81,6 +81,7 @@ func (e *Example) setLocation(loc Location) error {
 	e.Location = loc
 	return nil
 }
+func (e *Example) isNil() bool { return e == nil }
 
 var (
 	_ node = (*Example)(nil)

@@ -1,12 +1,13 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/jsonx"
 	"github.com/chanced/transcodefmt"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 	"gopkg.in/yaml.v3"
 )
 
@@ -81,7 +82,7 @@ func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 		if n.Reference != nil {
 			return n.Reference, nil
 		}
-		if (any)(n.Object) != nil {
+		if !n.Object.isNil() {
 			return n.Object, nil
 		}
 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
@@ -92,21 +93,28 @@ func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 	return n.resolveNodeByPointer(nxt)
 }
 
+func (cm *ComponentMap[T]) isNil() bool {
+	return cm == nil
+}
+
 // MarshalJSON marshals JSON
 func (cm ComponentMap[T]) MarshalJSON() ([]byte, error) {
-	b := []byte("{}")
+	b := bytes.Buffer{}
+	b.WriteByte('{')
 	for _, field := range cm.Items {
-		b, err := field.Component.MarshalJSON()
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		jsonx.EncodeAndWriteString(&b, field.Key)
+		b.WriteByte(':')
+		cb, err := field.Component.MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
-		b, err = sjson.SetBytes(b, field.Key.String(), field.Component)
-		_ = b
-		if err != nil {
-			return nil, err
-		}
+		b.Write(cb)
 	}
-	return b, nil
+	b.WriteByte('}')
+	return b.Bytes(), nil
 }
 
 func (cm *ComponentMap[T]) Get(key Text) *Component[T] {

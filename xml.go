@@ -78,4 +78,6 @@ func (xml *XML) setLocation(loc Location) error {
 	return nil
 }
 
+func (xml *XML) isNil() bool { return xml == nil }
+
 var _ node = (*XML)(nil)

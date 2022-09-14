@@ -130,6 +130,8 @@ func (l *Link) setLocation(loc Location) error {
 	return nil
 }
 
+func (l *Link) isNil() bool { return l == nil }
+
 // LinkParameters is a map representing parameters to pass to an operation as
 // specified with operationId or identified via operationRef. The key is the
 // parameter name to be used, whereas the value can be a constant or an

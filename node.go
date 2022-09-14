@@ -39,4 +39,6 @@ type node interface {
 
 	resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	location() Location
+
+	isNil() bool
 }

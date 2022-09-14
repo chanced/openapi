@@ -1,0 +1,160 @@
+{
+    "FilterItem": {
+        "type": "object",
+        "properties": {
+            "include": {
+                "type": "string"
+            },
+            "exclude": {
+                "type": "string"
+            }
+        }
+    },
+    "StringMap": {
+        "testing": "testing",
+        "type": "object",
+        "additionalProperties": {
+            "type": "string"
+        }
+    },
+    "PetFilter": {
+        "type": "object",
+        "properties": {
+            "tags": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "kind": {
+                "type": "string"
+            },
+            "nested": {
+                "type": "object",
+                "properties": {
+                    "prop": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "additionalProperties": {
+            "$ref": "#/components/schemas/FilterItem"
+        }
+    },
+    "Pet": {
+        "allOf": [
+            {
+                "$ref": "#/components/schemas/NewPet"
+            },
+            {
+                "required": ["_id"],
+                "properties": {
+                    "_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique id of the pet"
+                    }
+                }
+            }
+        ]
+    },
+    "NewPet": {
+        "required": ["name"],
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "Name of the pet"
+            },
+            "tag": {
+                "type": "string",
+                "description": "Type of the pet"
+            },
+            "kind": {
+                "type": "string"
+            },
+            "extra": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "firstField": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "additionalProperties": {
+            "type": "string"
+        }
+    },
+    "GenericError": {
+        "type": "object",
+        "properties": {
+            "statusCode": {
+                "type": "number"
+            },
+            "error": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": true
+    },
+    "ValidationError": {
+        "type": "object",
+        "properties": {
+            "parameters": {
+                "$ref": "#/components/schemas/ValidationErrorOutputUnit"
+            },
+            "body": {
+                "$ref": "#/components/schemas/ValidationErrorOutputUnit"
+            }
+        }
+    },
+    "ValidationErrorOutputUnitArray": {
+        "type": "array",
+        "items": {
+            "$ref": "#/components/schemas/ValidationErrorOutputUnit"
+        }
+    },
+    "ValidationErrorOutputUnit": {
+        "required": ["valid", "keywordLocation", "instanceLocation"],
+        "properties": {
+            "valid": {
+                "type": "boolean"
+            },
+            "keywordLocation": {
+                "type": "string",
+                "format": "uri-reference"
+            },
+            "absoluteKeywordLocation": {
+                "type": "string",
+                "format": "uri"
+            },
+            "instanceLocation": {
+                "type": "string",
+                "format": "uri-reference"
+            },
+            "errors": {
+                "$ref": "#/components/schemas/ValidationErrorOutputUnitArray"
+            },
+            "annotations": {
+                "$ref": "#/components/schemas/ValidationErrorOutputUnitArray"
+            }
+        },
+        "description": "A schema that validates the minimum requirements for validation output"
+    },
+    "Error": {
+        "type": "object",
+        "properties": {
+            "error": {
+                "type": "string"
+            }
+        }
+    }
+}

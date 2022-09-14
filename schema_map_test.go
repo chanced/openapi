@@ -1,7 +1,6 @@
 package openapi_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +9,7 @@ import (
 	"github.com/chanced/openapi"
 )
 
-func TestComponentsMarshaling(t *testing.T) {
+func TestSchemaMapMarshaling(t *testing.T) {
 	f, err := testdata.Open("testdata/schemas/petstore-schema-map-test-1.json")
 	if err != nil {
 		t.Fatal(err)
@@ -20,20 +19,15 @@ func TestComponentsMarshaling(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b := bytes.Buffer{}
 
-	b.Write([]byte(`{"schemas":`))
-	b.Write(fc)
-	b.Write([]byte(`}`))
-
-	var c openapi.Components
-	err = c.UnmarshalJSON(b.Bytes())
+	var sm openapi.SchemaMap
+	err = json.Unmarshal(fc, &sm)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cb, err := json.MarshalIndent(c, "", "  ")
+	b, err := json.MarshalIndent(sm, "", "  ")
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(string(cb))
+	fmt.Println(string(b))
 }

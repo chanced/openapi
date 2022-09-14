@@ -66,6 +66,8 @@ type Operation struct {
 	Servers *ServerSlice `json:"servers,omitempty"`
 }
 
+func (o *Operation) isNil() bool { return o == nil }
+
 func (o *Operation) Anchors() (*Anchors, error) {
 	if o == nil {
 		return nil, nil

@@ -42,17 +42,17 @@ func (cs *ComponentSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node
 }
 
 func (cs ComponentSlice[T]) MarshalJSON() ([]byte, error) {
-	type componentslice[T node] ComponentSlice[T]
-	return json.Marshal(componentslice[T](cs))
+	return json.Marshal(cs.Items)
 }
 
 func (cs *ComponentSlice[T]) UnmarshalJSON(data []byte) error {
-	type componentslice[T node] ComponentSlice[T]
-	var v componentslice[T]
-	if err := json.Unmarshal(data, &v); err != nil {
+	var items []Component[T]
+	if err := json.Unmarshal(data, &items); err != nil {
 		return err
 	}
-	*cs = ComponentSlice[T](v)
+	*cs = ComponentSlice[T]{
+		Items: items,
+	}
 	return nil
 }
 
@@ -86,5 +86,6 @@ func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
 	}
 	return anchors, nil
 }
+func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
 
 var _ node = (*ComponentSlice[*Server])(nil)

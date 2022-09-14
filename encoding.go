@@ -114,5 +114,6 @@ func (e *Encoding) UnmarshalJSON(data []byte) error {
 	*e = Encoding(v)
 	return nil
 }
+func (e *Encoding) isNil() bool { return e == nil }
 
 var _ node = (*Encoding)(nil)

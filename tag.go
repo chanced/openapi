@@ -2,7 +2,7 @@ package openapi
 
 import "github.com/chanced/jsonpointer"
 
-type TagSlice = ComponentSlice[*Tag]
+type TagSlice = ObjMap[*Tag]
 
 // Tag adds metadata that is used by the Operation Object.
 //
@@ -33,6 +33,8 @@ func (t *Tag) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	}
 	return t.resolveNodeByPointer(ptr)
 }
+
+func (t *Tag) isNil() bool { return t == nil }
 
 func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {

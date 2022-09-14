@@ -19,6 +19,8 @@ type SecurityRequirementItem struct {
 	Value []Text
 }
 
+func (sri *SecurityRequirementItem) isNil() bool { return sri == nil }
+
 func (sri *SecurityRequirementItem) Anchors() (*Anchors, error) { return nil, nil }
 
 func (sri *SecurityRequirementItem) setLocation(loc Location) error {
@@ -45,7 +47,7 @@ func (sri *SecurityRequirementItem) resolveNodeByPointer(ptr jsonpointer.Pointer
 	return nil, newErrNotResolvable(sri.AbsoluteLocation(), tok)
 }
 
-func (sri *SecurityRequirementItem) MarshalJSON() ([]byte, error) {
+func (sri SecurityRequirementItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sri.Value)
 }
 

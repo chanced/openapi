@@ -7,13 +7,13 @@ import (
 
 // TODO: relToRes needs to be a slice
 
-func NewLocation(uri *uri.URI) (Location, error) {
+func NewLocation(uri uri.URI) (Location, error) {
 	ptr, err := jsonpointer.Parse(uri.Fragment)
 	if err != nil {
 		return Location{}, err
 	}
 	loc := Location{
-		absolute: *uri,
+		absolute: uri,
 		relToRes: ptr,
 	}
 	return loc, nil

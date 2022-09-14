@@ -75,6 +75,8 @@ type SecurityScheme struct {
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
 }
 
+func (ss *SecurityScheme) isNil() bool { return ss == nil }
+
 func (ss *SecurityScheme) Anchors() (*Anchors, error) {
 	if ss == nil {
 		return nil, nil

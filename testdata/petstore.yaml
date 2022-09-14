@@ -219,6 +219,7 @@ components:
             additionalProperties:
                 type: string
         GenericError:
+            breakpoint: true
             type: object
             properties:
                 statusCode:

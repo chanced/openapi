@@ -75,6 +75,7 @@ func (s *Server) UnmarshalJSON(data []byte) error {
 	*s = Server(v)
 	return err
 }
+func (s *Server) isNil() bool { return s == nil }
 
 // ServerVariable for server URL template substitution.
 type ServerVariable struct {
@@ -139,6 +140,7 @@ func (sv *ServerVariable) UnmarshalJSON(data []byte) error {
 func (sv *ServerVariable) Anchors() (*Anchors, error) {
 	return nil, nil
 }
+func (sv *ServerVariable) isNil() bool { return sv == nil }
 
 var (
 	_ node = (*Server)(nil)

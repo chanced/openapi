@@ -288,5 +288,6 @@ func (p *Parameter) setLocation(loc Location) error {
 
 	return nil
 }
+func (p *Parameter) isNil() bool { return p == nil }
 
 var _ node = (*Parameter)(nil)

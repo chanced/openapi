@@ -56,6 +56,8 @@ func (p *Paths) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	return v.resolveNodeByPointer(nxt)
 }
 
+func (p *Paths) isNil() bool { return p == nil }
+
 func (*Paths) Kind() Kind      { return KindPaths }
 func (*Paths) mapKind() Kind   { return KindUndefined }
 func (*Paths) sliceKind() Kind { return KindUndefined }
@@ -74,7 +76,7 @@ func (p Paths) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return p.marshalExtensionsInto(j)
+	return marshalExtensionsInto(j, p.Extensions)
 }
 
 // UnmarshalJSON unmarshals JSON data into p
@@ -305,6 +307,8 @@ func (p *PathItem) UnmarshalJSON(data []byte) error {
 }
 
 func (*PathItem) Kind() Kind { return KindPathItem }
+
+func (pi *PathItem) isNil() bool { return pi == nil }
 
 var (
 	_ node = (*PathItem)(nil)

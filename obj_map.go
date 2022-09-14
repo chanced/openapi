@@ -1,13 +1,13 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 type ObjMapEntry[T node] struct {
@@ -42,7 +42,7 @@ func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	}
 	tok, _ := ptr.NextToken()
 	v := om.Get(Text(tok))
-	if (any)(v) == nil {
+	if v.isNil() {
 		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
 	}
 	return nil, nil
@@ -101,30 +101,36 @@ func (om *ObjMap[T]) UnmarshalJSON(data []byte) error {
 	var pi T
 	var err error
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
-		if err = t.UnmarshalJSON([]byte(value.Raw)); err != nil {
+		if err = json.Unmarshal([]byte(value.Raw), &pi); err != nil {
 			return false
 		}
 		m.Items = append(m.Items, ObjMapEntry[T]{Key: Text(key.String()), Value: pi})
 		return true
 	})
+	*om = m
 	return err
 }
 
 func (om *ObjMap[T]) MarshalJSON() ([]byte, error) {
-	data := []byte("{}")
 	var err error
+	b := bytes.Buffer{}
 	var j []byte
+	_ = j
+	b.WriteByte('{')
 	for _, entry := range om.Items {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		jsonx.EncodeAndWriteString(&b, entry.Key)
+		b.WriteByte(':')
 		j, err = entry.Value.MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
-		data, err = sjson.SetRawBytesOptions(data, entry.Key.String(), j, &sjson.Options{ReplaceInPlace: true})
-		if err != nil {
-			return nil, err
-		}
+		b.Write(j)
 	}
-	return data, err
+	b.WriteByte('}')
+	return b.Bytes(), err
 }
 
 func (om *ObjMap[T]) Anchors() (*Anchors, error) {
@@ -142,5 +148,7 @@ func (om *ObjMap[T]) Anchors() (*Anchors, error) {
 	//∆
 	return anchors, nil
 }
+
+func (om *ObjMap[T]) isNil() bool { return om == nil }
 
 var _ (node) = (*ObjMap[*Server])(nil)

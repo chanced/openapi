@@ -10,7 +10,7 @@ import (
 func TestLocationAppend(t *testing.T) {
 	u, _ := uri.Parse("https://example.org/schema/demo")
 
-	loc, err := openapi.NewLocation(u)
+	loc, err := openapi.NewLocation(*u)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestLocationAppend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	loc, err = openapi.NewLocation(u)
+	loc, err = openapi.NewLocation(*u)
 	if err != nil {
 		t.Fatal(err)
 	}

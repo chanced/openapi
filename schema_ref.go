@@ -10,9 +10,11 @@ import (
 
 type SchemaRef struct {
 	Location
-	Ref                   *uri.URI `json:"-"`
-	ResolveNodeByPointerd *Schema  `json:"-"`
+	Ref      *uri.URI `json:"-"`
+	Resolved *Schema  `json:"-"`
 }
+
+func (sr *SchemaRef) URI() *uri.URI { return sr.Ref }
 
 func (*SchemaRef) Kind() Kind      { return KindSchemaRef }
 func (*SchemaRef) mapKind() Kind   { return KindUndefined }
@@ -41,16 +43,16 @@ func (sr *SchemaRef) setLocation(l Location) error {
 	if sr == nil {
 		return nil
 	}
-	if sr.ResolveNodeByPointerd != nil {
+	if sr.Resolved != nil {
 		if sr.Ref != nil {
-			nl, err := NewLocation(sr.Ref)
+			nl, err := NewLocation(*sr.Ref)
 			if err != nil {
 				return err
 			}
-			sr.ResolveNodeByPointerd.setLocation(nl)
+			sr.Resolved.setLocation(nl)
 			return nil
 		}
-		return sr.ResolveNodeByPointerd.setLocation(l)
+		return sr.Resolved.setLocation(l)
 	}
 	return nil
 }
@@ -67,12 +69,14 @@ func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 
 	var s Schema
 	err := json.Unmarshal(data, &s)
-	sr.ResolveNodeByPointerd = &s
+	sr.Resolved = &s
 	return err
 }
 
-func (sr *SchemaRef) MarshalJSON() ([]byte, error) {
+func (sr SchemaRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sr.Ref)
 }
+
+func (sr *SchemaRef) isNil() bool { return sr == nil }
 
 var _ node = (*SchemaRef)(nil)

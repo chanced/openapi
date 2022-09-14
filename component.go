@@ -44,6 +44,14 @@ func (c *Component[T]) location() Location {
 	return c.Object.location()
 }
 
+func (c *Component[T]) IsReference() bool {
+	return c.Reference != nil
+}
+
+// func (c *Component[T]) IsResolved() bool {
+
+// }
+
 func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
@@ -100,12 +108,12 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 		}
 		return nil
 	}
-	var value T
-	if err := value.UnmarshalJSON(data); err != nil {
+	var obj T
+	if err := json.Unmarshal(data, &obj); err != nil {
 		return err
 	}
 	*c = Component[T]{
-		Object: value,
+		Object: obj,
 	}
 	return nil
 }
@@ -116,7 +124,7 @@ func (c *Component[T]) setLocation(loc Location) error {
 	}
 	if c.Reference != nil {
 		return c.Reference.setLocation(loc)
-	} else if (any)(c.Object) != nil {
+	} else if !c.Object.isNil() {
 		return c.Object.setLocation(loc)
 	}
 	return nil
@@ -128,5 +136,7 @@ func (c *Component[T]) Anchors() (*Anchors, error) {
 	}
 	return c.Object.Anchors()
 }
+
+func (c *Component[T]) isNil() bool { return c == nil }
 
 var _ node = (*Component[*Server])(nil)

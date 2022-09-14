@@ -39,6 +39,10 @@ type Reference struct {
 	Location `json:"-"`
 }
 
+func (r *Reference) URI() *uri.URI {
+	return r.Ref
+}
+
 func (r *Reference) Anchors() (*Anchors, error) { return nil, nil }
 
 func (r *Reference) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
@@ -56,9 +60,9 @@ func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
 }
 
-func (r *Reference) MarshalJSON() ([]byte, error) {
+func (r Reference) MarshalJSON() ([]byte, error) {
 	type reference Reference
-	return json.Marshal(reference(*r))
+	return json.Marshal(reference(r))
 }
 
 func (r *Reference) UnmarshalJSON(data []byte) error {
@@ -86,6 +90,8 @@ func (r *Reference) setLocation(loc Location) error {
 func (r *Reference) Kind() Kind    { return KindReference }
 func (*Reference) mapKind() Kind   { return KindUndefined }
 func (*Reference) sliceKind() Kind { return KindUndefined }
+
+func (r *Reference) isNil() bool { return r == nil }
 
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")

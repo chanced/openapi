@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -8,8 +9,8 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/maps"
 	"github.com/chanced/uri"
-	"github.com/tidwall/sjson"
 )
 
 // Schema allows the definition of input and output data types. These types can
@@ -73,7 +74,7 @@ type Schema struct {
 	// referenced schema. [CREF5]
 	//
 	// The value of the "$ref" keyword MUST be a string which is a
-	// URI-Reference. ResolveNodeByPointerd against the current URI base, it produces the URI
+	// URI-Reference. Resolved against the current URI base, it produces the URI
 	// of the schema to apply. This resolution is safe to perform on schema
 	// load, as the process of evaluating an instance cannot change how the
 	// reference resolves.
@@ -460,19 +461,45 @@ func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // MarshalJSON marshals JSON
 func (s Schema) MarshalJSON() ([]byte, error) {
 	type schema Schema
-	if s.Always != nil {
-		return json.Marshal(s.Always)
+	b := bytes.Buffer{}
+	data, err := json.Marshal(schema(s))
+	if err != nil {
+		return nil, err
 	}
-	data, err := marshalExtendedJSON(schema(s))
-	if s.Keywords != nil {
-		for k, v := range s.Keywords {
-			data, err = sjson.SetBytes(data, k, v)
-			if err != nil {
-				return data, err
+	// trimming the last }
+	b.Write(data[:len(data)-1])
+
+	if s.Always != nil && b.Len() <= 2 {
+		if len(s.Keywords) > 0 || len(s.Extensions) > 0 {
+			if !*s.Always {
+				b.WriteString(`"not":{}`)
+			}
+		} else if b.Len() <= 2 {
+			if *s.Always {
+				return []byte(`true`), nil
+			} else {
+				return []byte(`false`), nil
 			}
 		}
 	}
-	return data, err
+	if s.Keywords != nil {
+		for _, kv := range maps.SortByKeys(s.Keywords) {
+			if b.Len() > 2 {
+				b.WriteString(",")
+			}
+			jsonx.EncodeAndWriteString(&b, kv.Key)
+			b.WriteByte(':')
+			if kv.Value != nil {
+				bb, err := json.Marshal(kv.Value)
+				if err != nil {
+					return nil, err
+				}
+				b.Write(bb)
+			}
+		}
+	}
+	b.WriteByte('}')
+	return b.Bytes(), err
 }
 
 // UnmarshalJSON unmarshals JSON
@@ -496,9 +523,7 @@ func (s *Schema) unmarshalJSONBool(data []byte) error {
 }
 
 func (s *Schema) unmarshalJSONObj(data []byte) error {
-	res := Schema{
-		Extensions: make(Extensions),
-	}
+	res := Schema{}
 
 	d := map[string]jsonx.RawMessage{}
 	err := json.Unmarshal(data, &d)
@@ -513,6 +538,9 @@ func (s *Schema) unmarshalJSONObj(data []byte) error {
 				return err
 			}
 		} else if strings.HasPrefix(k, "x-") {
+			if res.Extensions == nil {
+				res.Extensions = Extensions{}
+			}
 			res.Extensions[k] = v
 		} else {
 			if res.Keywords == nil {
@@ -521,6 +549,7 @@ func (s *Schema) unmarshalJSONObj(data []byte) error {
 			res.Keywords[k] = v
 		}
 	}
+	*s = res
 	return nil
 }
 
@@ -718,5 +747,6 @@ func (s *Schema) setLocation(loc Location) error {
 	}
 	return nil
 }
+func (s *Schema) isNil() bool { return s == nil }
 
 var _ node = (*Schema)(nil)

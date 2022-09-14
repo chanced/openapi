@@ -1,13 +1,13 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 type SchemaItem struct {
@@ -26,7 +26,7 @@ type SchemaMap struct {
 func (*SchemaMap) Kind() Kind      { return KindSchemaMap }
 func (*SchemaMap) sliceKind() Kind { return KindUndefined }
 func (*SchemaMap) mapKind() Kind   { return KindUndefined }
-
+func (sm *SchemaMap) isNil() bool  { return sm == nil }
 func (sm *SchemaMap) Anchors() (*Anchors, error) {
 	if sm == nil {
 		return nil, nil
@@ -96,20 +96,25 @@ func (sm SchemaMap) Get(key Text) *Schema {
 	return nil
 }
 
-func (sm *SchemaMap) MarshalJSON() ([]byte, error) {
-	b := []byte("{}")
+func (sm SchemaMap) MarshalJSON() ([]byte, error) {
+	b := bytes.Buffer{}
+	b.WriteByte('{')
 	var err error
+	var s []byte
 	for _, v := range sm.Items {
-		b, err = json.Marshal(v.Schema)
-		if err != nil {
-			return b, err
+		if b.Len() > 1 {
+			b.WriteByte(',')
 		}
-		b, err = sjson.SetBytes(b, v.Key.String(), b)
+		jsonx.EncodeAndWriteString(&b, v.Key.String())
+		b.WriteByte(':')
+		s, err = v.Schema.MarshalJSON()
 		if err != nil {
-			return b, err
+			return nil, err
 		}
+		b.Write(s)
 	}
-	return b, nil
+	b.WriteByte('}')
+	return b.Bytes(), nil
 }
 
 func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
