@@ -98,4 +98,7 @@ func isRefJSON(data []byte) bool {
 	return r.Str != ""
 }
 
-var _ node = (*Reference)(nil)
+var (
+	_ node   = (*Reference)(nil)
+	_ Walker = (*Reference)(nil)
+)

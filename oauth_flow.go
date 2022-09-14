@@ -212,6 +212,8 @@ func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
 func (o *OAuthFlow) isNil() bool { return o == nil }
 
 var (
-	_ node = (*OAuthFlow)(nil)
-	_ node = (*OAuthFlows)(nil)
+	_ node   = (*OAuthFlow)(nil)
+	_ Walker = (*OAuthFlow)(nil)
+	_ node   = (*OAuthFlows)(nil)
+	_ Walker = (*OAuthFlows)(nil)
 )

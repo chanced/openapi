@@ -1,6 +1,37 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"github.com/chanced/jsonpointer"
+)
+
+// OperationItem is an *Operation and the HTTP Method it is associated with
+//
+// The primary purpose of this type is for use with a Visitor
+// type OperationItem struct {
+// 	Operation *Operation
+// 	Method    Method
+// }
+
+// func (oi *OperationItem) Walk(v Visitor) error {
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	if oi == nil {
+// 		return nil
+// 	}
+// 	if oi.Operation == nil {
+// 		return nil
+// 	}
+// 	var err error
+// 	v, err = v.VisitOperationItem(oi)
+// 	if v == nil {
+// 		return err
+// 	}
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return oi.Operation.Walk(v)
+// }
 
 // Operation describes a single API operation on a path.
 type Operation struct {
@@ -9,22 +40,28 @@ type Operation struct {
 	Location   `json:"-"`
 	Extensions `json:"-"`
 
-	// A list of tags for API documentation control. Tags can be used for
-	// logical grouping of operations by resources or any other qualifier.
-	Tags []Text `json:"tags,omitempty"`
-	// A short summary of what the operation does.
-	Summary Text `json:"summary,omitempty"`
-	// A verbose explanation of the operation behavior. CommonMark syntax MAY be
-	// used for rich text representation.
-	Description Text `json:"description,omitempty"`
-	// externalDocs	Additional external documentation.
-	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 	// Unique string used to identify the operation. The id MUST be unique among
 	// all operations described in the API. The operationId value is
 	// case-sensitive. Tools and libraries MAY use the operationId to uniquely
 	// identify an operation, therefore, it is RECOMMENDED to follow common
 	// programming naming conventions.
 	OperationID Text `json:"operationId,omitempty"`
+
+	// Declares this operation to be deprecated. Consumers SHOULD refrain from
+	// usage of the declared operation. Default value is false.
+	Deprecated bool `json:"deprecated,omitempty"`
+
+	// A short summary of what the operation does.
+	Summary Text `json:"summary,omitempty"`
+
+	// A verbose explanation of the operation behavior. CommonMark syntax MAY be
+	// used for rich text representation.
+	Description Text `json:"description,omitempty"`
+
+	// A list of tags for API documentation control. Tags can be used for
+	// logical grouping of operations by resources or any other qualifier.
+	Tags []Text `json:"tags,omitempty"`
+
 	// A list of parameters that are applicable for this operation. If a
 	// parameter is already defined at the Path Item, the new definition will
 	// override it but can never remove it. The list MUST NOT include duplicated
@@ -40,6 +77,7 @@ type Operation struct {
 	// permitted but does not have well-defined semantics and SHOULD be avoided
 	// if possible.
 	RequestBody *Component[*RequestBody] `json:"requestBody,omitempty"`
+
 	// The list of possible responses as they are returned from executing this
 	// operation.
 	Responses *ResponseMap `json:"responses,omitempty"`
@@ -49,9 +87,7 @@ type Operation struct {
 	// map is a Callback Object that describes a request that may be initiated
 	// by the API provider and the expected responses.
 	Callbacks *CallbacksMap `json:"callbacks,omitempty"`
-	// Declares this operation to be deprecated. Consumers SHOULD refrain from
-	// usage of the declared operation. Default value is false.
-	Deprecated bool `json:"deprecated,omitempty"`
+
 	// A declaration of which security mechanisms can be used for this
 	// operation. The list of values includes alternative security requirement
 	// objects that can be used. Only one of the security requirement objects
@@ -60,10 +96,14 @@ type Operation struct {
 	// definition overrides any declared top-level security. To remove a
 	// top-level security declaration, an empty array can be used.
 	Security *SecurityRequirements `json:"security,omitempty"`
+
 	// An alternative server array to service this operation. If an alternative
 	// server object is specified at the Path Item Object or Root level, it will
 	// be overridden by this value.
 	Servers *ServerSlice `json:"servers,omitempty"`
+
+	// externalDocs	Additional external documentation.
+	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
 func (o *Operation) isNil() bool { return o == nil }
@@ -100,8 +140,7 @@ func (o *Operation) Anchors() (*Anchors, error) {
 
 // ResolveNodeByPointers a Node by a json pointer
 func (o *Operation) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	err := ptr.Validate()
-	if err != nil {
+	if err := ptr.Validate(); err != nil {
 		return nil, err
 	}
 	return o.resolveNodeByPointer(ptr)
@@ -183,29 +222,101 @@ func (o *Operation) setLocation(loc Location) error {
 		return nil
 	}
 	o.Location = loc
-
-	if err := o.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
+	var err error
+	if err = o.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
 		return err
 	}
-	if err := o.Parameters.setLocation(loc.Append("parameters")); err != nil {
+	if err = o.Parameters.setLocation(loc.Append("parameters")); err != nil {
 		return err
 	}
-	if err := o.RequestBody.setLocation(loc.Append("requestBody")); err != nil {
+	if err = o.RequestBody.setLocation(loc.Append("requestBody")); err != nil {
 		return err
 	}
-	if err := o.Responses.setLocation(loc.Append("responses")); err != nil {
+	if err = o.Responses.setLocation(loc.Append("responses")); err != nil {
 		return err
 	}
-	if err := o.Callbacks.setLocation(loc.Append("callbacks")); err != nil {
+	if err = o.Callbacks.setLocation(loc.Append("callbacks")); err != nil {
 		return err
 	}
-	if err := o.Security.setLocation(loc.Append("security")); err != nil {
+	if err = o.Security.setLocation(loc.Append("security")); err != nil {
 		return err
 	}
-	if err := o.Servers.setLocation(loc.Append("servers")); err != nil {
+	if err = o.Servers.setLocation(loc.Append("servers")); err != nil {
 		return err
 	}
 	return nil
 }
 
-var _ node = (*Operation)(nil)
+// func (o *Operation) Walk(v Visitor) error {
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	if o == nil {
+// 		return nil
+// 	}
+
+// 	var err error
+// 	v, err = v.Visit(o)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	v, err = v.VisitOperation(o)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+
+// 	if o.Parameters != nil {
+// 		err = o.Parameters.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if o.RequestBody != nil {
+// 		err = o.RequestBody.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if o.Responses != nil {
+// 		err = o.Responses.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if o.Callbacks != nil {
+// 		err = o.Callbacks.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if o.Security != nil {
+// 		err = o.Security.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if o.Servers != nil {
+// 		err = o.Servers.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if o.ExternalDocs != nil {
+// 		err = o.ExternalDocs.Walk(v)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
+var (
+	_ node   = (*Operation)(nil)
+	_ Walker = (*Operation)(nil)
+)

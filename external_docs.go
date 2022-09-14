@@ -79,4 +79,7 @@ func (ed *ExternalDocs) setLocation(loc Location) error {
 }
 func (ed *ExternalDocs) isNil() bool { return ed == nil }
 
-var _ node = (*ExternalDocs)(nil)
+var (
+	_ node   = (*ExternalDocs)(nil)
+	_ Walker = (*ExternalDocs)(nil)
+)

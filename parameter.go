@@ -290,4 +290,7 @@ func (p *Parameter) setLocation(loc Location) error {
 }
 func (p *Parameter) isNil() bool { return p == nil }
 
-var _ node = (*Parameter)(nil)
+var (
+	_ node   = (*Parameter)(nil)
+	_ Walker = (*Parameter)(nil)
+)

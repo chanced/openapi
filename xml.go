@@ -80,4 +80,7 @@ func (xml *XML) setLocation(loc Location) error {
 
 func (xml *XML) isNil() bool { return xml == nil }
 
-var _ node = (*XML)(nil)
+var (
+	_ node   = (*XML)(nil)
+	_ Walker = (*XML)(nil)
+)

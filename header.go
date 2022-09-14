@@ -118,7 +118,7 @@ func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 
 func (*Header) Kind() Kind      { return KindHeader }
 func (*Header) mapKind() Kind   { return KindHeaderMap }
-func (*Header) sliceKind() Kind { return KindUndefined }
+func (*Header) sliceKind() Kind { return KindHeaderSlice }
 
 func (h Header) MarshalJSON() ([]byte, error) {
 	type header Header
@@ -149,4 +149,7 @@ func (h *Header) setLocation(loc Location) error {
 }
 func (h *Header) isNil() bool { return h == nil }
 
-var _ node = (*Header)(nil)
+var (
+	_ node   = (*Header)(nil)
+	_ Walker = (*Header)(nil)
+)

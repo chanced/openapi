@@ -21,8 +21,8 @@ type resolver struct {
 	nodes      map[string]node
 }
 
-// Src identifies source data's shape (e.g. JSON Schema or a second
-// OpenAPI Document).
+// kind identifies source data's shape (e.g. JSON Schema or a second OpenAPI
+// Document).
 //
 // Load will never ask for resolution of a URI with fragment. This only pertains
 // to the data at the absolute, non fragmented URI.
@@ -32,30 +32,19 @@ type resolver struct {
 // example.json#/$defs/foo). In this scenario, we know what $defs/foo is
 // expected to be, but we may not know what example.json is yet, if ever.
 //
-// This hint especially helps aleviate scenarios where we resolve
+// Knowing what the root document is prevents scenarios where we resolve
 // "example.json#/foo/bar" and then later encounter a $ref to
-// "example.json#/foo". Without Src being defined, we would have to extract out
-// "example.json#/foo/bar" from the raw json/yaml, and then reparse "#/foo" when
-// we hit the second $ref. As a result, there would then exist two references to
-// the same object within the graph.
+// "example.json#/foo". Without knowing the shape of "example.json" defined, we
+// would have to extract out "example.json#/foo/bar" from the raw json/yaml, and
+// then reparse "#/foo" when we hit the second $ref. As a result, there would
+// then exist two references to the same object within the graph.
 //
 // Finally, this is necessary for anchors (i.e. $anchor, $dynamicAnchor,
 // $recursiveAnchor) above referenced external resources. For example, if we
 // have a reference to "example.json#/foo/bar" which has an anchor "#baz", that
 // is located at the root of "example.json", it will not be found and an error
 // will be returned upon parsing.
-//
-// Src is not required and can be left as SrcKindUnspecified if anchors are not
-// a factor and duplicate data is not a concern. It is encouraged though.
-type Src uint8
-
-const (
-	SrcUnspecified Src = iota
-	SrcOpenAPIDocument
-	SrcSchema
-)
-
-func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(context.Context, *uri.URI) (Src, []byte, error)) (*Document, error) {
+func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
 	if fn == nil {
 		panic("fn cannot be nil")
 	}

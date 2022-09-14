@@ -23,8 +23,23 @@ type CallbacksMap = ComponentMap[*Callbacks]
 type Callbacks struct {
 	Extensions `json:"-"`
 	Location   `json:"-"`
-	Items      PathItemObjs `json:"-"`
+	Items      *PathItemObjs `json:"-"`
 }
+
+// func (c *Callbacks) Walk(v Visitor) error {
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	v, err := v.Visit(c)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+
+// 	return c.Items.Walk(v)
+// }
 
 func (c *Callbacks) isNil() bool {
 	return c == nil
@@ -101,4 +116,7 @@ func (c *Callbacks) setLocation(loc Location) error {
 	return c.Items.setLocation(loc)
 }
 
-var _ node = (*Callbacks)(nil)
+var (
+	_ node   = (*Callbacks)(nil)
+	_ Walker = (*Callbacks)(nil)
+)

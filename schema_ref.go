@@ -79,4 +79,7 @@ func (sr SchemaRef) MarshalJSON() ([]byte, error) {
 
 func (sr *SchemaRef) isNil() bool { return sr == nil }
 
-var _ node = (*SchemaRef)(nil)
+var (
+	_ node   = (*SchemaRef)(nil)
+	_ Walker = (*SchemaRef)(nil)
+)

@@ -133,4 +133,7 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-var _ node = (*SchemaMap)(nil)
+var (
+	_ node   = (*SchemaMap)(nil)
+	_ Walker = (*SchemaMap)(nil)
+)

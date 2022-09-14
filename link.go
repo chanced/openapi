@@ -5,32 +5,12 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
-	"github.com/chanced/uri"
 )
 
 // LinkMap is a Map of either LinkMap or References to LinkMap
 type (
 	LinkMap = ComponentMap[*Link]
 )
-
-type OperationRef struct {
-	Location
-	Ref       *uri.URI
-	Operation *Operation
-}
-
-func (or OperationRef) MarshalJSON() ([]byte, error) {
-	return json.Marshal(or.Ref)
-}
-
-func (or *OperationRef) UnmarshalJSON(data []byte) error {
-	var uri uri.URI
-	if err := json.Unmarshal(data, &uri); err != nil {
-		return err
-	}
-	or.Ref = &uri
-	return nil
-}
 
 // Link represents a possible design-time link for a response. The presence of a
 // link does not guarantee the caller's ability to successfully invoke it,
@@ -72,6 +52,10 @@ type Link struct {
 	Description Text `json:"description,omitempty"`
 }
 
+// func (*Link) Walk(v Visitor) error {
+// 	panic("Link.Walk() not implemented")
+// }
+
 func (l *Link) Anchors() (*Anchors, error) { return nil, nil }
 
 func (l *Link) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
@@ -89,8 +73,7 @@ func (l *Link) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	return nil, newErrNotResolvable(l.Location.AbsoluteLocation(), tok)
 }
 
-func (*Link) mapKind() Kind { return KindLinkMap }
-
+func (*Link) mapKind() Kind   { return KindLinkMap }
 func (*Link) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals JSON
@@ -140,4 +123,7 @@ func (l *Link) isNil() bool { return l == nil }
 // operations that use the same parameter name in different locations (e.g.
 // path.id).
 
-var _ node = (*Link)(nil)
+var (
+	_ node   = (*Link)(nil)
+	_ Walker = (*Link)(nil)
+)

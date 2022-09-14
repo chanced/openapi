@@ -86,6 +86,51 @@ func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
 	}
 	return anchors, nil
 }
+
+// func (cs *ComponentSlice[T]) Walk(v Visitor) error {
+// 	var t T
+// 	var err error
+// 	v, err = v.Visit(cs)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	switch t.Kind() {
+// 	case KindParameter:
+// 		return cs.walkParameters(v)
+// 	case KindServer:
+// 		return cs.walkServers(v)
+// 	default:
+
+// 	}
+// }
+
+// func (cs *ComponentSlice[T]) walkParameters(v Visitor) error {
+// 	var err error
+// 	ps, ok := (any)(cs).(*ComponentSlice[*Parameter])
+// 	if !ok {
+// 		// shouldn't happen
+// 		panic(fmt.Sprintf("%T is not a *ComponentSlice[*Parameter]", cs))
+// 	}
+// 	v, err = v.VisitParameterSlice(ps)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	for _, p := range ps.Items {
+// 		if err = p.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// }
+
 func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
 
-var _ node = (*ComponentSlice[*Server])(nil)
+var (
+	_ node   = (*ComponentSlice[*Server])(nil)
+	_ Walker = (*ComponentSlice[*Server])(nil)
+)

@@ -23,7 +23,8 @@ type Node interface {
 
 	Anchors() (*Anchors, error)
 
-	// Visit(Visitor) error
+	// I'm not sure why I can't add this. It creates a circular dependency though.
+	// Walker
 }
 
 type node interface {

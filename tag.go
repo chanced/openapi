@@ -2,7 +2,7 @@ package openapi
 
 import "github.com/chanced/jsonpointer"
 
-type TagSlice = ObjMap[*Tag]
+type TagMap = ObjMap[*Tag]
 
 // Tag adds metadata that is used by the Operation Object.
 //
@@ -84,4 +84,7 @@ func (t *Tag) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-var _ node = (*Tag)(nil)
+var (
+	_ node   = (*Tag)(nil)
+	_ Walker = (*Tag)(nil)
+)

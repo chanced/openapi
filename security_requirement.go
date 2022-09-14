@@ -107,9 +107,14 @@ func (sri *SecurityRequirementItem) UnmarshalJSON(data []byte) error {
 type SecurityRequirement = ObjMap[*SecurityRequirementItem]
 
 var (
-	_ node = (*SecurityScheme)(nil)
-	_ node = (*SecuritySchemeMap)(nil)
-	_ node = (*SecurityRequirements)(nil)
-	_ node = (*SecurityRequirement)(nil)
-	_ node = (*SecurityRequirementItem)(nil)
+	_ node   = (*SecurityScheme)(nil)
+	_ Walker = (*SecurityScheme)(nil)
+	_ node   = (*SecuritySchemeMap)(nil)
+	_ Walker = (*SecuritySchemeMap)(nil)
+	_ node   = (*SecurityRequirements)(nil)
+	_ Walker = (*SecurityRequirements)(nil)
+	_ node   = (*SecurityRequirement)(nil)
+	_ Walker = (*SecurityRequirement)(nil)
+	_ node   = (*SecurityRequirementItem)(nil)
+	_ Walker = (*SecurityRequirementItem)(nil)
 )

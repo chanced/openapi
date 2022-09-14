@@ -9,19 +9,22 @@ type (
 
 // Server represention of a Server.
 type Server struct {
+	Location   `json:"-"`
+	Extensions `json:"-"`
+
 	// A URL to the target host. This URL supports Server Variables and MAY be
 	// relative, to indicate that the host location is relative to the location
 	// where the OpenAPI document is being served. Variable substitutions will
 	// be made when a variable is named in {brackets}.
 	URL Text `json:"url"`
+
 	// Description of the host designated by the URL. CommonMark syntax MAY be
 	// used for rich text representation.
 	Description Text `json:"description,omitempty"`
+
 	// A map between a variable name and its value. The value is used for
 	// substitution in the server's URL template.
-	Variables  *ServerVariableMap `json:"variables,omitempty"`
-	Location   `json:"-"`
-	Extensions `json:"-"`
+	Variables *ServerVariableMap `json:"variables,omitempty"`
 }
 
 func (s *Server) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
@@ -143,6 +146,8 @@ func (sv *ServerVariable) Anchors() (*Anchors, error) {
 func (sv *ServerVariable) isNil() bool { return sv == nil }
 
 var (
-	_ node = (*Server)(nil)
-	_ node = (*ServerVariable)(nil)
+	_ node   = (*Server)(nil)
+	_ Walker = (*Server)(nil)
+	_ node   = (*ServerVariable)(nil)
+	_ Walker = (*ServerVariable)(nil)
 )

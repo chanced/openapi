@@ -1,135 +1,25 @@
 package openapi
 
-import (
-	"bytes"
-	"encoding/json"
-	"strings"
-
-	"github.com/chanced/jsonpointer"
-	"github.com/tidwall/gjson"
-)
-
-type PathItemEntry struct {
-	Key      string
-	PathItem *PathItem
-}
-
-type PathItemObjs = ObjMap[*PathItem]
-
-// PathItemMap is a map of Paths that can either be a Path or a Reference
-type PathItemMap = ComponentMap[*PathItem]
-
-// Paths holds the relative paths to the individual endpoints and their
-// operations. The path is appended to the URL from the Server Object in order
-// to construct the full URL. The Paths MAY be empty, due to Access Control List
-// (ACL) constraints.
-type Paths struct {
-	Location   `json:"-"`
-	Extensions `json:"-"`
-
-	// Items are the Path
-	Items PathItemObjs `json:"-"`
-}
-
-func (p *Paths) Anchors() (*Anchors, error) {
-	if p == nil {
-		return nil, nil
-	}
-	return p.Items.Anchors()
-}
-
-func (p *Paths) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return p.resolveNodeByPointer(ptr)
-}
-
-func (p *Paths) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return p, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	v := p.Items.Get(Text(tok))
-	if v == nil {
-		return nil, newErrNotFound(p.Location.AbsoluteLocation(), tok)
-	}
-	return v.resolveNodeByPointer(nxt)
-}
-
-func (p *Paths) isNil() bool { return p == nil }
-
-func (*Paths) Kind() Kind      { return KindPaths }
-func (*Paths) mapKind() Kind   { return KindUndefined }
-func (*Paths) sliceKind() Kind { return KindUndefined }
-
-func (p *Paths) setLocation(loc Location) error {
-	if p == nil {
-		return nil
-	}
-	p.Location = loc
-	return p.Items.setLocation(loc)
-}
-
-// MarshalJSON marshals JSON
-func (p Paths) MarshalJSON() ([]byte, error) {
-	j, err := p.Items.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	b := bytes.Buffer{}
-	// removing the last } as marshalExtensionsInto execpts a buffer without it
-	b.Write(j[:len(j)-1])
-	return marshalExtensionsInto(&b, p.Extensions)
-}
-
-// UnmarshalJSON unmarshals JSON data into p
-func (p *Paths) UnmarshalJSON(data []byte) error {
-	*p = Paths{
-		Extensions: Extensions{},
-	}
-	var err error
-	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
-		if strings.HasPrefix(key.String(), "x-") {
-			p.SetRawExtension(key.String(), []byte(value.Raw))
-		} else {
-			var v PathItem
-			err = json.Unmarshal([]byte(value.Raw), &v)
-			p.Items.Set(Text(key.String()), &v)
-		}
-		return err == nil
-	})
-	return err
-}
+import "github.com/chanced/jsonpointer"
 
 // PathItem describes the operations available on a single path. A PathItem Item MAY
 // be empty, due to ACL constraints. The path itself is still exposed to the
 // documentation viewer but they will not know which operations and parameters
 // are available.
 type PathItem struct {
+	Location   `json:"-"`
+	Extensions `json:"-"`
+
 	// An optional, string summary, intended to apply to all operations in this path.
 	Summary Text `json:"summary,omitempty"`
+
 	// An optional, string description, intended to apply to all operations in
 	// this path. CommonMark syntax MAY be used for rich text representation.
 	Description Text `json:"description,omitempty"`
-	// A definition of a GET operation on this path.
-	Get *Operation `json:"get,omitempty"`
-	// A definition of a PUT operation on this path.
-	Put *Operation `json:"put,omitempty"`
-	// A definition of a POST operation on this path.
-	Post *Operation `json:"post,omitempty"`
-	// A definition of a DELETE operation on this path.
-	Delete *Operation `json:"delete,omitempty"`
-	// A definition of a OPTIONS operation on this path.
-	Options *Operation `json:"options,omitempty"`
-	// A definition of a HEAD operation on this path.
-	Head *Operation `json:"head,omitempty"`
-	// A definition of a PATCH operation on this path.
-	Patch *Operation `json:"patch,omitempty"`
-	// A definition of a TRACE operation on this path.
-	Trace *Operation `json:"trace,omitempty"`
+
 	// An alternative server array to service all operations in this path.
 	Servers *ServerSlice `json:"servers,omitempty"`
+
 	// A list of parameters that are applicable for all the operations described
 	// under this path. These parameters can be overridden at the operation
 	// level, but cannot be removed there. The list MUST NOT include duplicated
@@ -137,8 +27,30 @@ type PathItem struct {
 	// location. The list can use the Reference Object to link to parameters
 	// that are defined at the OpenAPI Object's components/parameters.
 	Parameters *ParameterSlice `json:"parameters,omitempty"`
-	Location   `json:"-"`
-	Extensions `json:"-"`
+
+	// A definition of a GET operation on this path.
+	Get *Operation `json:"get,omitempty"`
+
+	// A definition of a PUT operation on this path.
+	Put *Operation `json:"put,omitempty"`
+
+	// A definition of a POST operation on this path.
+	Post *Operation `json:"post,omitempty"`
+
+	// A definition of a DELETE operation on this path.
+	Delete *Operation `json:"delete,omitempty"`
+
+	// A definition of a OPTIONS operation on this path.
+	Options *Operation `json:"options,omitempty"`
+
+	// A definition of a HEAD operation on this path.
+	Head *Operation `json:"head,omitempty"`
+
+	// A definition of a PATCH operation on this path.
+	Patch *Operation `json:"patch,omitempty"`
+
+	// A definition of a TRACE operation on this path.
+	Trace *Operation `json:"trace,omitempty"`
 }
 
 func (pi *PathItem) Anchors() (*Anchors, error) {
@@ -258,34 +170,35 @@ func (p *PathItem) setLocation(loc Location) error {
 		return nil
 	}
 	p.Location = loc
-	if err := p.Delete.setLocation(loc.Append("delete")); err != nil {
+	var err error
+	if err = p.Delete.setLocation(loc.Append("delete")); err != nil {
 		return err
 	}
-	if err := p.Get.setLocation(loc.Append("get")); err != nil {
+	if err = p.Get.setLocation(loc.Append("get")); err != nil {
 		return err
 	}
-	if err := p.Head.setLocation(loc.Append("head")); err != nil {
+	if err = p.Head.setLocation(loc.Append("head")); err != nil {
 		return err
 	}
-	if err := p.Options.setLocation(loc.Append("options")); err != nil {
+	if err = p.Options.setLocation(loc.Append("options")); err != nil {
 		return err
 	}
-	if err := p.Patch.setLocation(loc.Append("patch")); err != nil {
+	if err = p.Patch.setLocation(loc.Append("patch")); err != nil {
 		return err
 	}
-	if err := p.Post.setLocation(loc.Append("post")); err != nil {
+	if err = p.Post.setLocation(loc.Append("post")); err != nil {
 		return err
 	}
-	if err := p.Put.setLocation(loc.Append("put")); err != nil {
+	if err = p.Put.setLocation(loc.Append("put")); err != nil {
 		return err
 	}
-	if err := p.Trace.setLocation(loc.Append("trace")); err != nil {
+	if err = p.Trace.setLocation(loc.Append("trace")); err != nil {
 		return err
 	}
-	if err := p.Parameters.setLocation(loc.Append("parameters")); err != nil {
+	if err = p.Parameters.setLocation(loc.Append("parameters")); err != nil {
 		return err
 	}
-	if err := p.Servers.setLocation(loc.Append("servers")); err != nil {
+	if err = p.Servers.setLocation(loc.Append("servers")); err != nil {
 		return err
 	}
 
@@ -314,7 +227,91 @@ func (*PathItem) Kind() Kind { return KindPathItem }
 
 func (pi *PathItem) isNil() bool { return pi == nil }
 
+// func (pi *PathItem) Walk(v Visitor) error {
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	var err error
+// 	v, err = v.Visit(pi)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	v, err = v.VisitPathItem(pi)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+
+// 	if pi.Parameters != nil {
+// 		if err = pi.Parameters.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+
+// 	if pi.Servers != nil {
+// 		if err = pi.Servers.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+
+// 	var op OperationItem
+// 	if pi.Get != nil {
+// 		op = OperationItem{Operation: pi.Get, Method: MethodGet}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Put != nil {
+// 		op = OperationItem{Operation: pi.Put, Method: MethodPut}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Post != nil {
+// 		op = OperationItem{Operation: pi.Post, Method: MethodPost}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Delete != nil {
+// 		op = OperationItem{Operation: pi.Delete, Method: MethodDelete}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Options != nil {
+// 		op = OperationItem{Operation: pi.Options, Method: MethodOptions}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Head != nil {
+// 		op = OperationItem{Operation: pi.Head, Method: MethodHead}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Patch != nil {
+// 		op = OperationItem{Operation: pi.Patch, Method: MethodPatch}
+// 		if err = op.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	if pi.Trace != nil {
+// 		if err = pi.Trace.Walk(v); err != nil {
+// 			return err
+// 		}
+// 	}
+
+//		return nil
+//	}
+
 var (
-	_ node = (*PathItem)(nil)
-	_ node = (*Paths)(nil)
+	_ node   = (*PathItem)(nil)
+	_ Walker = (*PathItem)(nil)
 )

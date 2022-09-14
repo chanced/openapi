@@ -86,4 +86,7 @@ func (ss *SchemaSlice) setLocation(loc Location) error {
 
 func (ss *SchemaSlice) isNil() bool { return ss == nil }
 
-var _ node = (*SchemaSlice)(nil)
+var (
+	_ node   = (*SchemaSlice)(nil)
+	_ Walker = (*SchemaSlice)(nil)
+)

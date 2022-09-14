@@ -749,4 +749,7 @@ func (s *Schema) setLocation(loc Location) error {
 }
 func (s *Schema) isNil() bool { return s == nil }
 
-var _ node = (*Schema)(nil)
+var (
+	_ node   = (*Schema)(nil)
+	_ Walker = (*Schema)(nil)
+)
