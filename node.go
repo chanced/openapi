@@ -22,6 +22,8 @@ type Node interface {
 	ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 
 	Anchors() (*Anchors, error)
+
+	// Visit(Visitor) error
 }
 
 type node interface {

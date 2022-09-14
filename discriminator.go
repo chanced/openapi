@@ -16,7 +16,7 @@ type Discriminator struct {
 	PropertyName Text `json:"propertyName"`
 	// An object to hold mappings between payload values and schema names or
 	// references.
-	Mapping map[string]string `json:"mapping,omitempty"`
+	Mapping *Map[Text] `json:"mapping,omitempty"`
 }
 
 func (d *Discriminator) setLocation(loc Location) error {
