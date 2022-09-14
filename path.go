@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 
@@ -76,7 +77,10 @@ func (p Paths) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return marshalExtensionsInto(j, p.Extensions)
+	b := bytes.Buffer{}
+	// removing the last } as marshalExtensionsInto execpts a buffer without it
+	b.Write(j[:len(j)-1])
+	return marshalExtensionsInto(&b, p.Extensions)
 }
 
 // UnmarshalJSON unmarshals JSON data into p

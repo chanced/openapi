@@ -85,7 +85,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(i)
-		// // fmt.Println(b.String())
 	}
 	if d.JSONSchemaDialect != nil {
 		if b.Len() > 1 {
@@ -94,7 +93,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 
 		b.WriteString(`"jsonSchemaDialect":`)
 		jsonx.EncodeAndWriteString(&b, d.JSONSchemaDialect.String())
-		// // fmt.Print("JSON SCHEMA DIALECT\n\n")
 	}
 
 	if d.Servers != nil {
@@ -107,9 +105,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(s)
-		// // fmt.Print("\n\n")
-		// // fmt.Print("Servers\n\n")
-		// // fmt.Println(b.String())
 	}
 	if d.Paths != nil {
 		if b.Len() > 1 {
@@ -121,9 +116,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(p)
-		// fmt.Print("\n\n")
-		// fmt.Print("Paths\n\n")
-		// fmt.Println(b.String())
 	}
 	if d.Webhooks != nil {
 		if b.Len() > 1 {
@@ -135,8 +127,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(w)
-		// fmt.Print("\n\n")
-		// fmt.Println(b.String())
 	}
 
 	if d.Security != nil {
@@ -149,8 +139,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(s)
-		// fmt.Print("\n\n")
-		// fmt.Println(b.String())
 	}
 	if d.Tags != nil {
 		if b.Len() > 1 {
@@ -162,9 +150,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(t)
-		// fmt.Print("\n\n")
-		// fmt.Print("Tags\n\n")
-		// fmt.Println(b.String())
 	}
 	if d.ExternalDocs != nil {
 		if b.Len() > 1 {
@@ -176,9 +161,6 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(e)
-		// fmt.Print("\n\n")
-		// fmt.Print("ExternalDocs\n\n")
-		// fmt.Println(b.String())
 	}
 	if d.Components != nil {
 		if b.Len() > 1 {
@@ -190,12 +172,8 @@ func (d Document) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		b.Write(c)
-		// fmt.Print("\n\n")
-		// fmt.Print("Components\n\n")
-		// fmt.Println(b.String())
 	}
 	b.WriteByte('}')
-	// fmt.Println(b.String())
 	return b.Bytes(), nil
 }
 

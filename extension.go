@@ -8,6 +8,7 @@ import (
 
 	"github.com/chanced/jsonx"
 	"github.com/chanced/maps"
+	"github.com/tidwall/gjson"
 )
 
 // Extensions for OpenAPI
@@ -114,15 +115,12 @@ func unmarshalExtendedJSON(data []byte, dst extender) error {
 	if err := json.Unmarshal(data, dst); err != nil {
 		return err
 	}
-	var jm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &jm); err != nil {
-		return err
-	}
-	for key, d := range jm {
-		if strings.HasPrefix(key, "x-") {
-			ev[key] = jsonx.RawMessage(d)
+	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
+		if IsExtensionKey(key.String()) {
+			ev[key.String()] = jsonx.RawMessage(value.Raw)
 		}
-	}
+		return true
+	})
 	dst.setExts(ev)
 	return nil
 }
@@ -132,31 +130,29 @@ func marshalExtendedJSON(dst extended) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return marshalExtensionsInto(data, dst.exts())
-}
-
-func marshalExtensionsInto(json []byte, e Extensions) ([]byte, error) {
-	if e == nil {
-		return json, nil
-	}
-	if !jsonx.IsObject(json) {
-		return json, fmt.Errorf("error: cannot marshal extensions into non-object")
+	if !jsonx.IsObject(data) {
+		// this shouldn't happen
+		return nil, fmt.Errorf("error: cannot marshal extensions into non-object")
 	}
 
 	b := bytes.Buffer{}
-	b.Write(json[:len(json)-1])
+	b.Write(data[:len(data)-1])
+	return marshalExtensionsInto(&b, dst.exts())
+}
+
+func marshalExtensionsInto(b *bytes.Buffer, e Extensions) ([]byte, error) {
 	var err error
 	for _, kv := range maps.SortByKeys(e) {
 		if b.Len() > 1 {
 			b.WriteByte(',')
 		}
-		jsonx.EncodeAndWriteString(&b, kv.Key)
+		jsonx.EncodeAndWriteString(b, kv.Key)
 		b.WriteByte(':')
 		b.Write(kv.Value)
 		if err != nil {
-			return json, err
+			return nil, err
 		}
 	}
 	b.WriteByte('}')
-	return json, err
+	return b.Bytes(), nil
 }

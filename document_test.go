@@ -4,7 +4,6 @@ import (
 	"embed"
 	"encoding/json"
 	"io"
-	"os"
 	"testing"
 
 	"github.com/chanced/openapi"
@@ -16,7 +15,7 @@ import (
 var testdata embed.FS
 
 func TestUnmarshal(t *testing.T) {
-	f, err := testdata.Open("testdata/petstore.yaml")
+	f, err := testdata.Open("testdata/documents/petstore.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,10 +52,6 @@ func TestUnmarshal(t *testing.T) {
 	}
 	if !cmp.Equal(expected, actual) {
 		t.Error(cmp.Diff(expected, actual))
-	}
-	err = os.WriteFile("petstore.json", output, 0o644)
-	if err != nil {
-		t.Fatal(err)
 	}
 	// litter.Dump(v)
 }

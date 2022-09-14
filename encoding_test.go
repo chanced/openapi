@@ -54,7 +54,6 @@ package openapi_test
 // 		yb, err := json.MarshalIndent(yo, "", "  ")
 // 		assert.NoError(err)
 // 		if !jsonpatch.Equal(data, yb) {
-// 			fmt.Println(string(data), "\n------------------------\n", string(yb))
 // 		}
 // 		assert.True(jsonpatch.Equal(data, yb), cmpjson.Diff(data, yb))
 
