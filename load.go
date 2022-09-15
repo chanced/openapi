@@ -44,7 +44,7 @@ type resolver struct {
 // have a reference to "example.json#/foo/bar" which has an anchor "#baz", that
 // is located at the root of "example.json", it will not be found and an error
 // will be returned upon parsing.
-func Load(ctx context.Context, documentURI string, compiler SchemaCompiler, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
+func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
 	if fn == nil {
 		panic("fn cannot be nil")
 	}
@@ -116,7 +116,7 @@ func (r *resolver) findTopMostNode(u *uri.URI) (node, error) {
 			if ok {
 				// if it isn't a schema, then we can't resolve it
 				if n.Kind() != KindSchema {
-					return nil, fmt.Errorf("error: the reference URI fragment contains an anchor %q but the top-level Node is not a Schema", u.Fragment)
+					return nil, fmt.Errorf("openapi: the reference URI fragment contains an anchor %q but the top-level Node is not a Schema", u.Fragment)
 				}
 			}
 			return nil, fmt.Errorf("failed to find node with id \"%s\"", u.Fragment)

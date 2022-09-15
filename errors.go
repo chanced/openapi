@@ -3,6 +3,7 @@ package openapi
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/uri"
@@ -40,4 +41,28 @@ func newErrNotFound(uri uri.URI, tok jsonpointer.Token) error {
 
 func newErrNotResolvable(uri uri.URI, tok jsonpointer.Token) error {
 	return NewError(fmt.Errorf("%w: %q", ErrNotResolvable, tok), uri)
+}
+
+type SupportedVersionError struct {
+	Version string  `json:"version"`
+	Errs    []error `json:"errors"`
+}
+
+func (e *SupportedVersionError) Error() string {
+	b := strings.Builder{}
+	b.WriteString("openapi: unsupported version:")
+	b.WriteString(fmt.Sprintf(" %q:", e.Version))
+	for _, err := range e.Errs {
+		b.WriteString(fmt.Sprintf("\n- %s", err))
+	}
+	return b.String()
+}
+
+func (e *SupportedVersionError) Is(err error) bool {
+	for _, v := range e.Errs {
+		if errors.Is(v, err) {
+			return true
+		}
+	}
+	return false
 }

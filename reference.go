@@ -10,7 +10,7 @@ import (
 )
 
 // ErrNotReference indicates not a reference
-var ErrNotReference = errors.New("error: data is not a Reference")
+var ErrNotReference = errors.New("openapi: data is not a Reference")
 
 // Reference is simple object to allow referencing other components in the
 // OpenAPI document, internally and externally.

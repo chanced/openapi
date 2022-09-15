@@ -132,7 +132,7 @@ func marshalExtendedJSON(dst extended) ([]byte, error) {
 	}
 	if !jsonx.IsObject(data) {
 		// this shouldn't happen
-		return nil, fmt.Errorf("error: cannot marshal extensions into non-object")
+		return nil, fmt.Errorf("openapi: cannot marshal extensions into non-object")
 	}
 
 	b := bytes.Buffer{}
