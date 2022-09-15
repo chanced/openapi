@@ -26,6 +26,17 @@ func (ss *SchemaSlice) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
+func (ss *SchemaSlice) Refs() []Ref {
+	if ss == nil {
+		return nil
+	}
+	var refs []Ref
+	for _, s := range ss.Items {
+		refs = append(refs, s.Refs()...)
+	}
+	return refs
+}
+
 func (*SchemaSlice) Kind() Kind { return KindSchemaSlice }
 
 func (ss *SchemaSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {

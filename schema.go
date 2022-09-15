@@ -127,7 +127,7 @@ type Schema struct {
 	// must be an array with at least one element, where each element is unique.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#enumerated-values
-	Enum []string `json:"enum,omitempty"`
+	Enum []Text `json:"enum,omitempty"`
 	// The $comment keyword is strictly intended for adding comments to a
 	// schema. Its value must always be a string. Unlike the annotations title,
 	// description, and examples, JSON schema implementations aren’t allowed to
@@ -167,15 +167,18 @@ type Schema struct {
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
 	Then *Schema `json:"then,omitempty"`
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Else                 *Schema    `json:"else,omitempty"`
-	MinProperties        *Number    `json:"minProperties,omitempty"`
-	MaxProperties        *Number    `json:"maxProperties,omitempty"`
-	Required             []string   `json:"required,omitempty"`
-	Properties           *SchemaMap `json:"properties,omitempty"`
-	PropertyNames        *Schema    `json:"propertyNames,omitempty"`
-	RegexProperties      *bool      `json:"regexProperties,omitempty"`
+	Else          *Schema `json:"else,omitempty"`
+	MinProperties *Number `json:"minProperties,omitempty"`
+	MaxProperties *Number `json:"maxProperties,omitempty"`
+	Required      []Text  `json:"required,omitempty"`
+
+	Properties      *SchemaMap `json:"properties,omitempty"`
+	PropertyNames   *Schema    `json:"propertyNames,omitempty"`
+	RegexProperties *bool      `json:"regexProperties,omitempty"`
+
 	PatternProperties    *SchemaMap `json:"patternProperties,omitempty"`
 	AdditionalProperties *Schema    `json:"additionalProperties,omitempty"`
+
 	// The dependentRequired keyword conditionally requires that certain
 	// properties must be present if a given property is present in an object.
 	// For example, suppose we have a schema representing a customer. If you
@@ -186,11 +189,13 @@ type Schema struct {
 	// dependentRequired keyword is an object. Each entry in the object maps
 	// from the name of a property, p, to an array of strings listing properties
 	// that are required if p is present.
-	DependentRequired map[string][]string `json:"dependentRequired,omitempty"`
+	DependentRequired map[Text][]Text `json:"dependentRequired,omitempty"`
+
 	// The dependentSchemas keyword conditionally applies a subschema when a
 	// given property is present. This schema is applied in the same way allOf
 	// applies schemas. Nothing is merged or extended. Both schemas apply
 	// independently.
+
 	DependentSchemas      *SchemaMap `json:"dependentSchemas,omitempty"`
 	UnevaluatedProperties *Schema    `json:"unevaluatedProperties,omitempty"`
 	UniqueObjs            *bool      `json:"uniqueObjs,omitempty"`
@@ -240,6 +245,44 @@ type Schema struct {
 	Location   `json:"-"`
 }
 
+func (s *Schema) Refs() []Ref {
+	if s == nil {
+		return nil
+	}
+	var refs []Ref
+	if s.Ref != nil {
+		refs = append(refs, s.Ref)
+	}
+	if s.DynamicRef != nil {
+		refs = append(refs, s.DynamicRef)
+	}
+	if s.RecursiveRef != nil {
+		refs = append(refs, s.RecursiveRef)
+	}
+	refs = append(refs, s.Definitions.Refs()...)
+	refs = append(refs, s.Not.Refs()...)
+	refs = append(refs, s.AllOf.Refs()...)
+	refs = append(refs, s.AnyOf.Refs()...)
+	refs = append(refs, s.OneOf.Refs()...)
+	refs = append(refs, s.If.Refs()...)
+	refs = append(refs, s.Then.Refs()...)
+	refs = append(refs, s.Else.Refs()...)
+	refs = append(refs, s.Properties.Refs()...)
+	refs = append(refs, s.PropertyNames.Refs()...)
+	refs = append(refs, s.PatternProperties.Refs()...)
+	refs = append(refs, s.AdditionalProperties.Refs()...)
+	refs = append(refs, s.DependentSchemas.Refs()...)
+	refs = append(refs, s.UnevaluatedProperties.Refs()...)
+	refs = append(refs, s.Items.Refs()...)
+	refs = append(refs, s.UnevaluatedObjs.Refs()...)
+	refs = append(refs, s.AdditionalObjs.Refs()...)
+	refs = append(refs, s.PrefixObjs.Refs()...)
+	refs = append(refs, s.Contains.Refs()...)
+	refs = append(refs, s.XML.Refs()...)
+
+	return refs
+}
+
 func (s *Schema) Anchors() (*Anchors, error) {
 	if s == nil {
 		return nil, nil
@@ -270,10 +313,17 @@ func (s *Schema) Anchors() (*Anchors, error) {
 		}
 	}
 	var err error
-	if anchors, err = anchors.merge(s.Then.Anchors()); err != nil {
+
+	if anchors, err = anchors.merge(s.Ref.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.Else.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.Definitions.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.DynamicRef.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Not.Anchors()); err != nil {
 		return nil, err
 	}
 	if anchors, err = anchors.merge(s.AllOf.Anchors()); err != nil {
@@ -285,9 +335,6 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	if anchors, err = anchors.merge(s.OneOf.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.Not.Anchors()); err != nil {
-		return nil, err
-	}
 	if anchors, err = anchors.merge(s.If.Anchors()); err != nil {
 		return nil, err
 	}
@@ -297,16 +344,28 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	if anchors, err = anchors.merge(s.Else.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.Items.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.Properties.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.PropertyNames.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.PatternProperties.Anchors()); err != nil {
 		return nil, err
 	}
 	if anchors, err = anchors.merge(s.AdditionalProperties.Anchors()); err != nil {
 		return nil, err
 	}
+	if anchors, err = anchors.merge(s.DependentSchemas.Anchors()); err != nil {
+		return nil, err
+	}
 	if anchors, err = anchors.merge(s.UnevaluatedProperties.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.Contains.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.Items.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.UnevaluatedObjs.Anchors()); err != nil {
 		return nil, err
 	}
 	if anchors, err = anchors.merge(s.AdditionalObjs.Anchors()); err != nil {
@@ -315,9 +374,16 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	if anchors, err = anchors.merge(s.PrefixObjs.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.PropertyNames.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.Contains.Anchors()); err != nil {
 		return nil, err
 	}
+	if anchors, err = anchors.merge(s.RecursiveRef.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.XML.Anchors()); err != nil {
+		return nil, err
+	}
+
 	return anchors, nil
 }
 

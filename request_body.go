@@ -21,6 +21,13 @@ type RequestBody struct {
 	Required bool `json:"required,omitempty"`
 }
 
+func (rb *RequestBody) Refs() []Ref {
+	if rb == nil {
+		return nil
+	}
+	return rb.Content.Refs()
+}
+
 func (rb *RequestBody) isNil() bool { return rb == nil }
 
 func (rb *RequestBody) Anchors() (*Anchors, error) {

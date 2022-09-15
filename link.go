@@ -52,6 +52,17 @@ type Link struct {
 	Description Text `json:"description,omitempty"`
 }
 
+func (l *Link) Refs() []Ref {
+	if l == nil {
+		return nil
+	}
+	var refs []Ref
+	if l.OperationRef != nil {
+		refs = append(refs, l.OperationRef)
+	}
+	return refs
+}
+
 // func (*Link) Walk(v Visitor) error {
 // 	panic("Link.Walk() not implemented")
 // }

@@ -55,6 +55,13 @@ type Encoding struct {
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 }
 
+func (e *Encoding) Refs() []Ref {
+	if e == nil {
+		return nil
+	}
+	return e.Headers.Refs()
+}
+
 func (e *Encoding) Anchors() (*Anchors, error) {
 	if e == nil {
 		return nil, nil

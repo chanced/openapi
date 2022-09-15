@@ -29,6 +29,17 @@ type ComponentMap[T node] struct {
 	Items []ComponentEntry[T]
 }
 
+func (cm *ComponentMap[T]) Refs() []Ref {
+	if cm == nil {
+		return nil
+	}
+	var refs []Ref
+	for _, item := range cm.Items {
+		refs = append(refs, item.Component.Refs()...)
+	}
+	return refs
+}
+
 func (cm ComponentMap[T]) Map() map[Text]*Component[T] {
 	m := make(map[Text]*Component[T], len(cm.Items))
 	for _, item := range cm.Items {

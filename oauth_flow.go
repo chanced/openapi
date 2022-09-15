@@ -2,6 +2,104 @@ package openapi
 
 import "github.com/chanced/jsonpointer"
 
+// OAuthFlow configuration details for a supported OAuth Flow
+type OAuthFlow struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
+	// The authorization URL to be used for this flow. This MUST be in the form
+	// of a URL. The OAuth2 standard requires the use of TLS.
+	//
+	// Applies to: OAuth2 ("implicit", "authorizationCode")
+	//
+	// 	*required*
+	AuthorizationURL Text `json:"authorizationUrl,omitempty"`
+	// The token URL to be used for this flow. This MUST be in the form of a
+	// URL. The OAuth2 standard requires the use of TLS.
+	//
+	// Applies to: OAuth2Flow ("password", "clientCredentials", "authorizationCode")
+	//
+	// 	*required*
+	TokenURL Text `json:"tokenUrl,omitempty"`
+	// The URL to be used for obtaining refresh tokens. This MUST be in the form
+	// of a URL. The OAuth2 standard requires the use of TLS.
+	RefreshURL Text `json:"refreshUrl,omitempty"`
+	// The available scopes for the OAuth2 security scheme. A map between the
+	// scope name and a short description for it. The map MAY be empty.
+	//
+	// 	*required*
+	Scopes *Scopes `json:"scopes"`
+}
+
+func (f *OAuthFlow) Refs() []Ref {
+	if f == nil {
+		return nil
+	}
+	return f.Scopes.Refs()
+}
+
+func (f *OAuthFlow) Anchors() (*Anchors, error) {
+	if f == nil {
+		return nil, nil
+	}
+	return f.Scopes.Anchors()
+}
+
+func (f *OAuthFlow) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return f.resolveNodeByPointer(ptr)
+}
+
+func (f *OAuthFlow) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return f, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	switch tok {
+	case "scopes":
+		if f.Scopes == nil {
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+		}
+		return f.Scopes.resolveNodeByPointer(nxt)
+	default:
+		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
+	}
+}
+
+func (*OAuthFlow) Kind() Kind      { return KindOAuthFlow }
+func (*OAuthFlow) mapKind() Kind   { return KindUndefined }
+func (*OAuthFlow) sliceKind() Kind { return KindUndefined }
+
+func (o *OAuthFlow) setLocation(loc Location) error {
+	if o == nil {
+		return nil
+	}
+	o.Location = loc
+	o.Scopes.setLocation(loc.Append("scopes"))
+	return nil
+}
+
+// MarshalJSON marshals json
+func (o OAuthFlow) MarshalJSON() ([]byte, error) {
+	type oauthflow OAuthFlow
+
+	return marshalExtendedJSON(oauthflow(o))
+}
+
+// UnmarshalJSON unmarshals json
+func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
+	type oauthflow OAuthFlow
+	var v oauthflow
+	if err := unmarshalExtendedJSON(data, &v); err != nil {
+		return err
+	}
+	*o = OAuthFlow(v)
+	return nil
+}
+func (o *OAuthFlow) isNil() bool { return o == nil }
+
 // OAuthFlows allows configuration of the supported OAuth Flows.
 type OAuthFlows struct {
 	Extensions `json:"-"`
@@ -16,6 +114,18 @@ type OAuthFlows struct {
 	ClientCredentials *OAuthFlow `json:"clientCredentials,omitempty"`
 	// Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0.
 	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty"`
+}
+
+func (f *OAuthFlows) Refs() []Ref {
+	if f == nil {
+		return nil
+	}
+	var refs []Ref
+	refs = append(refs, f.Implicit.Refs()...)
+	refs = append(refs, f.Password.Refs()...)
+	refs = append(refs, f.ClientCredentials.Refs()...)
+	refs = append(refs, f.AuthorizationCode.Refs()...)
+	return refs
 }
 
 func (f *OAuthFlows) isNil() bool { return f == nil }
@@ -119,97 +229,6 @@ func (f *OAuthFlows) UnmarshalJSON(data []byte) error {
 	*f = OAuthFlows(v)
 	return nil
 }
-
-// OAuthFlow configuration details for a supported OAuth Flow
-type OAuthFlow struct {
-	Extensions `json:"-"`
-	Location   `json:"-"`
-
-	// The authorization URL to be used for this flow. This MUST be in the form
-	// of a URL. The OAuth2 standard requires the use of TLS.
-	//
-	// Applies to: OAuth2 ("implicit", "authorizationCode")
-	//
-	// 	*required*
-	AuthorizationURL Text `json:"authorizationUrl,omitempty"`
-	// The token URL to be used for this flow. This MUST be in the form of a
-	// URL. The OAuth2 standard requires the use of TLS.
-	//
-	// Applies to: OAuth2Flow ("password", "clientCredentials", "authorizationCode")
-	//
-	// 	*required*
-	TokenURL Text `json:"tokenUrl,omitempty"`
-	// The URL to be used for obtaining refresh tokens. This MUST be in the form
-	// of a URL. The OAuth2 standard requires the use of TLS.
-	RefreshURL Text `json:"refreshUrl,omitempty"`
-	// The available scopes for the OAuth2 security scheme. A map between the
-	// scope name and a short description for it. The map MAY be empty.
-	//
-	// 	*required*
-	Scopes *Scopes `json:"scopes"`
-}
-
-func (f *OAuthFlow) Anchors() (*Anchors, error) {
-	if f == nil {
-		return nil, nil
-	}
-	return f.Scopes.Anchors()
-}
-
-func (f *OAuthFlow) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return f.resolveNodeByPointer(ptr)
-}
-
-func (f *OAuthFlow) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return f, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "scopes":
-		if f.Scopes == nil {
-			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-		}
-		return f.Scopes.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
-	}
-}
-
-func (*OAuthFlow) Kind() Kind      { return KindOAuthFlow }
-func (*OAuthFlow) mapKind() Kind   { return KindUndefined }
-func (*OAuthFlow) sliceKind() Kind { return KindUndefined }
-
-func (o *OAuthFlow) setLocation(loc Location) error {
-	if o == nil {
-		return nil
-	}
-	o.Location = loc
-	o.Scopes.setLocation(loc.Append("scopes"))
-	return nil
-}
-
-// MarshalJSON marshals json
-func (o OAuthFlow) MarshalJSON() ([]byte, error) {
-	type oauthflow OAuthFlow
-
-	return marshalExtendedJSON(oauthflow(o))
-}
-
-// UnmarshalJSON unmarshals json
-func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
-	type oauthflow OAuthFlow
-	var v oauthflow
-	if err := unmarshalExtendedJSON(data, &v); err != nil {
-		return err
-	}
-	*o = OAuthFlow(v)
-	return nil
-}
-func (o *OAuthFlow) isNil() bool { return o == nil }
 
 var (
 	_ node   = (*OAuthFlow)(nil)

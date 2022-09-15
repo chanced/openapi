@@ -13,6 +13,28 @@ type OperationRef struct {
 	Operation *Operation
 }
 
+func (or *OperationRef) Refs() []Ref {
+	return nil
+}
+
+func (or *OperationRef) IsRef() bool {
+	return or != nil
+}
+
+func (or *OperationRef) IsResolved() bool {
+	return or.Operation != nil
+}
+
+// RefDst implements Ref
+func (or *OperationRef) RefDst() interface{} {
+	return &or.Operation
+}
+
+// RefURI implements Ref
+func (or *OperationRef) RefURI() *uri.URI {
+	return or.Ref
+}
+
 // func (or *OperationRef) Walk(v Visitor) error {
 // 	if v == nil {
 // 		return nil

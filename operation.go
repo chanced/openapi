@@ -106,6 +106,21 @@ type Operation struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
+func (o *Operation) Refs() []Ref {
+	if o == nil {
+		return nil
+	}
+	var refs []Ref
+	refs = append(refs, o.ExternalDocs.Refs()...)
+	refs = append(refs, o.Parameters.Refs()...)
+	refs = append(refs, o.RequestBody.Refs()...)
+	refs = append(refs, o.Responses.Refs()...)
+	refs = append(refs, o.Callbacks.Refs()...)
+	refs = append(refs, o.Security.Refs()...)
+	refs = append(refs, o.Servers.Refs()...)
+	return refs
+}
+
 func (o *Operation) isNil() bool { return o == nil }
 
 func (o *Operation) Anchors() (*Anchors, error) {

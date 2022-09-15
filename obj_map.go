@@ -29,16 +29,16 @@ func (*ObjMap[T]) Kind() Kind {
 func (*ObjMap[T]) mapKind() Kind   { return KindUndefined }
 func (*ObjMap[T]) sliceKind() Kind { return KindUndefined }
 
-// func (om *ObjMap[T]) Walk(v Visitor) error {
-// 	if om == nil {
-// 		return nil
-// 	}
-// 	var t T
-// 	switch t.Kind() {
-
-// 	}
-// 	panic("ObjMap.Walk is not done")
-// }
+func (om *ObjMap[T]) Refs() []Ref {
+	if om == nil {
+		return nil
+	}
+	refs := []Ref{}
+	for _, item := range om.Items {
+		refs = append(refs, item.Value.Refs()...)
+	}
+	return refs
+}
 
 func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {

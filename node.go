@@ -23,6 +23,8 @@ type Node interface {
 
 	Anchors() (*Anchors, error)
 
+	Refs() []Ref
+
 	// I'm not sure why I can't add this. It creates a circular dependency though.
 	// Walker
 }

@@ -22,6 +22,10 @@ func (*Scope) Kind() Kind                 { return KindScope }
 func (*Scope) mapKind() Kind              { return KindUndefined }
 func (*Scope) sliceKind() Kind            { return KindUndefined }
 
+func (s *Scope) Refs() []Ref {
+	return nil
+}
+
 func (s *Scope) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
@@ -93,6 +97,16 @@ type Scopes struct {
 	Items []*Scope `json:"-"`
 }
 
+func (s *Scopes) Refs() []Ref {
+	if s == nil {
+		return nil
+	}
+	var refs []Ref
+	for _, v := range s.Items {
+		refs = append(refs, v.Refs()...)
+	}
+	return refs
+}
 func (*Scopes) Anchors() (*Anchors, error) { return nil, nil }
 func (*Scopes) Kind() Kind                 { return KindScopes }
 func (*Scopes) mapKind() Kind              { return KindUndefined }

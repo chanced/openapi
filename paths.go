@@ -31,6 +31,13 @@ type Paths struct {
 	Items *PathItemObjs `json:"-"`
 }
 
+func (p *Paths) Refs() []Ref {
+	if p == nil {
+		return nil
+	}
+	return p.Items.Refs()
+}
+
 func (p *Paths) Anchors() (*Anchors, error) {
 	if p == nil {
 		return nil, nil

@@ -13,6 +13,15 @@ type ComponentSlice[T node] struct {
 	Items    []Component[T] `json:"-"`
 }
 
+// Refs implements node
+func (cs *ComponentSlice[T]) Refs() []Ref {
+	var refs []Ref
+	for _, item := range cs.Items {
+		refs = append(refs, item.Refs()...)
+	}
+	return refs
+}
+
 func (ComponentSlice[T]) Kind() Kind {
 	var t T
 	return t.Kind()
@@ -87,6 +96,13 @@ func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
+func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
+
+var (
+	_ node   = (*ComponentSlice[*Server])(nil)
+	_ Walker = (*ComponentSlice[*Server])(nil)
+)
+
 // func (cs *ComponentSlice[T]) Walk(v Visitor) error {
 // 	var t T
 // 	var err error
@@ -127,10 +143,3 @@ func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
 // 		}
 // 	}
 // }
-
-func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
-
-var (
-	_ node   = (*ComponentSlice[*Server])(nil)
-	_ Walker = (*ComponentSlice[*Server])(nil)
-)

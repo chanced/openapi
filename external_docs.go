@@ -16,6 +16,7 @@ type ExternalDocs struct {
 	Description Text `json:"description,omitempty"`
 }
 
+func (*ExternalDocs) Refs() []Ref     { return nil }
 func (*ExternalDocs) Kind() Kind      { return KindExternalDocs }
 func (*ExternalDocs) mapKind() Kind   { return KindUndefined }
 func (*ExternalDocs) sliceKind() Kind { return KindUndefined }

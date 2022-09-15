@@ -5,10 +5,13 @@ import "github.com/chanced/uri"
 type Ref interface {
 	RefURI() *uri.URI
 	IsResolved() bool
-	IsReference() bool
+	IsRef() bool
+	Kind() Kind
+	RefDst() interface{}
 }
 
-// var (
-// 	_ Ref = (*SchemaRef)(nil)
-// 	_ Ref = (*Component[*Server])(nil)
-// )
+var (
+	_ Ref = (*SchemaRef)(nil)
+	_ Ref = (*Component[*Server])(nil)
+	_ Ref = (*OperationRef)(nil)
+)

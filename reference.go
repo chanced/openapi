@@ -39,9 +39,7 @@ type Reference struct {
 	Location `json:"-"`
 }
 
-func (r *Reference) URI() *uri.URI {
-	return r.Ref
-}
+func (*Reference) Refs() []Ref { return nil }
 
 func (r *Reference) Anchors() (*Anchors, error) { return nil, nil }
 

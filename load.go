@@ -12,7 +12,7 @@ import (
 type resolver struct {
 	primaryResource []byte
 	resources       map[string][]byte
-	fn              func(context.Context, *uri.URI) (Src, []byte, error)
+	fn              func(context.Context, *uri.URI) (Kind, []byte, error)
 	uri             *uri.URI
 	document        *Document
 	// id rather have map[string]*Callback and so on, but that causes a circular dependency

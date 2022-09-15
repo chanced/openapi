@@ -79,6 +79,7 @@ func (xml *XML) setLocation(loc Location) error {
 }
 
 func (xml *XML) isNil() bool { return xml == nil }
+func (xml *XML) Refs() []Ref { return nil }
 
 var (
 	_ node   = (*XML)(nil)

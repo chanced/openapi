@@ -25,6 +25,7 @@ type Tag struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
 }
 
+func (*Tag) Refs() []Ref                { return nil }
 func (*Tag) Anchors() (*Anchors, error) { return nil, nil }
 
 func (t *Tag) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {

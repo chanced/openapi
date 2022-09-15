@@ -27,6 +27,17 @@ type Server struct {
 	Variables *ServerVariableMap `json:"variables,omitempty"`
 }
 
+func (s *Server) Refs() []Ref {
+	if s == nil {
+		return nil
+	}
+	var refs []Ref
+	if s.Variables != nil {
+		refs = append(refs, s.Variables.Refs()...)
+	}
+	return refs
+}
+
 func (s *Server) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
@@ -84,7 +95,7 @@ func (s *Server) isNil() bool { return s == nil }
 type ServerVariable struct {
 	// An enumeration of string values to be used if the substitution options
 	// are from a limited set. The array MUST NOT be empty.
-	Enum []string `json:"enum"`
+	Enum []Text `json:"enum"`
 	// The default value to use for substitution, which SHALL be sent if an
 	// alternate value is not supplied. Note this behavior is different than the
 	// Schema Object's treatment of default values, because in those cases
@@ -100,6 +111,8 @@ type ServerVariable struct {
 	Location   `json:"-"`
 	Extensions `json:"-"`
 }
+
+func (*ServerVariable) Refs() []Ref { return nil }
 
 func (sv *ServerVariable) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {

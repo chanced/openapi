@@ -26,21 +26,10 @@ type Callbacks struct {
 	Items      *PathItemObjs `json:"-"`
 }
 
-// func (c *Callbacks) Walk(v Visitor) error {
-// 	if v == nil {
-// 		return nil
-// 	}
-// 	v, err := v.Visit(c)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if v == nil {
-// 		return nil
-// 	}
-
-// 	return c.Items.Walk(v)
-// }
-
+// kind returns KindCallback
+func (*Callbacks) Kind() Kind     { return KindCallbacks }
+func (*Callbacks) mapKind() Kind  { return KindCallbacksMap }
+func (Callbacks) sliceKind() Kind { return KindUndefined }
 func (c *Callbacks) isNil() bool {
 	return c == nil
 }
@@ -51,6 +40,13 @@ func (c *Callbacks) Anchors() (*Anchors, error) {
 		return nil, nil
 	}
 	return c.Items.Anchors()
+}
+
+func (c *Callbacks) Refs() []Ref {
+	if c == nil {
+		return nil
+	}
+	return c.Items.Refs()
 }
 
 // ResolveNodeByPointer performs a l
@@ -103,11 +99,6 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// kind returns KindCallback
-func (*Callbacks) Kind() Kind     { return KindCallbacks }
-func (*Callbacks) mapKind() Kind  { return KindCallbacksMap }
-func (Callbacks) sliceKind() Kind { return KindUndefined }
-
 func (c *Callbacks) setLocation(loc Location) error {
 	if c == nil {
 		return nil
@@ -115,6 +106,21 @@ func (c *Callbacks) setLocation(loc Location) error {
 	c.Location = loc
 	return c.Items.setLocation(loc)
 }
+
+// func (c *Callbacks) Walk(v Visitor) error {
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	v, err := v.Visit(c)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+
+// 	return c.Items.Walk(v)
+// }
 
 var (
 	_ node   = (*Callbacks)(nil)

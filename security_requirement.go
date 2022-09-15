@@ -19,6 +19,7 @@ type SecurityRequirementItem struct {
 	Value []Text
 }
 
+func (sri *SecurityRequirementItem) Refs() []Ref { return nil }
 func (sri *SecurityRequirementItem) isNil() bool { return sri == nil }
 
 func (sri *SecurityRequirementItem) Anchors() (*Anchors, error) { return nil, nil }
@@ -107,8 +108,6 @@ func (sri *SecurityRequirementItem) UnmarshalJSON(data []byte) error {
 type SecurityRequirement = ObjMap[*SecurityRequirementItem]
 
 var (
-	_ node   = (*SecurityScheme)(nil)
-	_ Walker = (*SecurityScheme)(nil)
 	_ node   = (*SecuritySchemeMap)(nil)
 	_ Walker = (*SecuritySchemeMap)(nil)
 	_ node   = (*SecurityRequirements)(nil)

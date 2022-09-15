@@ -13,7 +13,18 @@ type TagSlice struct {
 }
 
 // Kind implements node
-func (TagSlice) Kind() Kind { return KindTagSlice }
+func (*TagSlice) Kind() Kind { return KindTagSlice }
+
+func (ts *TagSlice) Refs() []Ref {
+	if ts == nil {
+		return nil
+	}
+	var refs []Ref
+	for _, item := range ts.Items {
+		refs = append(refs, item.Refs()...)
+	}
+	return refs
+}
 
 // ResolveNodeByPointer implements node
 func (ts TagSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
@@ -23,7 +34,7 @@ func (ts TagSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	return ts.resolveNodeByPointer(ptr)
 }
 
-func (ts TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+func (ts *TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return ts, nil
 	}
@@ -42,7 +53,7 @@ func (ts TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 }
 
 // MarshalJSON implements node
-func (ts TagSlice) MarshalJSON() ([]byte, error) {
+func (ts *TagSlice) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ts.Items)
 }
 

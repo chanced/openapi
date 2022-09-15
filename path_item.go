@@ -53,6 +53,24 @@ type PathItem struct {
 	Trace *Operation `json:"trace,omitempty"`
 }
 
+func (pi *PathItem) Refs() []Ref {
+	if pi == nil {
+		return nil
+	}
+	var refs []Ref
+	refs = append(refs, pi.Servers.Refs()...)
+	refs = append(refs, pi.Parameters.Refs()...)
+	refs = append(refs, pi.Get.Refs()...)
+	refs = append(refs, pi.Put.Refs()...)
+	refs = append(refs, pi.Post.Refs()...)
+	refs = append(refs, pi.Delete.Refs()...)
+	refs = append(refs, pi.Options.Refs()...)
+	refs = append(refs, pi.Head.Refs()...)
+	refs = append(refs, pi.Patch.Refs()...)
+	refs = append(refs, pi.Trace.Refs()...)
+	return refs
+}
+
 func (pi *PathItem) Anchors() (*Anchors, error) {
 	if pi == nil {
 		return nil, nil

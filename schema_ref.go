@@ -14,6 +14,22 @@ type SchemaRef struct {
 	Resolved *Schema  `json:"-"`
 }
 
+func (*SchemaRef) Refs() []Ref { return nil }
+
+func (*SchemaRef) IsRef() bool { return true }
+
+func (sr *SchemaRef) IsResolved() bool {
+	return sr.Resolved != nil
+}
+
+func (sr *SchemaRef) RefURI() *uri.URI {
+	return sr.Ref
+}
+
+func (sr *SchemaRef) RefDst() interface{} {
+	return &sr.Resolved
+}
+
 func (sr *SchemaRef) URI() *uri.URI { return sr.Ref }
 
 func (*SchemaRef) Kind() Kind      { return KindSchemaRef }
@@ -82,4 +98,5 @@ func (sr *SchemaRef) isNil() bool { return sr == nil }
 var (
 	_ node   = (*SchemaRef)(nil)
 	_ Walker = (*SchemaRef)(nil)
+	_ Ref    = (*SchemaRef)(nil)
 )

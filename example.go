@@ -35,6 +35,8 @@ type Example struct {
 	Location   `json:"-"`
 }
 
+func (*Example) Refs() []Ref { return nil }
+
 func (e *Example) Anchors() (*Anchors, error) { return nil, nil }
 
 func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {

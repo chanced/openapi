@@ -44,6 +44,17 @@ type Response struct {
 	Location `json:"-"`
 }
 
+func (r *Response) Refs() []Ref {
+	if r == nil {
+		return nil
+	}
+	var refs []Ref
+	refs = append(refs, r.Headers.Refs()...)
+	refs = append(refs, r.Content.Refs()...)
+	refs = append(refs, r.Links.Refs()...)
+	return refs
+}
+
 func (r *Response) Anchors() (*Anchors, error) {
 	if r == nil {
 		return nil, nil

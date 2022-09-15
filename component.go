@@ -4,12 +4,38 @@ import (
 	"encoding/json"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/uri"
 )
 
 type Component[T node] struct {
 	Location
 	Reference *Reference
 	Object    T
+}
+
+// Dst implements Ref
+func (c *Component[T]) RefDst() interface{} {
+	if !c.IsRef() || c == nil {
+		return nil
+	}
+	// this should always be a pointer
+	return &c.Object
+}
+
+// IsResolved implements Ref
+func (c *Component[T]) IsResolved() bool {
+	if c == nil || c.Reference == nil {
+		return true
+	}
+	return !c.Object.isNil()
+}
+
+// RefURI implements Ref
+func (c *Component[T]) RefURI() *uri.URI {
+	if !c.IsRef() {
+		return nil
+	}
+	return c.Reference.Ref
 }
 
 func (c *Component[T]) Kind() Kind {
@@ -44,8 +70,18 @@ func (c *Component[T]) location() Location {
 	return c.Object.location()
 }
 
-func (c *Component[T]) IsReference() bool {
+func (c *Component[T]) IsRef() bool {
 	return c.Reference != nil
+}
+
+func (c *Component[T]) Refs() []Ref {
+	if c == nil {
+		return nil
+	}
+	if c.IsRef() {
+		return []Ref{c}
+	}
+	return c.Object.Refs()
 }
 
 // func (c *Component[T]) IsResolved() bool {

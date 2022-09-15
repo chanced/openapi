@@ -201,6 +201,23 @@ type Parameter struct {
 	Content *ContentMap `json:"content,omitempty"`
 }
 
+func (p *Parameter) Refs() []Ref {
+	if p == nil {
+		return nil
+	}
+	var refs []Ref
+	if p.Schema != nil {
+		refs = append(refs, p.Schema.Refs()...)
+	}
+	if p.Examples != nil {
+		refs = append(refs, p.Examples.Refs()...)
+	}
+	if p.Content != nil {
+		refs = append(refs, p.Content.Refs()...)
+	}
+	return refs
+}
+
 func (p *Parameter) Anchors() (*Anchors, error) {
 	if p == nil {
 		return nil, nil

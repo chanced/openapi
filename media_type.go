@@ -41,6 +41,16 @@ type MediaType struct {
 	Encoding *EncodingMap `json:"encoding,omitempty"`
 }
 
+func (mt *MediaType) Refs() []Ref {
+	if mt == nil {
+		return nil
+	}
+	refs := mt.Schema.Refs()
+	refs = append(refs, mt.Examples.Refs()...)
+	refs = append(refs, mt.Encoding.Refs()...)
+	return refs
+}
+
 func (mt *MediaType) Anchors() (*Anchors, error) {
 	if mt == nil {
 		return nil, nil

@@ -75,6 +75,12 @@ type SecurityScheme struct {
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
 }
 
+func (ss *SecurityScheme) Refs() []Ref {
+	if ss == nil {
+		return nil
+	}
+	return ss.Flows.Refs()
+}
 func (ss *SecurityScheme) isNil() bool { return ss == nil }
 
 func (ss *SecurityScheme) Anchors() (*Anchors, error) {
@@ -139,3 +145,8 @@ func (ss SecurityScheme) MarshalJSON() ([]byte, error) {
 func (*SecurityScheme) Kind() Kind      { return KindSecurityScheme }
 func (*SecurityScheme) mapKind() Kind   { return KindSecuritySchemeMap }
 func (*SecurityScheme) sliceKind() Kind { return KindUndefined }
+
+var (
+	_ node   = (*SecurityScheme)(nil)
+	_ Walker = (*SecurityScheme)(nil)
+)

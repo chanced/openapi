@@ -23,6 +23,18 @@ type SchemaMap struct {
 	Items []SchemaItem
 }
 
+// Refs implements node
+func (sm *SchemaMap) Refs() []Ref {
+	if sm == nil {
+		return nil
+	}
+	var refs []Ref
+	for _, e := range sm.Items {
+		refs = append(refs, e.Schema.Refs()...)
+	}
+	return refs
+}
+
 func (*SchemaMap) Kind() Kind      { return KindSchemaMap }
 func (*SchemaMap) sliceKind() Kind { return KindUndefined }
 func (*SchemaMap) mapKind() Kind   { return KindUndefined }

@@ -73,6 +73,16 @@ type Header struct {
 	Example jsonx.RawMessage `json:"example,omitempty"`
 }
 
+func (h *Header) Refs() []Ref {
+	if h == nil {
+		return nil
+	}
+	var refs []Ref
+	refs = append(refs, h.Schema.Refs()...)
+	refs = append(refs, h.Examples.Refs()...)
+	return refs
+}
+
 func (h *Header) Anchors() (*Anchors, error) {
 	if h == nil {
 		return nil, nil
