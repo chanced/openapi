@@ -122,9 +122,14 @@ type StdValidator struct {
 }
 
 // Validate implements Validator
-func (v *StdValidator) Validate(data []byte, kind Kind, _ *uri.URI, openapi semver.Version) error {
+func (sv *StdValidator) Validate(data []byte, kind Kind, _ *uri.URI, openapi semver.Version) error {
 	if isRefJSON(data) {
 		kind = KindReference
+	}
+	switch kind {
+	case KindSchema:
+
+		return sv.ValidateSchema(data)
 	}
 }
 
