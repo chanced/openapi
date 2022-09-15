@@ -106,6 +106,32 @@ type Operation struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
+func (o *Operation) Edges() []Node {
+	if o == nil {
+		return nil
+	}
+	return downcastNodes(o.edges())
+}
+
+func (o *Operation) edges() []node {
+	if o == nil {
+		return nil
+	}
+	return appendEdges(nil,
+		o.Parameters,
+		o.RequestBody,
+		o.Responses,
+		o.Callbacks,
+		o.Security,
+		o.Servers,
+		o.ExternalDocs,
+	)
+}
+
+func (*Operation) IsRef() bool { return false }
+
+func (*Operation) ref() Ref { return nil }
+
 func (o *Operation) Refs() []Ref {
 	if o == nil {
 		return nil
@@ -153,7 +179,7 @@ func (o *Operation) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-// ResolveNodeByPointers a Node by a json pointer
+// ResolveNodeByPointer resolves a Node by a json pointer
 func (o *Operation) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err

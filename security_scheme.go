@@ -2,24 +2,17 @@ package openapi
 
 import "github.com/chanced/jsonpointer"
 
-// SecuritySchemeType represents the type of the security scheme.
-type SecuritySchemeType string
-
-func (ss SecuritySchemeType) String() string {
-	return string(ss)
-}
-
 const (
 	// SecuritySchemeTypeAPIKey = "apiKey"
-	SecuritySchemeTypeAPIKey SecuritySchemeType = "apiKey"
+	SecuritySchemeTypeAPIKey Text = "apiKey"
 	// SecuritySchemeTypeHTTP = "http"
-	SecuritySchemeTypeHTTP SecuritySchemeType = "http"
+	SecuritySchemeTypeHTTP Text = "http"
 	// SecuritySchemeTypeMutualTLS = mutualTLS
-	SecuritySchemeTypeMutualTLS SecuritySchemeType = "mutualTLS"
+	SecuritySchemeTypeMutualTLS Text = "mutualTLS"
 	// SecuritySchemeTypeOAuth2 = oauth2
-	SecuritySchemeTypeOAuth2 SecuritySchemeType = "oauth2"
+	SecuritySchemeTypeOAuth2 Text = "oauth2"
 	// SecuritySchemeTypeOpenIDConnect = "openIdConnect"
-	SecuritySchemeTypeOpenIDConnect SecuritySchemeType = "openIdConnect"
+	SecuritySchemeTypeOpenIDConnect Text = "openIdConnect"
 )
 
 // SecuritySchemeMap is a map of SecurityScheme
@@ -33,7 +26,7 @@ type SecurityScheme struct {
 	// The type of the security scheme.
 	//
 	// *required
-	Type SecuritySchemeType `json:"type,omitempty"`
+	Type Text `json:"type,omitempty"`
 
 	// Any description for security scheme. CommonMark syntax MAY be used for
 	// rich text representation.
@@ -73,6 +66,22 @@ type SecurityScheme struct {
 	//
 	// 	*required*
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
+}
+
+func (*SecurityScheme) IsRef() bool { return false }
+
+func (ss *SecurityScheme) Edges() []Node {
+	if ss == nil {
+		return nil
+	}
+	return downcastNodes(ss.edges())
+}
+
+func (ss *SecurityScheme) edges() []node {
+	if ss == nil {
+		return nil
+	}
+	return appendEdges(nil, ss.Flows)
 }
 
 func (ss *SecurityScheme) Refs() []Ref {

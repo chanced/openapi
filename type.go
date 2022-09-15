@@ -40,15 +40,7 @@ const (
 // Type restricts to a JSON Schema specific type
 //
 // https://json-schema.org/understanding-json-schema/reference/type.html#type
-type Type string
-
-func (t Type) String() string {
-	return string(t)
-}
-
-func (t Type) Text() Text {
-	return Text(t.String())
-}
+type Type = Text
 
 // Types is a set of Types. A single Type marshals/unmarshals into a string
 // while 2+ marshals into an array.
@@ -93,11 +85,6 @@ func (t Types) ContainsNull() bool {
 // IsSingle returns true if len(t) == 1
 func (t Types) IsSingle() bool {
 	return len(t) == 1
-}
-
-// IsEmpty returns true if len(t) == 0
-func (t Type) IsEmpty() bool {
-	return len(t) == 0
 }
 
 // Len returns len(t)

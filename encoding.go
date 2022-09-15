@@ -35,7 +35,7 @@ type Encoding struct {
 	// not application/x-www-form-urlencoded or multipart/form-data. If a value
 	// is explicitly defined, then the value of contentType (implicit or
 	// explicit) SHALL be ignored.
-	Style Style `json:"style,omitempty"`
+	Style Text `json:"style,omitempty"`
 	// When this is true, property values of type array or object generate
 	// separate parameters for each value of the array, or key-value-pair of the
 	// map. For other types of properties this property has no effect. When
@@ -53,6 +53,20 @@ type Encoding struct {
 	// explicitly defined, then the value of contentType (implicit or explicit)
 	// SHALL be ignored.
 	AllowReserved *bool `json:"allowReserved,omitempty"`
+}
+
+func (e *Encoding) Edges() []Node {
+	if e == nil {
+		return nil
+	}
+	return downcastNodes(e.edges())
+}
+
+func (e *Encoding) edges() []node {
+	if e == nil {
+		return nil
+	}
+	return appendEdges(nil, e.Headers)
 }
 
 func (e *Encoding) Refs() []Ref {
@@ -76,6 +90,8 @@ func (e *Encoding) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	}
 	return e.resolveNodeByPointer(ptr)
 }
+
+func (e *Encoding) IsRef() bool { return false }
 
 func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {

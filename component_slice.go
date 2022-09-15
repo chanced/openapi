@@ -13,6 +13,22 @@ type ComponentSlice[T node] struct {
 	Items    []Component[T] `json:"-"`
 }
 
+func (cs *ComponentSlice[T]) edges() []node {
+	if cs == nil {
+		return nil
+	}
+	edges := make([]node, len(cs.Items))
+	for i, item := range cs.Items {
+		edges[i] = item.Object
+	}
+	return edges
+}
+
+func (*ComponentSlice[T]) IsRef() bool { return false }
+
+// ref implements node
+func (*ComponentSlice[T]) ref() Ref { return nil }
+
 // Refs implements node
 func (cs *ComponentSlice[T]) Refs() []Ref {
 	var refs []Ref

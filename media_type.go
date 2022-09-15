@@ -41,6 +41,22 @@ type MediaType struct {
 	Encoding *EncodingMap `json:"encoding,omitempty"`
 }
 
+func (*MediaType) IsRef() bool { return false }
+
+func (mt *MediaType) Edges() []Node {
+	if mt == nil {
+		return nil
+	}
+	return downcastNodes(mt.edges())
+}
+
+func (mt *MediaType) edges() []node {
+	if mt == nil {
+		return nil
+	}
+	return appendEdges(nil, mt.Schema, mt.Examples, mt.Encoding)
+}
+
 func (mt *MediaType) Refs() []Ref {
 	if mt == nil {
 		return nil

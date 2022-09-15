@@ -16,6 +16,8 @@ const (
 
 	KindSchemaRef // *SchemaRef
 
+	KindDiscriminator // *Discriminator
+
 	KindHeader          // *Header
 	KindHeaderMap       // *HeaderMap
 	KindHeaderSlice     // *HeaderSlice

@@ -13,12 +13,29 @@ type OperationRef struct {
 	Operation *Operation
 }
 
-func (or *OperationRef) Refs() []Ref {
-	return nil
+func (or *OperationRef) Edges() []Node {
+	if or == nil {
+		return nil
+	}
+	return downcastNodes(or.edges())
 }
 
-func (or *OperationRef) IsRef() bool {
-	return or != nil
+func (or *OperationRef) edges() []node {
+	if or == nil {
+		return nil
+	}
+	var edges []node
+	return appendEdges(edges, or.Operation)
+}
+
+func (or *OperationRef) IsRef() bool { return true }
+
+func (or *OperationRef) refs() []node {
+	return []node{or.Operation}
+}
+
+func (or *OperationRef) Refs() []Ref {
+	return nil
 }
 
 func (or *OperationRef) IsResolved() bool {
@@ -26,8 +43,8 @@ func (or *OperationRef) IsResolved() bool {
 }
 
 // RefDst implements Ref
-func (or *OperationRef) RefDst() interface{} {
-	return &or.Operation
+func (or *OperationRef) RefDst() []any {
+	return []any{&or.Operation}
 }
 
 // RefURI implements Ref

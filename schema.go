@@ -57,18 +57,33 @@ type Schema struct {
 	Always *bool `json:"-"`
 
 	Schema *uri.URI `json:"$schema,omitempty"`
+
 	// The value of $id is a URI-reference without a fragment that resolves
 	// against the Retrieval URI. The resulting URI is the base URI for the
 	// schema.
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=id#id
 	ID *uri.URI `json:"$id,omitempty"`
+
+	// A less common way to identify a subschema is to create a named anchor in
+	// the schema using the $anchor keyword and using that name in the URI
+	// fragment. Anchors must start with a letter followed by any number of
+	// letters, digits, -, _, :, or ..
+	//
+	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=anchor#anchor
+	Anchor Text `json:"$anchor,omitempty"`
+
+	DynamicAnchor Text `json:"$dynamicAnchor,omitempty"`
+
+	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
+
 	// At its core, JSON *SchemaObj defines the following basic types:
 	//
 	// 	"string", "number", "integer", "object", "array", "boolean", "null"
 	//
 	// https://json-schema.org/understanding-json-schema/reference/type.html#type
 	Type Types `json:"type,omitempty"`
+
 	// The "$ref" keyword is an applicator that is used to reference a
 	// statically identified schema. Its results are the results of the
 	// referenced schema. [CREF5]
@@ -83,17 +98,16 @@ type Schema struct {
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=ref#ref
 	Ref *SchemaRef `json:"$ref,omitempty"`
-	// The "$defs" keyword reserves a location for schema authors to inline
-	// re-usable JSON Schemas into a more general schema. The keyword does not
-	// directly affect the validation result.
+
+	// The "$dynamicRef" keyword is an applicator that allows for deferring the
+	// full resolution until runtime, at which point it is resolved each time it
+	// is encountered while evaluating an instance.
 	//
-	// This keyword's value MUST be an object. Each member value of this object
-	// MUST be a valid JSON *SchemaObj.
-	//
-	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
-	//
-	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
-	Definitions *SchemaMap `json:"$defs,omitempty"`
+	// https://json-schema.org/draft/2020-12/json-schema-core.html#dynamic-ref
+	DynamicRef *SchemaRef `json:"$dynamicRef,omitempty"`
+
+	RecursiveRef *SchemaRef `json:"$recursiveRef,omitempty"`
+
 	// The format keyword allows for basic semantic identification of certain Kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
 	//
 	// Optionally, validator implementations can provide a configuration option to
@@ -104,30 +118,23 @@ type Schema struct {
 	// Expressions can do.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/string.html#format
-	Format        Text `json:"format,omitempty"`
-	DynamicAnchor Text `json:"$dynamicAnchor,omitempty"`
-	// The "$dynamicRef" keyword is an applicator that allows for deferring the
-	// full resolution until runtime, at which point it is resolved each time it
-	// is encountered while evaluating an instance.
-	//
-	// https://json-schema.org/draft/2020-12/json-schema-core.html#dynamic-ref
-	DynamicRef *SchemaRef `json:"$dynamicRef,omitempty"`
-	// A less common way to identify a subschema is to create a named anchor in
-	// the schema using the $anchor keyword and using that name in the URI
-	// fragment. Anchors must start with a letter followed by any number of
-	// letters, digits, -, _, :, or ..
-	//
-	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=anchor#anchor
-	Anchor Text `json:"$anchor,omitempty"`
+	Format Text `json:"format,omitempty"`
+
 	// The const keyword is used to restrict a value to a single value.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#constant-values
 	Const jsonx.RawMessage `json:"const,omitempty"`
+
+	Required []Text `json:"required,omitempty"`
+
+	Properties *SchemaMap `json:"properties,omitempty"`
+
 	// The enum keyword is used to restrict a value to a fixed set of values. It
 	// must be an array with at least one element, where each element is unique.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#enumerated-values
 	Enum []Text `json:"enum,omitempty"`
+
 	// The $comment keyword is strictly intended for adding comments to a
 	// schema. Its value must always be a string. Unlike the annotations title,
 	// description, and examples, JSON schema implementations aren’t allowed to
@@ -144,40 +151,49 @@ type Schema struct {
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=not#not
 	Not *Schema `json:"not,omitempty"`
+
 	// validate against allOf, the given data must be valid against all of the
 	// given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=anyof#anyof
 	AllOf *SchemaSlice `json:"allOf,omitempty"`
+
 	// validate against anyOf, the given data must be valid against any (one or
 	// more) of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=allof#allof
 	AnyOf *SchemaSlice `json:"anyOf,omitempty"`
+
 	// alidate against oneOf, the given data must be valid against exactly one of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=oneof#oneof
 	OneOf *SchemaSlice `json:"oneOf,omitempty"`
+
 	// if, then and else keywords allow the application of a subschema based on
 	// the outcome of another schema, much like the if/then/else constructs
 	// you’ve probably seen in traditional programming languages.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
 	If *Schema `json:"if,omitempty"`
+
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
 	Then *Schema `json:"then,omitempty"`
+
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Else          *Schema `json:"else,omitempty"`
+
+	Else *Schema `json:"else,omitempty"`
+
 	MinProperties *Number `json:"minProperties,omitempty"`
+
 	MaxProperties *Number `json:"maxProperties,omitempty"`
-	Required      []Text  `json:"required,omitempty"`
 
-	Properties      *SchemaMap `json:"properties,omitempty"`
-	PropertyNames   *Schema    `json:"propertyNames,omitempty"`
-	RegexProperties *bool      `json:"regexProperties,omitempty"`
+	PropertyNames *Schema `json:"propertyNames,omitempty"`
 
-	PatternProperties    *SchemaMap `json:"patternProperties,omitempty"`
-	AdditionalProperties *Schema    `json:"additionalProperties,omitempty"`
+	RegexProperties *bool `json:"regexProperties,omitempty"`
+
+	PatternProperties *SchemaMap `json:"patternProperties,omitempty"`
+
+	AdditionalProperties *Schema `json:"additionalProperties,omitempty"`
 
 	// The dependentRequired keyword conditionally requires that certain
 	// properties must be present if a given property is present in an object.
@@ -196,53 +212,146 @@ type Schema struct {
 	// applies schemas. Nothing is merged or extended. Both schemas apply
 	// independently.
 
-	DependentSchemas      *SchemaMap `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties *Schema    `json:"unevaluatedProperties,omitempty"`
-	UniqueObjs            *bool      `json:"uniqueObjs,omitempty"`
+	DependentSchemas *SchemaMap `json:"dependentSchemas,omitempty"`
+
+	UnevaluatedProperties *Schema `json:"unevaluatedProperties,omitempty"`
+
+	UniqueItems *bool `json:"uniqueItems,omitempty"`
+
 	// List validation is useful for arrays of arbitrary length where each item
 	// matches the same schema. For this kind of array, set the items keyword to
 	// a single schema that will be used to validate all of the items in the
 	// array.
-	Items            *Schema            `json:"items,omitempty"`
-	UnevaluatedObjs  *Schema            `json:"unevaluatedObjs,omitempty"`
-	AdditionalObjs   *Schema            `json:"additionalObjs,omitempty"`
-	PrefixObjs       *SchemaSlice       `json:"prefixObjs,omitempty"`
-	Contains         *Schema            `json:"contains,omitempty"`
-	MinContains      *Number            `json:"minContains,omitempty"`
-	MaxContains      *Number            `json:"maxContains,omitempty"`
-	MinLength        *Number            `json:"minLength,omitempty"`
-	MaxLength        *Number            `json:"maxLength,omitempty"`
-	Pattern          *Regexp            `json:"pattern,omitempty"`
-	ContentEncoding  Text               `json:"contentEncoding,omitempty"`
-	ContentMediaType Text               `json:"contentMediaType,omitempty"`
-	Minimum          *Number            `json:"minimum,omitempty"`
-	ExclusiveMinimum *Number            `json:"exclusiveMinimum,omitempty"`
-	Maximum          *Number            `json:"maximum,omitempty"`
-	ExclusiveMaximum *Number            `json:"exclusiveMaximum,omitempty"`
-	MultipleOf       *Number            `json:"multipleOf,omitempty"`
-	Title            Text               `json:"title,omitempty"`
-	Description      Text               `json:"description,omitempty"`
-	Default          jsonx.RawMessage   `json:"default,omitempty"`
-	ReadOnly         *bool              `json:"readOnly,omitempty"`
-	WriteOnly        *bool              `json:"writeOnly,omitempty"`
-	Examples         []jsonx.RawMessage `json:"examples,omitempty"`
-	Example          jsonx.RawMessage   `json:"example,omitempty"`
-	Deprecated       *bool              `json:"deprecated,omitempty"`
-	ExternalDocs     Text               `json:"externalDocs,omitempty"`
-	// Deprecated: renamed to dynamicAnchor
-	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
-	// Deprecated: renamed to dynamicRef
-	RecursiveRef *SchemaRef `json:"$recursiveRef,omitempty"`
+	//
+	// https://json-schema.org/understanding-json-schema/reference/array.html#items
+	Items *Schema `json:"items,omitempty"`
 
+	UnevaluatedItems *Schema `json:"unevaluatedItems,omitempty"`
+
+	AdditionalItems *Schema `json:"additionalItems,omitempty"`
+
+	PrefixItems *SchemaSlice `json:"prefixItems,omitempty"`
+
+	Contains *Schema `json:"contains,omitempty"`
+
+	MinContains *Number `json:"minContains,omitempty"`
+
+	MaxContains *Number `json:"maxContains,omitempty"`
+
+	MinLength *Number `json:"minLength,omitempty"`
+
+	MaxLength *Number `json:"maxLength,omitempty"`
+
+	Pattern *Regexp `json:"pattern,omitempty"`
+
+	ContentEncoding Text `json:"contentEncoding,omitempty"`
+
+	ContentMediaType Text `json:"contentMediaType,omitempty"`
+
+	Minimum *Number `json:"minimum,omitempty"`
+
+	ExclusiveMinimum *Number `json:"exclusiveMinimum,omitempty"`
+
+	Maximum *Number `json:"maximum,omitempty"`
+
+	ExclusiveMaximum *Number `json:"exclusiveMaximum,omitempty"`
+
+	MultipleOf *Number `json:"multipleOf,omitempty"`
+
+	Title Text `json:"title,omitempty"`
+
+	Description Text `json:"description,omitempty"`
+
+	Default jsonx.RawMessage `json:"default,omitempty"`
+
+	ReadOnly *bool `json:"readOnly,omitempty"`
+
+	WriteOnly *bool `json:"writeOnly,omitempty"`
+
+	Examples []jsonx.RawMessage `json:"examples,omitempty"`
+
+	Example jsonx.RawMessage `json:"example,omitempty"`
+
+	Deprecated *bool `json:"deprecated,omitempty"`
+
+	ExternalDocs Text `json:"externalDocs,omitempty"`
+
+	// When request bodies or response payloads may be one of a number of
+	// different schemas, a discriminator object can be used to aid in
+	// serialization, deserialization, and validation. The discriminator is a
+	// specific object in a schema which is used to inform the consumer of the
+	// document of an alternative schema based on the value associated with it.
+	//
+	// This object MAY be extended with Specification Extensions.
+	//
+	// The discriminator object is legal only when using one of the composite
+	// keywords oneOf, anyOf, allOf.
+	//
+	// 3.1:
+	//
+	// https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#discriminatorObject
+	//
+	// 3.0:
+	//
+	// https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#discriminatorObject
 	Discriminator *Discriminator `json:"discriminator,omitempty"`
+
 	// This MAY be used only on properties schemas. It has no effect on root
 	// schemas. Adds additional metadata to describe the XML representation of
 	// this property.
-	XML      *XML                        `json:"xml,omitempty"`
+	XML *XML `json:"xml,omitempty"`
+
+	// The "$defs" keyword reserves a location for schema authors to inline
+	// re-usable JSON Schemas into a more general schema. The keyword does not
+	// directly affect the validation result.
+	//
+	// This keyword's value MUST be an object. Each member value of this object
+	// MUST be a valid JSON *SchemaObj.
+	//
+	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
+	//
+	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
+	Definitions *SchemaMap `json:"$defs,omitempty"`
+
 	Keywords map[string]jsonx.RawMessage `json:"-"`
 
 	Extensions `json:"-"`
 	Location   `json:"-"`
+}
+
+func (s *Schema) Edges() []Node {
+	if s == nil {
+		return nil
+	}
+	return downcastNodes(s.edges())
+}
+
+func (s *Schema) edges() []node {
+	return appendEdges(nil, s.Ref,
+		s.DynamicRef,
+		s.RecursiveRef,
+		s.Properties,
+		s.Not,
+		s.AllOf,
+		s.AnyOf,
+		s.OneOf,
+		s.If,
+		s.Then,
+		s.Else,
+		s.PropertyNames,
+		s.PatternProperties,
+		s.AdditionalProperties,
+		s.DependentSchemas,
+		s.UnevaluatedProperties,
+		s.Items,
+		s.UnevaluatedItems,
+		s.AdditionalItems,
+		s.PrefixItems,
+		s.Contains,
+		s.Discriminator,
+		s.XML,
+		s.Definitions,
+	)
 }
 
 func (s *Schema) Refs() []Ref {
@@ -274,9 +383,9 @@ func (s *Schema) Refs() []Ref {
 	refs = append(refs, s.DependentSchemas.Refs()...)
 	refs = append(refs, s.UnevaluatedProperties.Refs()...)
 	refs = append(refs, s.Items.Refs()...)
-	refs = append(refs, s.UnevaluatedObjs.Refs()...)
-	refs = append(refs, s.AdditionalObjs.Refs()...)
-	refs = append(refs, s.PrefixObjs.Refs()...)
+	refs = append(refs, s.UnevaluatedItems.Refs()...)
+	refs = append(refs, s.AdditionalItems.Refs()...)
+	refs = append(refs, s.PrefixItems.Refs()...)
 	refs = append(refs, s.Contains.Refs()...)
 	refs = append(refs, s.XML.Refs()...)
 
@@ -365,13 +474,13 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	if anchors, err = anchors.merge(s.Items.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.UnevaluatedObjs.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.UnevaluatedItems.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.AdditionalObjs.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.AdditionalItems.Anchors()); err != nil {
 		return nil, err
 	}
-	if anchors, err = anchors.merge(s.PrefixObjs.Anchors()); err != nil {
+	if anchors, err = anchors.merge(s.PrefixItems.Anchors()); err != nil {
 		return nil, err
 	}
 	if anchors, err = anchors.merge(s.Contains.Anchors()); err != nil {
@@ -489,21 +598,21 @@ func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Items.resolveNodeByPointer(nxt)
-	case "unevaluatedObjs":
-		if s.UnevaluatedObjs == nil {
+	case "unevaluatedItems":
+		if s.UnevaluatedItems == nil {
 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
-		return s.UnevaluatedObjs.resolveNodeByPointer(nxt)
-	case "additionalObjs":
-		if s.AdditionalObjs == nil {
+		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
+	case "additionalItems":
+		if s.AdditionalItems == nil {
 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
-		return s.AdditionalObjs.resolveNodeByPointer(nxt)
-	case "prefixObjs":
-		if s.PrefixObjs == nil {
+		return s.AdditionalItems.resolveNodeByPointer(nxt)
+	case "prefixItems":
+		if s.PrefixItems == nil {
 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
-		return s.PrefixObjs.resolveNodeByPointer(nxt)
+		return s.PrefixItems.resolveNodeByPointer(nxt)
 	case "contains":
 		if s.Contains == nil {
 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
@@ -698,11 +807,11 @@ func (s *Schema) fields() map[string]interface{} {
 		"dependentRequired":     &s.DependentRequired,
 		"dependentSchemas":      &s.DependentSchemas,
 		"unevaluatedProperties": &s.UnevaluatedProperties,
-		"uniqueObjs":            &s.UniqueObjs,
+		"uniqueItems":           &s.UniqueItems,
 		"items":                 &s.Items,
-		"unevaluatedObjs":       &s.UnevaluatedObjs,
-		"additionalObjs":        &s.AdditionalObjs,
-		"prefixObjs":            &s.PrefixObjs,
+		"unevaluatedItems":      &s.UnevaluatedItems,
+		"additionalItems":       &s.AdditionalItems,
+		"prefixItems":           &s.PrefixItems,
 		"contains":              &s.Contains,
 		"minContains":           &s.MinContains,
 		"maxContains":           &s.MaxContains,
@@ -790,13 +899,13 @@ func (s *Schema) setLocation(loc Location) error {
 	if err := s.Items.setLocation(loc.Append("items")); err != nil {
 		return err
 	}
-	if err := s.UnevaluatedObjs.setLocation(loc.Append("unevaluatedObjs")); err != nil {
+	if err := s.UnevaluatedItems.setLocation(loc.Append("unevaluatedItems")); err != nil {
 		return err
 	}
-	if err := s.AdditionalObjs.setLocation(loc.Append("additionalObjs")); err != nil {
+	if err := s.AdditionalItems.setLocation(loc.Append("additionalItems")); err != nil {
 		return err
 	}
-	if err := s.PrefixObjs.setLocation(loc.Append("prefixObjs")); err != nil {
+	if err := s.PrefixItems.setLocation(loc.Append("prefixItems")); err != nil {
 		return err
 	}
 	if err := s.Contains.setLocation(loc.Append("contains")); err != nil {

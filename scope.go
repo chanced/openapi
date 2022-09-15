@@ -17,14 +17,12 @@ type Scope struct {
 	Value    Text `json:"-"`
 }
 
+func (*Scope) IsRef() bool                { return false }
 func (*Scope) Anchors() (*Anchors, error) { return nil, nil }
 func (*Scope) Kind() Kind                 { return KindScope }
 func (*Scope) mapKind() Kind              { return KindUndefined }
 func (*Scope) sliceKind() Kind            { return KindUndefined }
-
-func (s *Scope) Refs() []Ref {
-	return nil
-}
+func (s *Scope) Refs() []Ref              { return nil }
 
 func (s *Scope) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
@@ -33,6 +31,13 @@ func (s *Scope) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	return s.resolveNodeByPointer(ptr)
 }
 
+func (s *Scope) Edges() []Node {
+	if s == nil {
+		return nil
+	}
+	return downcastNodes(s.edges())
+}
+func (s *Scope) edges() []node { return nil }
 func (s *Scope) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return s, nil
@@ -136,6 +141,25 @@ func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		}
 	}
 	return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+}
+
+func (*Scopes) IsRef() bool { return false }
+func (s *Scopes) Edges() []Node {
+	if s == nil {
+		return nil
+	}
+	return downcastNodes(s.edges())
+}
+
+func (s *Scopes) edges() []node {
+	if s == nil {
+		return nil
+	}
+	nodes := make([]node, len(s.Items))
+	for i, n := range s.Items {
+		nodes[i] = n
+	}
+	return nodes
 }
 
 func (s *Scopes) setLocation(loc Location) error {

@@ -31,6 +31,24 @@ type Paths struct {
 	Items *PathItemObjs `json:"-"`
 }
 
+func (p *Paths) Edges() []Node {
+	if p == nil {
+		return nil
+	}
+	return downcastNodes(p.edges())
+}
+
+func (p *Paths) edges() []node {
+	if p == nil {
+		return nil
+	}
+	return appendEdges(nil, p.Items)
+}
+
+func (*Paths) IsRef() bool { return false }
+
+func (*Paths) ref() Ref { return nil }
+
 func (p *Paths) Refs() []Ref {
 	if p == nil {
 		return nil

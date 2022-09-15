@@ -26,19 +26,53 @@ type Reference struct {
 	//
 	// 	*required*
 	Ref *uri.URI `yaml:"$ref" json:"$ref"`
+
 	// A short summary which by default SHOULD override that of the referenced
 	// component. If the referenced object-type does not allow a summary field,
 	// then this field has no effect.
 	Summary Text `json:"summary,omitempty"`
+
 	// A description which by default SHOULD override that of the referenced
 	// component. CommonMark syntax MAY be used for rich text representation. If
 	// the referenced object-type does not allow a description field, then this
 	// field has no effect.
 	Description Text `json:"description,omitempty"`
+
 	// Location of the Reference
 	Location `json:"-"`
+
+	// The referenced component
+	Referenced Node `json:"-"`
 }
 
+func (r *Reference) Edges() []Node {
+	if r == nil {
+		return nil
+	}
+	return downcastNodes(r.edges())
+}
+
+func (r *Reference) edges() []node {
+	if r == nil {
+		return nil
+	}
+	edges := make([]node, 0, 1)
+	edges = appendEdges(edges)
+	return edges
+}
+
+// IsRef returns true if the Node is any of the following:
+//   - *Reference
+//   - *SchemaRef
+//   - *OperationRef
+//
+// Note: Components which may or may not be references return false even if
+// the Component is a reference. This is exclusively for determining
+// if the type is a reference.
+func (r *Reference) IsRef() bool { return false }
+
+// Refs returns nil as instances of Reference do not contain the referenced
+// object
 func (*Reference) Refs() []Ref { return nil }
 
 func (r *Reference) Anchors() (*Anchors, error) { return nil, nil }

@@ -12,6 +12,21 @@ type SchemaSlice struct {
 	Items []*Schema
 }
 
+func (ss *SchemaSlice) Edges() []Node {
+	if ss == nil {
+		return nil
+	}
+	return downcastNodes(ss.edges())
+}
+
+func (ss *SchemaSlice) edges() []node {
+	edges := make([]node, len(ss.Items))
+	for i, s := range ss.Items {
+		edges[i] = s
+	}
+	return edges
+}
+
 func (ss *SchemaSlice) Anchors() (*Anchors, error) {
 	if ss == nil {
 		return nil, nil
@@ -46,7 +61,7 @@ func (ss *SchemaSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 
 	return ss.resolveNodeByPointer(ptr)
 }
-
+func (ss *SchemaSlice) IsRef() bool { return false }
 func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return ss, nil

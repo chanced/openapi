@@ -25,6 +25,22 @@ type Tag struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
 }
 
+func (*Tag) IsRef() bool { return false }
+
+func (t *Tag) Edges() []Node {
+	if t == nil {
+		return nil
+	}
+	return downcastNodes(t.edges())
+}
+
+func (t *Tag) edges() []node {
+	if t == nil {
+		return nil
+	}
+	return appendEdges(nil, t.ExternalDocs)
+}
+
 func (*Tag) Refs() []Ref                { return nil }
 func (*Tag) Anchors() (*Anchors, error) { return nil, nil }
 

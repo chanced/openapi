@@ -23,6 +23,26 @@ type SchemaMap struct {
 	Items []SchemaItem
 }
 
+func (sm *SchemaMap) IsRef() bool { return false }
+
+func (sm *SchemaMap) Edges() []Node {
+	if sm == nil {
+		return nil
+	}
+	return downcastNodes(sm.edges())
+}
+
+func (sm *SchemaMap) edges() []node {
+	if sm == nil {
+		return nil
+	}
+	var edges []node
+	for _, e := range sm.Items {
+		edges = append(edges, e.Schema)
+	}
+	return edges
+}
+
 // Refs implements node
 func (sm *SchemaMap) Refs() []Ref {
 	if sm == nil {

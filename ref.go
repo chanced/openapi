@@ -5,9 +5,8 @@ import "github.com/chanced/uri"
 type Ref interface {
 	RefURI() *uri.URI
 	IsResolved() bool
-	IsRef() bool
 	Kind() Kind
-	RefDst() interface{}
+	RefDst() []interface{}
 }
 
 var (

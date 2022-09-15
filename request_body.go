@@ -21,6 +21,23 @@ type RequestBody struct {
 	Required bool `json:"required,omitempty"`
 }
 
+// IsRef returns false
+func (*RequestBody) IsRef() bool { return false }
+
+func (rb *RequestBody) Edges() []Node {
+	if rb == nil {
+		return nil
+	}
+	return downcastNodes(rb.edges())
+}
+
+func (rb *RequestBody) edges() []node {
+	if rb == nil {
+		return nil
+	}
+	return appendEdges(nil, rb.Content)
+}
+
 func (rb *RequestBody) Refs() []Ref {
 	if rb == nil {
 		return nil

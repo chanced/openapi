@@ -17,9 +17,6 @@ type PathItem struct {
 	// this path. CommonMark syntax MAY be used for rich text representation.
 	Description Text `json:"description,omitempty"`
 
-	// An alternative server array to service all operations in this path.
-	Servers *ServerSlice `json:"servers,omitempty"`
-
 	// A list of parameters that are applicable for all the operations described
 	// under this path. These parameters can be overridden at the operation
 	// level, but cannot be removed there. The list MUST NOT include duplicated
@@ -51,7 +48,37 @@ type PathItem struct {
 
 	// A definition of a TRACE operation on this path.
 	Trace *Operation `json:"trace,omitempty"`
+
+	// An alternative server array to service all operations in this path.
+	Servers *ServerSlice `json:"servers,omitempty"`
 }
+
+func (pi *PathItem) Edges() []Node {
+	if pi == nil {
+		return nil
+	}
+	return downcastNodes(pi.edges())
+}
+
+func (pi *PathItem) edges() []node {
+	if pi == nil {
+		return nil
+	}
+	var edges []node
+	edges = appendEdges(edges, pi.Servers)
+	edges = appendEdges(edges, pi.Parameters)
+	edges = appendEdges(edges, pi.Get)
+	edges = appendEdges(edges, pi.Put)
+	edges = appendEdges(edges, pi.Post)
+	edges = appendEdges(edges, pi.Delete)
+	edges = appendEdges(edges, pi.Options)
+	edges = appendEdges(edges, pi.Head)
+	edges = appendEdges(edges, pi.Patch)
+	edges = appendEdges(edges, pi.Trace)
+	return edges
+}
+func (pi *PathItem) IsRef() bool { return false }
+func (pi *PathItem) ref() Ref    { return nil }
 
 func (pi *PathItem) Refs() []Ref {
 	if pi == nil {

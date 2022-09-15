@@ -26,6 +26,38 @@ type Callbacks struct {
 	Items      *PathItemObjs `json:"-"`
 }
 
+func (c *Callbacks) Edges() []Node {
+	if c == nil {
+		return nil
+	}
+	return downcastNodes(c.edges())
+}
+
+func (c *Callbacks) edges() []node {
+	if c == nil {
+		return nil
+	}
+	edges := make([]node, 0, 1)
+	edges = appendEdges(edges, c.Items)
+	return edges
+}
+
+func (c *Callbacks) ref() Ref { return nil }
+
+// Edges returns the immediate edges of the Node. This is used to build a
+// graph of the OpenAPI document.
+//
+
+// IsRef returns true if the Node is any of the following:
+//   - *Reference
+//   - *SchemaRef
+//   - *OperationRef
+//
+// Note: Components which may or may not be references return false even if
+// the Component is a reference. This is exclusively for determining
+// if the type is a reference.
+func (c *Callbacks) IsRef() bool { return false }
+
 // kind returns KindCallback
 func (*Callbacks) Kind() Kind     { return KindCallbacks }
 func (*Callbacks) mapKind() Kind  { return KindCallbacksMap }

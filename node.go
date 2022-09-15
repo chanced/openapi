@@ -4,7 +4,7 @@ import "github.com/chanced/jsonpointer"
 
 type Node interface {
 	Kind() Kind
-	// ResolveNodeByPointers a Node by a jsonpointer. It validates the pointer and then
+	// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
 	// attempts to resolve the Node.
 	//
 	// # Errors
@@ -25,6 +25,8 @@ type Node interface {
 
 	Refs() []Ref
 
+	IsRef() bool
+
 	// I'm not sure why I can't add this. It creates a circular dependency though.
 	// Walker
 }
@@ -44,6 +46,23 @@ type node interface {
 
 	resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	location() Location
-
 	isNil() bool
+	edges() []node
+}
+
+func downcastNodes(n []node) []Node {
+	nodes := make([]Node, len(n))
+	for i, v := range n {
+		nodes[i] = v
+	}
+	return nodes
+}
+
+func appendEdges(nodes []node, elems ...node) []node {
+	for _, n := range elems {
+		if !n.isNil() {
+			nodes = append(nodes, n)
+		}
+	}
+	return nodes
 }

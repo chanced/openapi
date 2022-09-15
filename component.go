@@ -13,13 +13,23 @@ type Component[T node] struct {
 	Object    T
 }
 
+func (c *Component[T]) edges() []node {
+	if c == nil {
+		return nil
+	}
+	if c.IsRef() {
+		return appendEdges(nil, c.Reference)
+	}
+	return appendEdges(nil, c.Object)
+}
+
 // Dst implements Ref
-func (c *Component[T]) RefDst() interface{} {
+func (c *Component[T]) RefDst() []any {
 	if !c.IsRef() || c == nil {
 		return nil
 	}
 	// this should always be a pointer
-	return &c.Object
+	return []any{&c.Object, &c.Reference.Referenced}
 }
 
 // IsResolved implements Ref
@@ -70,9 +80,13 @@ func (c *Component[T]) location() Location {
 	return c.Object.location()
 }
 
-func (c *Component[T]) IsRef() bool {
-	return c.Reference != nil
-}
+// IsRef returns false
+//
+// To check if this is a Reference, use IsReference
+func (*Component[T]) IsRef() bool { return false }
+
+// IsReference returns true if this Component contains a Reference
+func (c *Component[T]) IsReference() bool { return !c.Reference.isNil() }
 
 func (c *Component[T]) Refs() []Ref {
 	if c == nil {

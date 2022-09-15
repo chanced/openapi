@@ -1,5 +1,7 @@
 package openapi
 
+import "github.com/chanced/jsonpointer"
+
 // Discriminator can be used to aid in serialization, deserialization, and
 // validation of request bodies or response payloads which may be one of a
 // number of different schemas. The discriminator is a specific object in a
@@ -45,3 +47,39 @@ func (d *Discriminator) UnmarshalJSON(data []byte) error {
 	*d = Discriminator(v)
 	return nil
 }
+
+func (d *Discriminator) Anchors() (*Anchors, error) { return nil, nil }
+func (d *Discriminator) IsRef() bool                { return false }
+
+func (*Discriminator) Kind() Kind { return KindDiscriminator }
+
+func (*Discriminator) Refs() []Ref { return nil }
+
+func (d *Discriminator) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return d.resolveNodeByPointer(ptr)
+}
+
+func (d *Discriminator) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return d, nil
+	}
+	tok, _ := ptr.NextToken()
+	return nil, newErrNotResolvable(d.Location.AbsoluteLocation(), tok)
+}
+
+func (d *Discriminator) Edges() []Node {
+	if d == nil {
+		return nil
+	}
+	return downcastNodes(d.edges())
+}
+func (d *Discriminator) edges() []node { return nil }
+
+func (d *Discriminator) isNil() bool   { return d == nil }
+func (*Discriminator) mapKind() Kind   { return KindUndefined }
+func (*Discriminator) sliceKind() Kind { return KindUndefined }
+
+var _ node = (*Discriminator)(nil)

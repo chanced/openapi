@@ -29,6 +29,17 @@ type ComponentMap[T node] struct {
 	Items []ComponentEntry[T]
 }
 
+func (cm *ComponentMap[T]) edges() []node {
+	if cm == nil {
+		return nil
+	}
+	var edges []node
+	for _, item := range cm.Items {
+		edges = appendEdges(edges, item.Component)
+	}
+	return edges
+}
+
 func (cm *ComponentMap[T]) Refs() []Ref {
 	if cm == nil {
 		return nil
@@ -78,6 +89,8 @@ func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 	}
 	return cm.resolveNodeByPointer(ptr)
 }
+
+func (c *ComponentMap[T]) IsRef() bool { return false }
 
 func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {

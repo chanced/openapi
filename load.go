@@ -44,7 +44,7 @@ type resolver struct {
 // have a reference to "example.json#/foo/bar" which has an anchor "#baz", that
 // is located at the root of "example.json", it will not be found and an error
 // will be returned upon parsing.
-func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
+func Load(ctx context.Context, documentURI string, compiler SchemaCompiler, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
 	if fn == nil {
 		panic("fn cannot be nil")
 	}

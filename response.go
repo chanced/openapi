@@ -44,6 +44,22 @@ type Response struct {
 	Location `json:"-"`
 }
 
+func (r *Response) Edges() []Node {
+	if r == nil {
+		return nil
+	}
+	return downcastNodes(r.edges())
+}
+
+func (r *Response) edges() []node {
+	if r == nil {
+		return nil
+	}
+	return appendEdges(nil, r.Headers, r.Content, r.Links)
+}
+
+func (r *Response) IsRef() bool { return false }
+
 func (r *Response) Refs() []Ref {
 	if r == nil {
 		return nil
@@ -73,7 +89,7 @@ func (r *Response) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-// ResolveNodeByPointers a Node by a jsonpointer. It validates the pointer and then
+// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
 // attempts to resolve the Node.
 //
 // # Errors

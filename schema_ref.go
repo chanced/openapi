@@ -14,6 +14,14 @@ type SchemaRef struct {
 	Resolved *Schema  `json:"-"`
 }
 
+func (sr *SchemaRef) Edges() []Node {
+	if sr == nil {
+		return nil
+	}
+	return downcastNodes(sr.edges())
+}
+func (sr *SchemaRef) edges() []node { return []node{sr.Resolved} }
+
 func (*SchemaRef) Refs() []Ref { return nil }
 
 func (*SchemaRef) IsRef() bool { return true }
@@ -26,8 +34,8 @@ func (sr *SchemaRef) RefURI() *uri.URI {
 	return sr.Ref
 }
 
-func (sr *SchemaRef) RefDst() interface{} {
-	return &sr.Resolved
+func (sr *SchemaRef) RefDst() []any {
+	return []any{&sr.Resolved}
 }
 
 func (sr *SchemaRef) URI() *uri.URI { return sr.Ref }

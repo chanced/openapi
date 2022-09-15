@@ -9,7 +9,24 @@ import (
 type TagSlice struct {
 	Location `json:"-"`
 
-	Items []Tag
+	Items []*Tag
+}
+
+func (*TagSlice) IsRef() bool { return false }
+
+func (tl *TagSlice) Edges() []Node {
+	if tl == nil {
+		return nil
+	}
+	return downcastNodes(tl.edges())
+}
+
+func (tl *TagSlice) edges() []node {
+	edges := make([]node, len(tl.Items))
+	for i, item := range tl.Items {
+		edges[i] = item
+	}
+	return edges
 }
 
 // Kind implements node
@@ -59,7 +76,7 @@ func (ts *TagSlice) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements node
 func (ts *TagSlice) UnmarshalJSON(data []byte) error {
-	var items []Tag
+	var items []*Tag
 	if err := json.Unmarshal(data, &items); err != nil {
 		return err
 	}

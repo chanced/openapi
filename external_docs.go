@@ -1,6 +1,9 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/uri"
+)
 
 // ExternalDocs allows referencing an external resource for extended
 // documentation.
@@ -11,10 +14,22 @@ type ExternalDocs struct {
 	// The URL for the target documentation. This MUST be in the form of a URL.
 	//
 	// 	*required*
-	URL Text `json:"url"`
-	// A description of the target documentation. CommonMark syntax MAY be used for rich text representation.
+	URL *uri.URI `json:"url"`
+
+	// A description of the target documentation. CommonMark syntax MAY be used
+	// for rich text representation.
 	Description Text `json:"description,omitempty"`
 }
+
+func (*ExternalDocs) IsRef() bool { return false }
+
+func (ed *ExternalDocs) Edges() []Node {
+	if ed == nil {
+		return nil
+	}
+	return downcastNodes(ed.edges())
+}
+func (ed *ExternalDocs) edges() []node { return nil }
 
 func (*ExternalDocs) Refs() []Ref     { return nil }
 func (*ExternalDocs) Kind() Kind      { return KindExternalDocs }
@@ -23,7 +38,7 @@ func (*ExternalDocs) sliceKind() Kind { return KindUndefined }
 
 func (*ExternalDocs) Anchors() (*Anchors, error) { return nil, nil }
 
-// ResolveNodeByPointers a Node by a jsonpointer. It validates the pointer and then
+// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
 // attempts to resolve the Node.
 //
 // # Errors

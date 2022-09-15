@@ -2,15 +2,13 @@ package openapi
 
 import "net/http"
 
-type Method string
-
 const (
-	MethodGet     Method = http.MethodGet
-	MethodPut     Method = http.MethodPut
-	MethodPost    Method = http.MethodPost
-	MethodDelete  Method = http.MethodDelete
-	MethodOptions Method = http.MethodOptions
-	MethodHead    Method = http.MethodHead
-	MethodPatch   Method = http.MethodPatch
-	MethodTrace   Method = http.MethodTrace
+	MethodGet     = Text(http.MethodGet)
+	MethodPut     = Text(http.MethodPut)
+	MethodPost    = Text(http.MethodPost)
+	MethodDelete  = Text(http.MethodDelete)
+	MethodOptions = Text(http.MethodOptions)
+	MethodHead    = Text(http.MethodHead)
+	MethodPatch   = Text(http.MethodPatch)
+	MethodTrace   = Text(http.MethodTrace)
 )
