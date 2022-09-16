@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
@@ -10,8 +11,8 @@ import (
 
 type SchemaRef struct {
 	Location
-	Ref      *uri.URI `json:"-"`
-	Resolved *Schema  `json:"-"`
+	Ref    *uri.URI `json:"-"`
+	Schema *Schema  `json:"-"`
 }
 
 func (sr *SchemaRef) Edges() []Node {
@@ -20,22 +21,14 @@ func (sr *SchemaRef) Edges() []Node {
 	}
 	return downcastNodes(sr.edges())
 }
-func (sr *SchemaRef) edges() []node { return []node{sr.Resolved} }
+func (sr *SchemaRef) edges() []node { return []node{sr.Schema} }
 
 func (*SchemaRef) Refs() []Ref { return nil }
 
 func (*SchemaRef) IsRef() bool { return true }
 
 func (sr *SchemaRef) IsResolved() bool {
-	return sr.Resolved != nil
-}
-
-func (sr *SchemaRef) RefURI() *uri.URI {
-	return sr.Ref
-}
-
-func (sr *SchemaRef) RefDst() []any {
-	return []any{&sr.Resolved}
+	return sr.Schema != nil
 }
 
 func (sr *SchemaRef) URI() *uri.URI { return sr.Ref }
@@ -43,6 +36,25 @@ func (sr *SchemaRef) URI() *uri.URI { return sr.Ref }
 func (*SchemaRef) Kind() Kind      { return KindSchemaRef }
 func (*SchemaRef) mapKind() Kind   { return KindUndefined }
 func (*SchemaRef) sliceKind() Kind { return KindUndefined }
+
+func (sr *SchemaRef) Resolved() Node {
+	if sr == nil {
+		return nil
+	}
+	return sr.Schema
+}
+
+func (sr *SchemaRef) resolve(n Node) error {
+	if n == nil {
+		return fmt.Errorf("node is nil")
+	}
+
+	if s, ok := n.(*Schema); ok {
+		sr.Schema = s
+		return nil
+	}
+	return fmt.Errorf("openapi: cannot resolve %s to SchemaRef", n.Kind())
+}
 
 func (*SchemaRef) Anchors() (*Anchors, error) { return nil, nil }
 
@@ -57,7 +69,7 @@ func (sr *SchemaRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	tok, _ := ptr.NextToken()
 	if !ptr.IsRoot() {
 		if sr.Ref != nil {
-			return nil, newErrNotResolvable(sr.Location.AbsoluteLocation(), tok)
+			return nil, newErrNotResolvable(sr.Location.AbsolutePath(), tok)
 		}
 	}
 	return sr, nil
@@ -67,16 +79,16 @@ func (sr *SchemaRef) setLocation(l Location) error {
 	if sr == nil {
 		return nil
 	}
-	if sr.Resolved != nil {
+	if sr.Schema != nil {
 		if sr.Ref != nil {
 			nl, err := NewLocation(*sr.Ref)
 			if err != nil {
 				return err
 			}
-			sr.Resolved.setLocation(nl)
+			sr.Schema.setLocation(nl)
 			return nil
 		}
-		return sr.Resolved.setLocation(l)
+		return sr.Schema.setLocation(l)
 	}
 	return nil
 }
@@ -93,7 +105,7 @@ func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 
 	var s Schema
 	err := json.Unmarshal(data, &s)
-	sr.Resolved = &s
+	sr.Schema = &s
 	return err
 }
 
@@ -104,7 +116,7 @@ func (sr SchemaRef) MarshalJSON() ([]byte, error) {
 func (sr *SchemaRef) isNil() bool { return sr == nil }
 
 var (
-	_ node   = (*SchemaRef)(nil)
-	_ Walker = (*SchemaRef)(nil)
-	_ Ref    = (*SchemaRef)(nil)
+	_ node = (*SchemaRef)(nil)
+	// _ Walker = (*SchemaRef)(nil)
+	_ Ref = (*SchemaRef)(nil)
 )

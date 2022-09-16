@@ -101,7 +101,7 @@ func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 
 	if nxt.IsRoot() {
 		if n == nil {
-			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
 		}
 		if n.Reference != nil {
 			return n.Reference, nil
@@ -109,10 +109,10 @@ func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 		if !n.Object.isNil() {
 			return n.Object, nil
 		}
-		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(c.Location.AbsolutePath(), tok)
 	}
 	if n == nil {
-		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(c.Location.AbsolutePath(), tok)
 	}
 	return n.resolveNodeByPointer(nxt)
 }
@@ -219,7 +219,4 @@ func (cm *ComponentMap[T]) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-var (
-	_ node   = (*ComponentMap[*Server])(nil)
-	_ Walker = (*ComponentMap[*Server])(nil)
-)
+var _ node = (*ComponentMap[*Server])(nil) // _ Walker = (*ComponentMap[*Server])(nil)

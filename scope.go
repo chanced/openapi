@@ -43,7 +43,7 @@ func (s *Scope) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return s, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(s.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(s.AbsolutePath(), tok)
 }
 
 func (s Scope) MarshalJSON() ([]byte, error) {
@@ -140,7 +140,7 @@ func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 			return v.ResolveNodeByPointer(ptr)
 		}
 	}
-	return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+	return nil, newErrNotFound(s.AbsolutePath(), tok)
 }
 
 func (*Scopes) IsRef() bool { return false }
@@ -272,8 +272,8 @@ func (s *Scopes) UnmarshalJSON(data []byte) error {
 func (s *Scope) isNil() bool { return s == nil }
 
 var (
-	_ node   = (*Scope)(nil)
-	_ Walker = (*Scope)(nil)
-	_ node   = (*Scopes)(nil)
-	_ Walker = (*Scopes)(nil)
+	_ node = (*Scope)(nil)
+	// _ Walker = (*Scope)(nil)
+	_ node = (*Scopes)(nil)
+	// _ Walker = (*Scopes)(nil)
 )

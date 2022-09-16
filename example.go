@@ -66,7 +66,7 @@ func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return e, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(e.Location.AbsolutePath(), tok)
 }
 
 func (*Example) Kind() Kind      { return KindExample }
@@ -101,8 +101,8 @@ func (e *Example) setLocation(loc Location) error {
 func (e *Example) isNil() bool { return e == nil }
 
 var (
-	_ node   = (*Example)(nil)
-	_ Walker = (*Example)(nil)
-	_ node   = (*ExampleMap)(nil)
-	_ Walker = (*ExampleMap)(nil)
+	_ node = (*Example)(nil)
+	// _ Walker = (*Example)(nil)
+	_ node = (*ExampleMap)(nil)
+	// _ Walker = (*ExampleMap)(nil)
 )

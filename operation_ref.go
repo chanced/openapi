@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/uri"
@@ -18,6 +19,10 @@ func (or *OperationRef) Edges() []Node {
 		return nil
 	}
 	return downcastNodes(or.edges())
+}
+
+func (or *OperationRef) Resolved() Node {
+	return or.Operation
 }
 
 func (or *OperationRef) edges() []node {
@@ -42,30 +47,10 @@ func (or *OperationRef) IsResolved() bool {
 	return or.Operation != nil
 }
 
-// RefDst implements Ref
-func (or *OperationRef) RefDst() []any {
-	return []any{&or.Operation}
-}
-
-// RefURI implements Ref
-func (or *OperationRef) RefURI() *uri.URI {
+// URI returns the reference URI
+func (or *OperationRef) URI() *uri.URI {
 	return or.Ref
 }
-
-// func (or *OperationRef) Walk(v Visitor) error {
-// 	if v == nil {
-// 		return nil
-// 	}
-// 	v, err := v.Visit(or)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if v == nil {
-// 		return nil
-// 	}
-// 	_, err = v.VisitOperationRef(or)
-// 	return err
-// }
 
 // Anchors implements node
 func (*OperationRef) Anchors() (*Anchors, error) { return nil, nil }
@@ -86,7 +71,7 @@ func (or *OperationRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, err
 		return or, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(or.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(or.AbsolutePath(), tok)
 }
 
 func (or OperationRef) MarshalJSON() ([]byte, error) {
@@ -108,7 +93,47 @@ func (op *OperationRef) setLocation(loc Location) error {
 	return nil
 }
 
+func (o *OperationRef) resolve(n Node) error {
+	if o == nil {
+		return fmt.Errorf("openapi: OperationRef is nil")
+	}
+	if n == nil {
+		return fmt.Errorf("openapi: node is nil")
+	}
+
+	switch n.Kind() {
+	case KindOperation:
+		o.Operation = n.(*Operation)
+	default:
+		return fmt.Errorf("openapi: cannot resolve %s to %s", n.Kind(), o.Kind())
+	}
+
+	if op, ok := n.(*Operation); ok {
+		o.Operation = op
+		return nil
+	}
+
+	return fmt.Errorf("openapi: failed convert %s to %s", n.Kind(), o.Kind())
+}
+
 var (
-	_ node   = (*OperationRef)(nil)
-	_ Walker = (*OperationRef)(nil)
+	_ node = (*OperationRef)(nil)
+	_ Ref  = (*OperationRef)(nil)
+	_ ref  = (*OperationRef)(nil)
+	// _ Walker = (*OperationRef)(nil)
 )
+
+// func (or *OperationRef) Walk(v Visitor) error {
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	v, err := v.Visit(or)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if v == nil {
+// 		return nil
+// 	}
+// 	_, err = v.VisitOperationRef(or)
+// 	return err
+// }

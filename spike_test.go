@@ -32,6 +32,13 @@ type C struct {
 	Two *Spike2
 }
 
+type X struct {
+	v interface{}
+}
+type V struct {
+	S *Spike2
+}
+
 func (c *C) R1() interface{} { return &c.One }
 func (c *C) R2() interface{} { return &c.Two }
 
@@ -60,4 +67,13 @@ func TestSpike(t *testing.T) {
 
 	fmt.Println("v2 assignable to r1.Type.Elem()", v2.Type().AssignableTo(r1.Type().Elem()))
 	fmt.Println("v1 assignable to r1.Type.Elem()", v1.Type().AssignableTo(r1.Type().Elem()))
+
+	v := &V{}
+
+	x := &X{v: &v.S}
+	xr := reflect.ValueOf(x.v)
+
+	fmt.Println(xr.CanAddr())
+
+	fmt.Printf("V.S: %+v\n", v.S)
 }

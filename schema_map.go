@@ -87,7 +87,7 @@ func (sm *SchemaMap) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	tok, _ := ptr.NextToken()
 	v := sm.Get(Text(tok))
 	if v == nil {
-		return nil, newErrNotFound(sm.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(sm.Location.AbsolutePath(), tok)
 	}
 	return v.resolveNodeByPointer(ptr)
 }
@@ -165,7 +165,4 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-var (
-	_ node   = (*SchemaMap)(nil)
-	_ Walker = (*SchemaMap)(nil)
-)
+var _ node = (*SchemaMap)(nil) // _ Walker = (*SchemaMap)(nil)

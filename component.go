@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/uri"
@@ -17,20 +18,15 @@ func (c *Component[T]) edges() []node {
 	if c == nil {
 		return nil
 	}
-	if c.IsRef() {
+	if c.IsReference() {
 		return appendEdges(nil, c.Reference)
 	}
 	return appendEdges(nil, c.Object)
 }
 
-// Dst implements Ref
-func (c *Component[T]) RefDst() []any {
-	if !c.IsRef() || c == nil {
-		return nil
-	}
-	// this should always be a pointer
-	return []any{&c.Object, &c.Reference.Referenced}
-}
+// Edges returns the immediate edges of the Node. This is used to build a
+// graph of the OpenAPI document.
+//
 
 // IsResolved implements Ref
 func (c *Component[T]) IsResolved() bool {
@@ -40,20 +36,37 @@ func (c *Component[T]) IsResolved() bool {
 	return !c.Object.isNil()
 }
 
-// RefURI implements Ref
-func (c *Component[T]) RefURI() *uri.URI {
-	if !c.IsRef() {
+// URI implements Ref
+func (c *Component[T]) URI() *uri.URI {
+	if !c.IsReference() {
 		return nil
 	}
 	return c.Reference.Ref
 }
 
+// MakeReference converts the Component into a refernce, altering the path of
+// all nested nodes.
+func (c *Component[T]) MakeReference(ref uri.URI) error {
+	if c.Object.isNil() {
+		return fmt.Errorf("cannot make reference to nil object")
+	}
+	c.Reference.dst = &c.Object
+	c.Reference.Ref = &ref
+	loc, err := NewLocation(ref)
+	if err != nil {
+		return err
+	}
+	return c.Object.setLocation(loc)
+}
+
 func (c *Component[T]) Kind() Kind {
-	switch c.Object.Kind() {
+	switch c.ObjectKind() {
 	case KindExample:
 		return KindExampleComponent
 	case KindHeader:
 		return KindHeaderComponent
+	case KindServer:
+		return KindServerComponent
 	case KindLink:
 		return KindLinkComponent
 	case KindResponse:
@@ -82,8 +95,6 @@ func (c *Component[T]) location() Location {
 
 // IsRef returns false
 //
-// To check if this is a Reference, use IsReference
-func (*Component[T]) IsRef() bool { return false }
 
 // IsReference returns true if this Component contains a Reference
 func (c *Component[T]) IsReference() bool { return !c.Reference.isNil() }
@@ -92,15 +103,25 @@ func (c *Component[T]) Refs() []Ref {
 	if c == nil {
 		return nil
 	}
-	if c.IsRef() {
-		return []Ref{c}
+	if c.IsReference() {
+		return []Ref{c.Reference}
 	}
 	return c.Object.Refs()
 }
 
-// func (c *Component[T]) IsResolved() bool {
-
-// }
+// IsRef returns true if the Node is any of the following:
+//   - *Reference
+//   - *SchemaRef
+//   - *OperationRef
+//
+// # Note:
+//
+// Components which may or may not be references return false even if
+// the Component is a reference. This is exclusively for determining
+// if the type implementsef.
+//
+// Use IsReference to determine if a Component[T] contains a Ref.
+func (c *Component[T]) IsRef() bool { return false }
 
 func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
@@ -119,7 +140,7 @@ func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 		if nxt.IsRoot() {
 			return c.Reference, nil
 		}
-		return nil, newErrNotResolvable(c.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(c.Location.AbsolutePath(), tok)
 	default:
 		// TODO: this may need to change. Not sure when I need to perform these
 		// resolutions just yet. If before population, Object may be nil at this call.
@@ -147,12 +168,23 @@ func (c Component[T]) MarshalJSON() ([]byte, error) {
 	return nil, nil
 }
 
+// ComponentKind returns the Kind of the containing Object, regardless of if it
+// is referenced or not.
+func (c *Component[T]) ObjectKind() Kind {
+	return c.Object.Kind()
+}
+
 func (c *Component[T]) UnmarshalJSON(data []byte) error {
 	if isRefJSON(data) {
 		var ref Reference
 		if err := json.Unmarshal(data, &ref); err != nil {
 			return err
 		}
+
+		ref.ReferencedKind = c.ObjectKind()
+		ref.dst = &c.Object
+		c.Reference = &ref
+
 		*c = Component[T]{
 			Reference: &ref,
 		}
@@ -189,7 +221,4 @@ func (c *Component[T]) Anchors() (*Anchors, error) {
 
 func (c *Component[T]) isNil() bool { return c == nil }
 
-var (
-	_ node   = (*Component[*Server])(nil)
-	_ Walker = (*Component[*Server])(nil)
-)
+var _ node = (*Component[*Server])(nil) // _ Walker = (*Component[*Server])(nil)

@@ -100,7 +100,7 @@ func (l *Link) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return l, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(l.Location.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(l.Location.AbsolutePath(), tok)
 }
 
 func (*Link) mapKind() Kind   { return KindLinkMap }
@@ -153,7 +153,4 @@ func (l *Link) isNil() bool { return l == nil }
 // operations that use the same parameter name in different locations (e.g.
 // path.id).
 
-var (
-	_ node   = (*Link)(nil)
-	_ Walker = (*Link)(nil)
-)
+var _ node = (*Link)(nil) // _ Walker = (*Link)(nil)

@@ -52,10 +52,6 @@ func (c *Callbacks) ref() Ref { return nil }
 //   - *Reference
 //   - *SchemaRef
 //   - *OperationRef
-//
-// Note: Components which may or may not be references return false even if
-// the Component is a reference. This is exclusively for determining
-// if the type is a reference.
 func (c *Callbacks) IsRef() bool { return false }
 
 // kind returns KindCallback
@@ -96,7 +92,7 @@ func (c *Callbacks) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	nxt, tok, _ := ptr.Next()
 	item := c.Items.Get(Text(tok))
 	if item == nil {
-		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(c.Location.AbsolutePath(), tok)
 	}
 	return item.resolveNodeByPointer(nxt)
 }
@@ -154,7 +150,4 @@ func (c *Callbacks) setLocation(loc Location) error {
 // 	return c.Items.Walk(v)
 // }
 
-var (
-	_ node   = (*Callbacks)(nil)
-	_ Walker = (*Callbacks)(nil)
-)
+var _ node = (*Callbacks)(nil) // _ Walker = (*Callbacks)(nil)

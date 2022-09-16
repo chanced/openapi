@@ -61,7 +61,7 @@ func (cs *ComponentSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node
 		return nil, err
 	}
 	if idx < 0 || idx >= len(cs.Items) {
-		return nil, newErrNotFound(cs.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(cs.Location.AbsolutePath(), tok)
 	}
 	return cs.Items[idx].resolveNodeByPointer(nxt)
 }
@@ -114,10 +114,7 @@ func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
 
 func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
 
-var (
-	_ node   = (*ComponentSlice[*Server])(nil)
-	_ Walker = (*ComponentSlice[*Server])(nil)
-)
+var _ node = (*ComponentSlice[*Server])(nil) // _ Walker = (*ComponentSlice[*Server])(nil)
 
 // func (cs *ComponentSlice[T]) Walk(v Visitor) error {
 // 	var t T

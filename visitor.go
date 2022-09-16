@@ -1,8 +1,8 @@
 package openapi
 
-type Walker interface {
-	// Walk(v Visitor) error
-}
+// type Walker interface {
+// Walk(v Visitor) error
+// }
 
 // type Visitor interface {
 // 	Visit(n Node) (Visitor, error)

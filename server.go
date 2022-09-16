@@ -81,11 +81,11 @@ func (s *Server) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch tok {
 	case "variables":
 		if s.Variables == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(s.AbsolutePath(), tok)
 		}
 		return s.Variables.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(s.Location.AbsolutePath(), tok)
 	}
 }
 
@@ -176,7 +176,7 @@ func (sv *ServerVariable) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 		return sv, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(sv.Location.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(sv.Location.AbsolutePath(), tok)
 }
 
 func (*ServerVariable) Kind() Kind      { return KindServerVariable }
@@ -209,8 +209,8 @@ func (sv *ServerVariable) Anchors() (*Anchors, error) {
 func (sv *ServerVariable) isNil() bool { return sv == nil }
 
 var (
-	_ node   = (*Server)(nil)
-	_ Walker = (*Server)(nil)
-	_ node   = (*ServerVariable)(nil)
-	_ Walker = (*ServerVariable)(nil)
+	_ node = (*Server)(nil)
+	// _ Walker = (*Server)(nil)
+	_ node = (*ServerVariable)(nil)
+	// _ Walker = (*ServerVariable)(nil)
 )

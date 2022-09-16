@@ -278,21 +278,21 @@ func (p *Parameter) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	switch tok {
 	case "schema":
 		if p.Schema == nil {
-			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(p.AbsolutePath(), tok)
 		}
 		return p.Schema.resolveNodeByPointer(nxt)
 	case "content":
 		if p.Content == nil {
-			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(p.AbsolutePath(), tok)
 		}
 		return p.Content.resolveNodeByPointer(nxt)
 	case "examples":
 		if p.Examples == nil {
-			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(p.AbsolutePath(), tok)
 		}
 		return p.Examples.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(p.AbsolutePath(), tok)
 	}
 }
 
@@ -334,7 +334,4 @@ func (p *Parameter) setLocation(loc Location) error {
 }
 func (p *Parameter) isNil() bool { return p == nil }
 
-var (
-	_ node   = (*Parameter)(nil)
-	_ Walker = (*Parameter)(nil)
-)
+var _ node = (*Parameter)(nil) // _ Walker = (*Parameter)(nil)

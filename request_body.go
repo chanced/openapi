@@ -69,11 +69,11 @@ func (rb *RequestBody) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 	switch tok {
 	case "content":
 		if rb.Content == nil {
-			return nil, newErrNotFound(rb.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(rb.AbsolutePath(), tok)
 		}
 		return rb.Content.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(rb.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(rb.Location.AbsolutePath(), tok)
 	}
 }
 
@@ -106,7 +106,4 @@ func (rb *RequestBody) setLocation(loc Location) error {
 	return nil
 }
 
-var (
-	_ node   = (*RequestBody)(nil)
-	_ Walker = (*RequestBody)(nil)
-)
+var _ node = (*RequestBody)(nil) // _ Walker = (*RequestBody)(nil)

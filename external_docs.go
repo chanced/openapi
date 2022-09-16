@@ -64,7 +64,7 @@ func (ed *ExternalDocs) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, err
 func (ed *ExternalDocs) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	tok, _ := ptr.NextToken()
 	if !ptr.IsRoot() {
-		return nil, newErrNotResolvable(ed.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(ed.Location.AbsolutePath(), tok)
 	}
 	return ed, nil
 }
@@ -95,7 +95,4 @@ func (ed *ExternalDocs) setLocation(loc Location) error {
 }
 func (ed *ExternalDocs) isNil() bool { return ed == nil }
 
-var (
-	_ node   = (*ExternalDocs)(nil)
-	_ Walker = (*ExternalDocs)(nil)
-)
+var _ node = (*ExternalDocs)(nil) // _ Walker = (*ExternalDocs)(nil)

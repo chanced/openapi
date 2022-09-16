@@ -134,16 +134,16 @@ func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch nxt {
 	case "schema":
 		if h.Schema == nil {
-			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(h.Location.AbsolutePath(), tok)
 		}
 		return h.Schema.resolveNodeByPointer(nxt)
 	case "examples":
 		if h.Examples == nil {
-			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(h.Location.AbsolutePath(), tok)
 		}
 		return h.Examples.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(h.Location.AbsolutePath(), tok)
 	}
 }
 
@@ -180,7 +180,4 @@ func (h *Header) setLocation(loc Location) error {
 }
 func (h *Header) isNil() bool { return h == nil }
 
-var (
-	_ node   = (*Header)(nil)
-	_ Walker = (*Header)(nil)
-)
+var _ node = (*Header)(nil) // _ Walker = (*Header)(nil)

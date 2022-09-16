@@ -47,7 +47,7 @@ func (x *XML) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return x, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(x.Location.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(x.Location.AbsolutePath(), tok)
 }
 
 func (*XML) Kind() Kind      { return KindXML }
@@ -89,7 +89,4 @@ func (xml *XML) Edges() []Node {
 }
 func (xml *XML) edges() []node { return nil }
 
-var (
-	_ node   = (*XML)(nil)
-	_ Walker = (*XML)(nil)
-)
+var _ node = (*XML)(nil) // _ Walker = (*XML)(nil)

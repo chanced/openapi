@@ -30,15 +30,15 @@ const (
 )
 
 var (
-	OpenAPI31SchemaURI          = *uri.MustParse(OPEN_API_3_1_SCHEMA)
-	OpenAPI30SchemaURI          = *uri.MustParse(OPEN_API_3_0_SCHEMA)
-	JSONSchema202012URI         = *uri.MustParse(JSON_SCHEMA_2020_12)
-	JSONSchema201909URI         = *uri.MustParse(JSON_SCHEMA_2019_09)
-	versionThreeOneConstraints  = mustParseConstraints(">=3.1.0 < 3.2.0")
-	versionThreeZeroConstraints = mustParseConstraints(">=3.0.0 < 3.1.0")
-	supportedVersions           = mustParseConstraints(">=3.0.0 < 3.2.0")
-	v31                         = *semver.MustParse("3.1")
-	v30                         = *semver.MustParse("3.0")
+	OpenAPI31SchemaURI  = *uri.MustParse(OPEN_API_3_1_SCHEMA)
+	OpenAPI30SchemaURI  = *uri.MustParse(OPEN_API_3_0_SCHEMA)
+	JSONSchema202012URI = *uri.MustParse(JSON_SCHEMA_2020_12)
+	JSONSchema201909URI = *uri.MustParse(JSON_SCHEMA_2019_09)
+	v30Constraints      = mustParseConstraints("3.1.0, < 3.2.0")
+	v31Constraints      = mustParseConstraints(">= 3.0.0, < 3.1.0")
+	supportedVersions   = mustParseConstraints(">= 3.0.0, < 3.2.0")
+	v31                 = *semver.MustParse("3.1")
+	v30                 = *semver.MustParse("3.0")
 )
 
 var (
@@ -49,9 +49,9 @@ var (
 // TryGetSchemaDialect attempts to extract the schema dialect from raw JSON
 // data.
 //
-// TryGetSchemaDialect will check the following keys in order:
-//   - "$schema"
-//   - "jsonSchemaDialect"
+// TryGetSchemaDialect will check the following fields in order:
+//   - $schema
+//   - jsonSchemaDialect
 func TryGetSchemaDialect(data []byte) (string, bool) {
 	id := gjson.GetBytes(data, "$schema")
 	if id.Exists() {
@@ -382,14 +382,13 @@ func compileOpenAPISchemas(c Compiler, openAPISchemas []map[string]uri.URI) (map
 	for k, v := range vm {
 		compiled[k], err = compileOpenAPISchemasFor(c, v)
 		if err != nil {
-			return nil, fmt.Errorf("openapi: failed to compile OpenAPI %s Schema %s: %w", k, v, err)
+			return nil, fmt.Errorf("openapi: failed to compile OpenAPI %s Schema %s: %w", k.String(), v.String(), err)
 		}
 	}
 	return compiled, nil
 }
 
 func compileOpenAPISchemasFor(compiler Compiler, uri uri.URI) (map[Kind]CompiledSchema, error) {
-	// u := "https://spec.openapis.org/oas/3.1/schema/2022-02-27"
 	uri.Fragment = ""
 	uri.RawFragment = ""
 	spec := uri.String()

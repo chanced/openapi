@@ -69,13 +69,13 @@ func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 	nxt, tok, _ := ptr.Next()
 	idx, err := tok.Int()
 	if err != nil {
-		return nil, newErrNotResolvable(ss.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(ss.Location.AbsolutePath(), tok)
 	}
 	if idx < 0 {
-		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(ss.Location.AbsolutePath(), tok)
 	}
 	if idx >= len(ss.Items) {
-		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(ss.Location.AbsolutePath(), tok)
 	}
 	return ss.Items[idx].resolveNodeByPointer(nxt)
 }
@@ -112,7 +112,4 @@ func (ss *SchemaSlice) setLocation(loc Location) error {
 
 func (ss *SchemaSlice) isNil() bool { return ss == nil }
 
-var (
-	_ node   = (*SchemaSlice)(nil)
-	_ Walker = (*SchemaSlice)(nil)
-)
+var _ node = (*SchemaSlice)(nil) // _ Walker = (*SchemaSlice)(nil)

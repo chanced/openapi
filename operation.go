@@ -195,41 +195,41 @@ func (o *Operation) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	switch nxt {
 	case "externalDocs":
 		if o.ExternalDocs == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.ExternalDocs.resolveNodeByPointer(nxt)
 	case "parameters":
 		if o.Parameters == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.Parameters.resolveNodeByPointer(nxt)
 	case "requestBody":
 		if o.RequestBody == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.RequestBody.resolveNodeByPointer(nxt)
 	case "responses":
 		if o.Responses == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.Responses.resolveNodeByPointer(nxt)
 	case "callbacks":
 		if o.Callbacks == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.Callbacks.resolveNodeByPointer(nxt)
 	case "security":
 		if o.Security == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.Security.resolveNodeByPointer(nxt)
 	case "servers":
 		if o.Servers == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(o.AbsolutePath(), tok)
 		}
 		return o.Servers.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(o.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(o.Location.AbsolutePath(), tok)
 	}
 }
 
@@ -357,7 +357,4 @@ func (o *Operation) setLocation(loc Location) error {
 // 	return nil
 // }
 
-var (
-	_ node   = (*Operation)(nil)
-	_ Walker = (*Operation)(nil)
-)
+var _ node = (*Operation)(nil) // _ Walker = (*Operation)(nil)

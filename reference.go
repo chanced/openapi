@@ -3,6 +3,8 @@ package openapi
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/uri"
@@ -41,8 +43,11 @@ type Reference struct {
 	// Location of the Reference
 	Location `json:"-"`
 
-	// The referenced component
-	Referenced Node `json:"-"`
+	ReferencedKind Kind `json:"-"`
+
+	dst interface{}
+
+	resolved bool
 }
 
 func (r *Reference) Edges() []Node {
@@ -56,9 +61,41 @@ func (r *Reference) edges() []node {
 	if r == nil {
 		return nil
 	}
-	edges := make([]node, 0, 1)
-	edges = appendEdges(edges)
-	return edges
+
+	return appendEdges(nil, r.Resolved().(node))
+}
+
+func (r *Reference) URI() *uri.URI {
+	if r == nil {
+		return nil
+	}
+	return r.Ref
+}
+
+func (r *Reference) IsResolved() bool { return r.resolved }
+
+// resolve resolves the reference
+//
+// TODO: make this a bit less panicky
+func (r *Reference) resolve(v Node) error {
+	if r == nil {
+		return fmt.Errorf("openapi: Reference is nil")
+	}
+	if r.dst == nil {
+		return fmt.Errorf("openapi: Reference dst is nil")
+	}
+
+	reflect.ValueOf(r.dst).Elem().Set(reflect.ValueOf(v))
+	return nil
+}
+
+// Referenced returns the resolved referenced Node
+func (r *Reference) Resolved() Node {
+	n, ok := (r.dst).(*Node)
+	if !ok {
+		panic("openapi: Reference dst is not a Node. This is a bug. Please report it: https://github.com/chanced/openapi/issues/new")
+	}
+	return *n
 }
 
 // IsRef returns true if the Node is any of the following:
@@ -67,9 +104,9 @@ func (r *Reference) edges() []node {
 //   - *OperationRef
 //
 // Note: Components which may or may not be references return false even if
-// the Component is a reference. This is exclusively for determining
+// the Component contains a reference. This is exclusively for determining
 // if the type is a reference.
-func (r *Reference) IsRef() bool { return false }
+func (r *Reference) IsRef() bool { return true }
 
 // Refs returns nil as instances of Reference do not contain the referenced
 // object
@@ -89,7 +126,7 @@ func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 		return r, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+	return nil, newErrNotResolvable(r.Location.AbsolutePath(), tok)
 }
 
 func (r Reference) MarshalJSON() ([]byte, error) {
@@ -131,6 +168,8 @@ func isRefJSON(data []byte) bool {
 }
 
 var (
-	_ node   = (*Reference)(nil)
-	_ Walker = (*Reference)(nil)
+	_ node = (*Reference)(nil)
+	// _ Walker = (*Reference)(nil)
+	_ Ref = (*Reference)(nil)
+	_ ref = (*Reference)(nil)
 )

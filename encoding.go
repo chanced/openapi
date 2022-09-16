@@ -101,11 +101,11 @@ func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch nxt {
 	case "headers":
 		if e.Headers == nil {
-			return nil, newErrNotFound(e.Location.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(e.Location.AbsolutePath(), tok)
 		}
 		return e.Headers.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(e.Location.AbsolutePath(), tok)
 	}
 }
 
@@ -139,7 +139,4 @@ func (e *Encoding) UnmarshalJSON(data []byte) error {
 }
 func (e *Encoding) isNil() bool { return e == nil }
 
-var (
-	_ node   = (*Encoding)(nil)
-	_ Walker = (*Encoding)(nil)
-)
+var _ node = (*Encoding)(nil) // _ Walker = (*Encoding)(nil)

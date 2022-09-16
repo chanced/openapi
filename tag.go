@@ -64,11 +64,11 @@ func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 			return t.ExternalDocs, nil
 		}
 		if t.ExternalDocs == nil {
-			return nil, newErrNotFound(t.Location.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(t.Location.AbsolutePath(), tok)
 		}
 		return t.ExternalDocs.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(t.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(t.Location.AbsolutePath(), tok)
 	}
 }
 
@@ -101,7 +101,4 @@ func (t *Tag) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-var (
-	_ node   = (*Tag)(nil)
-	_ Walker = (*Tag)(nil)
-)
+var _ node = (*Tag)(nil) // _ Walker = (*Tag)(nil)

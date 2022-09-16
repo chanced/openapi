@@ -118,11 +118,11 @@ func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 			return ss.Flows, nil
 		}
 		if ss.Flows == nil {
-			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
+			return nil, newErrNotFound(ss.AbsolutePath(), tok)
 		}
 		return ss.Flows.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(ss.AbsolutePath(), tok)
 	}
 }
 
@@ -155,7 +155,4 @@ func (*SecurityScheme) Kind() Kind      { return KindSecurityScheme }
 func (*SecurityScheme) mapKind() Kind   { return KindSecuritySchemeMap }
 func (*SecurityScheme) sliceKind() Kind { return KindUndefined }
 
-var (
-	_ node   = (*SecurityScheme)(nil)
-	_ Walker = (*SecurityScheme)(nil)
-)
+var _ node = (*SecurityScheme)(nil) // _ Walker = (*SecurityScheme)(nil)

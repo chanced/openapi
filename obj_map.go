@@ -75,7 +75,7 @@ func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	tok, _ := ptr.NextToken()
 	v := om.Get(Text(tok))
 	if v.isNil() {
-		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(om.Location.AbsolutePath(), tok)
 	}
 	return nil, nil
 }

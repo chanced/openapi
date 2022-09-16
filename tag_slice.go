@@ -58,13 +58,13 @@ func (ts *TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	nxt, tok, _ := ptr.Next()
 	idx, err := tok.Int()
 	if err != nil {
-		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(ts.Location.AbsolutePath(), tok)
 	}
 	if idx < 0 {
-		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotResolvable(ts.Location.AbsolutePath(), tok)
 	}
 	if idx >= len(ts.Items) {
-		return nil, newErrNotFound(ts.Location.AbsoluteLocation(), tok)
+		return nil, newErrNotFound(ts.Location.AbsolutePath(), tok)
 	}
 	return ts.Items[idx].resolveNodeByPointer(nxt)
 }
@@ -106,7 +106,4 @@ func (ts *TagSlice) setLocation(loc Location) error {
 
 func (TagSlice) Anchors() (*Anchors, error) { return nil, nil }
 
-var (
-	_ node   = (*TagSlice)(nil)
-	_ Walker = (*TagSlice)(nil)
-)
+var _ node = (*TagSlice)(nil) // _ Walker = (*TagSlice)(nil)
