@@ -27,9 +27,9 @@ type Node interface {
 }
 
 // IsRef returns true if the Node is any of the following:
-//   - Reference
-//   - SchemaRef
-//   - OperationRef
+//   - *Reference
+//   - *SchemaRef
+//   - *OperationRef
 func IsRef(n Node) bool {
 	switch n.Kind() {
 	case KindReference, KindSchemaRef, KindOperationRef:

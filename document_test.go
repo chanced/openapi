@@ -24,7 +24,7 @@ func TestUnmarshal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	petstore, err := transcodefmt.YAMLToJSON(ps)
+	petstore, err := transcodefmt.JSONFromYAML(ps)
 	if err != nil {
 		t.Fatal(err)
 	}
