@@ -77,8 +77,7 @@ func (pi *PathItem) edges() []node {
 	edges = appendEdges(edges, pi.Trace)
 	return edges
 }
-func (pi *PathItem) IsRef() bool { return false }
-func (pi *PathItem) ref() Ref    { return nil }
+func (pi *PathItem) ref() Ref { return nil }
 
 func (pi *PathItem) Refs() []Ref {
 	if pi == nil {

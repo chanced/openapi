@@ -45,8 +45,6 @@ func (p *Paths) edges() []node {
 	return appendEdges(nil, p.Items)
 }
 
-func (*Paths) IsRef() bool { return false }
-
 func (*Paths) ref() Ref { return nil }
 
 func (p *Paths) Refs() []Ref {

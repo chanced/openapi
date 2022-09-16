@@ -98,16 +98,6 @@ func (r *Reference) Resolved() Node {
 	return *n
 }
 
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-//
-// Note: Components which may or may not be references return false even if
-// the Component contains a reference. This is exclusively for determining
-// if the type is a reference.
-func (r *Reference) IsRef() bool { return true }
-
 // Refs returns nil as instances of Reference do not contain the referenced
 // object
 func (*Reference) Refs() []Ref { return nil }

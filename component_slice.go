@@ -24,8 +24,6 @@ func (cs *ComponentSlice[T]) edges() []node {
 	return edges
 }
 
-func (*ComponentSlice[T]) IsRef() bool { return false }
-
 // ref implements node
 func (*ComponentSlice[T]) ref() Ref { return nil }
 

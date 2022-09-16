@@ -48,12 +48,6 @@ func (c *Callbacks) ref() Ref { return nil }
 // graph of the OpenAPI document.
 //
 
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-func (c *Callbacks) IsRef() bool { return false }
-
 // kind returns KindCallback
 func (*Callbacks) Kind() Kind     { return KindCallbacks }
 func (*Callbacks) mapKind() Kind  { return KindCallbacksMap }

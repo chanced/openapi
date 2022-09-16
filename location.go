@@ -62,3 +62,17 @@ func (l Location) withURI(uri *uri.URI) (Location, error) {
 func (l Location) location() Location {
 	return l
 }
+
+func (l Location) IsRelativeTo(uri *uri.URI) bool {
+	if uri == nil {
+		return false
+	}
+	a := l.absolute
+	a.Fragment = ""
+	a.RawFragment = ""
+	u := *uri
+	u.Fragment = ""
+	u.RawFragment = ""
+
+	return a.String() == u.String()
+}

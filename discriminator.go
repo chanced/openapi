@@ -49,7 +49,6 @@ func (d *Discriminator) UnmarshalJSON(data []byte) error {
 }
 
 func (d *Discriminator) Anchors() (*Anchors, error) { return nil, nil }
-func (d *Discriminator) IsRef() bool                { return false }
 
 func (*Discriminator) Kind() Kind { return KindDiscriminator }
 

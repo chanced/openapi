@@ -90,8 +90,6 @@ func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 	return cm.resolveNodeByPointer(ptr)
 }
 
-func (c *ComponentMap[T]) IsRef() bool { return false }
-
 func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return c, nil

@@ -128,8 +128,6 @@ func (o *Operation) edges() []node {
 	)
 }
 
-func (*Operation) IsRef() bool { return false }
-
 func (*Operation) ref() Ref { return nil }
 
 func (o *Operation) Refs() []Ref {

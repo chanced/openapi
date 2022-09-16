@@ -68,8 +68,6 @@ type SecurityScheme struct {
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
 }
 
-func (*SecurityScheme) IsRef() bool { return false }
-
 func (ss *SecurityScheme) Edges() []Node {
 	if ss == nil {
 		return nil

@@ -59,8 +59,6 @@ type Link struct {
 	RequestBody jsonx.RawMessage `json:"requestBody,omitempty"`
 }
 
-func (l *Link) IsRef() bool { return false }
-
 func (l *Link) Edges() []Node {
 	if l == nil {
 		return nil

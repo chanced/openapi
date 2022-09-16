@@ -61,7 +61,7 @@ func (ss *SchemaSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 
 	return ss.resolveNodeByPointer(ptr)
 }
-func (ss *SchemaSlice) IsRef() bool { return false }
+
 func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return ss, nil

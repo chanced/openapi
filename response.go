@@ -58,8 +58,6 @@ func (r *Response) edges() []node {
 	return appendEdges(nil, r.Headers, r.Content, r.Links)
 }
 
-func (r *Response) IsRef() bool { return false }
-
 func (r *Response) Refs() []Ref {
 	if r == nil {
 		return nil

@@ -51,7 +51,6 @@ func (f *OAuthFlow) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	}
 	return f.resolveNodeByPointer(ptr)
 }
-func (f *OAuthFlow) IsRef() bool { return false }
 
 func (r *OAuthFlow) Edges() []Node {
 	if r == nil {
@@ -130,8 +129,6 @@ type OAuthFlows struct {
 	// Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0.
 	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty"`
 }
-
-func (*OAuthFlows) IsRef() bool { return false }
 
 func (f *OAuthFlows) Edges() []Node {
 	if f == nil {

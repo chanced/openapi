@@ -82,7 +82,6 @@ type Header struct {
 	Example jsonx.RawMessage `json:"example,omitempty"`
 }
 
-func (*Header) IsRef() bool { return false }
 func (h *Header) Edges() []Node {
 	if h == nil {
 		return nil

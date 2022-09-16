@@ -24,11 +24,19 @@ type Node interface {
 	Anchors() (*Anchors, error)
 
 	Refs() []Ref
+}
 
-	IsRef() bool
-
-	// I'm not sure why I can't add this. It creates a circular dependency though.
-	// Walker
+// IsRef returns true if the Node is any of the following:
+//   - Reference
+//   - SchemaRef
+//   - OperationRef
+func IsRef(n Node) bool {
+	switch n.Kind() {
+	case KindReference, KindSchemaRef, KindOperationRef:
+		return true
+	default:
+		return false
+	}
 }
 
 type node interface {

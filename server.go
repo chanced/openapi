@@ -41,20 +41,6 @@ func (s *Server) edges() []node {
 	return appendEdges(nil, s.Variables)
 }
 
-// Edges returns the immediate edges of the Node. This is used to build a
-// graph of the OpenAPI document.
-//
-
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-//
-// Note: Components which may or may not be references return false even if
-// the Component is a reference. This is exclusively for determining
-// if the type is a reference.
-func (s *Server) IsRef() bool { return false }
-
 func (s *Server) Refs() []Ref {
 	if s == nil {
 		return nil
@@ -147,20 +133,6 @@ func (sv *ServerVariable) Edges() []Node {
 	return downcastNodes(sv.edges())
 }
 func (sv *ServerVariable) edges() []node { return nil }
-
-// Edges returns the immediate edges of the Node. This is used to build a
-// graph of the OpenAPI document.
-//
-
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-//
-// Note: Components which may or may not be references return false even if
-// the Component is a reference. This is exclusively for determining
-// if the type is a reference.
-func (*ServerVariable) IsRef() bool { return false }
 
 func (*ServerVariable) Refs() []Ref { return nil }
 

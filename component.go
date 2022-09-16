@@ -109,20 +109,6 @@ func (c *Component[T]) Refs() []Ref {
 	return c.Object.Refs()
 }
 
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-//
-// # Note:
-//
-// Components which may or may not be references return false even if
-// the Component is a reference. This is exclusively for determining
-// if the type implementsef.
-//
-// Use IsReference to determine if a Component[T] contains a Ref.
-func (c *Component[T]) IsRef() bool { return false }
-
 func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err

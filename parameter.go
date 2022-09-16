@@ -212,8 +212,6 @@ type Parameter struct {
 	Content *ContentMap `json:"content,omitempty"`
 }
 
-func (*Parameter) IsRef() bool { return false }
-
 func (p *Parameter) Edges() []Node {
 	if p == nil {
 		return nil

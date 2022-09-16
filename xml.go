@@ -80,7 +80,6 @@ func (xml *XML) setLocation(loc Location) error {
 
 func (xml *XML) isNil() bool { return xml == nil }
 func (xml *XML) Refs() []Ref { return nil }
-func (xml *XML) IsRef() bool { return false }
 func (xml *XML) Edges() []Node {
 	if xml == nil {
 		return nil

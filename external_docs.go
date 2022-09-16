@@ -21,8 +21,6 @@ type ExternalDocs struct {
 	Description Text `json:"description,omitempty"`
 }
 
-func (*ExternalDocs) IsRef() bool { return false }
-
 func (ed *ExternalDocs) Edges() []Node {
 	if ed == nil {
 		return nil

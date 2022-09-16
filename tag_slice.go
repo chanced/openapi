@@ -12,8 +12,6 @@ type TagSlice struct {
 	Items []*Tag
 }
 
-func (*TagSlice) IsRef() bool { return false }
-
 func (tl *TagSlice) Edges() []Node {
 	if tl == nil {
 		return nil

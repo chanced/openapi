@@ -19,8 +19,6 @@ type SecurityRequirementItem struct {
 	Value []Text
 }
 
-func (*SecurityRequirementItem) IsRef() bool { return false }
-
 func (sri *SecurityRequirementItem) Edges() []Node {
 	if sri == nil {
 		return nil

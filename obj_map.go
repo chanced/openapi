@@ -51,16 +51,6 @@ func (om *ObjMap[T]) edges() []node {
 	return edges
 }
 
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-//
-// Note: Components which may or may not be references return false even if
-// the Component is a reference. This is exclusively for determining
-// if the type is a reference.
-func (*ObjMap[T]) IsRef() bool { return false }
-
 func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err

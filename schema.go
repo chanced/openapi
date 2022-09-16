@@ -738,11 +738,6 @@ func (s *Schema) IsBool() bool {
 	return false
 }
 
-// IsRef returns true if s.Ref is set
-func (s *Schema) IsRef() bool {
-	return s.Ref != nil
-}
-
 // SetKeyword encodes and sets the keyword key to the encoded value
 func (s *Schema) SetKeyword(key string, value interface{}) error {
 	b, err := json.Marshal(value)

@@ -33,8 +33,6 @@ func (or *OperationRef) edges() []node {
 	return appendEdges(edges, or.Operation)
 }
 
-func (or *OperationRef) IsRef() bool { return true }
-
 func (or *OperationRef) refs() []node {
 	return []node{or.Operation}
 }

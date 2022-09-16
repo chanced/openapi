@@ -25,8 +25,6 @@ func (sr *SchemaRef) edges() []node { return []node{sr.Schema} }
 
 func (*SchemaRef) Refs() []Ref { return nil }
 
-func (*SchemaRef) IsRef() bool { return true }
-
 func (sr *SchemaRef) IsResolved() bool {
 	return sr.Schema != nil
 }

@@ -91,8 +91,6 @@ func (e *Encoding) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	return e.resolveNodeByPointer(ptr)
 }
 
-func (e *Encoding) IsRef() bool { return false }
-
 func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return e, nil

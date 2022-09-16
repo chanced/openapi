@@ -39,9 +39,6 @@ type Example struct {
 	ExternalValue *uri.URI `json:"externalValue,omitempty"`
 }
 
-// IsRef returns false
-func (*Example) IsRef() bool { return false }
-
 func (e *Example) Edges() []Node {
 	if e == nil {
 		return nil

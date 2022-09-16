@@ -17,7 +17,6 @@ type Scope struct {
 	Value    Text `json:"-"`
 }
 
-func (*Scope) IsRef() bool                { return false }
 func (*Scope) Anchors() (*Anchors, error) { return nil, nil }
 func (*Scope) Kind() Kind                 { return KindScope }
 func (*Scope) mapKind() Kind              { return KindUndefined }
@@ -143,7 +142,6 @@ func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	return nil, newErrNotFound(s.AbsolutePath(), tok)
 }
 
-func (*Scopes) IsRef() bool { return false }
 func (s *Scopes) Edges() []Node {
 	if s == nil {
 		return nil
