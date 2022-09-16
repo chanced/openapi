@@ -41,32 +41,49 @@ var (
 	v30                         = *semver.MustParse("3.0")
 )
 
-var _ Validator = (*StdValidator)(nil)
+var (
+	_ Validator          = (*StdValidator)(nil)
+	_ ComponentValidator = (*StdComponentValidator)(nil)
+)
 
-type Validator interface {
-	// Validate should validate the OpenAPI document. It will be fully-resolved.
-	//
-	// StdValidator does not currently perform additional validation.
-	ValidateDocument(document *Document) error
+// TryGetSchemaDialect attempts to extract the schema dialect from raw JSON
+// data.
+//
+// TryGetSchemaDialect will check the following keys in order:
+//   - "$schema"
+//   - "jsonSchemaDialect"
+func TryGetSchemaDialect(data []byte) (string, bool) {
+	id := gjson.GetBytes(data, "$schema")
+	if id.Exists() {
+		return id.String(), true
+	}
+	id = gjson.GetBytes(data, "jsonSchemaDialect")
+	if id.Exists() {
+		return id.String(), true
+	}
+	return "", false
+}
 
-	// ValidateSchema should validate a JSON Schema document.
-	//
-	// dialect will be (in this order):
-	//  - value of $schema, if present
-	//  - value of jsonSchemaDialect if present in the nearest Document
-	//  - "https://json-schema.org/draft/2020-12/schema" if OpenAPI is v3.1
-	//  - "https://json-schema.org/draft/2019-09/schema" if OpenAPI is v3.0
-	ValidateSchema(data []byte, uri *uri.URI, dialect *uri.URI) error
+// TryGetOpenAPIVersion attempts to extract the OpenAPI version from raw JSON
+// data and parse it as a semver.Version.
+func TryGetOpenAPIVersion(data []byte) (string, bool) {
+	v := gjson.GetBytes(data, "openapi")
+	if v.Exists() {
+		return v.String(), true
+	}
+	return "", false
+}
 
+type ComponentValidator interface {
 	// Validate should validate the structural integrity of a of an OpenAPI
 	// document or component.
 	//
 	// If $ref is present in the data, the Kind will be KindReference.
 	// Otherwise, it will be the Kind of the data being loaded.
 	//
-	// This should only be called for the following:
-	//
-	//    - Document (KindDocument)
+	// openapi will only ever call Validate for the following:
+	//    - Schema (KindSchema)
+	//    - Components (KindComponents)
 	//    - Callbacks (KindCallbacks)
 	//    - Example (KindExample)
 	//    - Header (KindHeader)
@@ -79,11 +96,27 @@ type Validator interface {
 	//    - Response (KindResponse)
 	//    - SecurityScheme (KindSecurityScheme)
 	//
-	// StdValidator will return an error if the CompiledSchemas does not contani
+	// For Schemas, the Schema's $schema field should be considered
+	//
+	// StdComponentValidator will return an error if CompiledSchemas does not contain
 	// a CompiledSchema for the given Kind.
 	//
-	// uri is the URI of the data being validated. It is used for error reporting
-	Validate(data []byte, kind Kind, openapi semver.Version, uri *uri.URI) error
+	// resource is the URI of the data being validated. It is used for error reporting.
+	//
+	Validate(data []byte, kind Kind, resource uri.URI) error
+}
+
+type Validator interface {
+	// ValidateDocument should validate the structural integrity of a of an OpenAPI
+	// document.
+	ValidateDocumentData(data []byte, resource uri.URI) error
+
+	// Validate should validate the fully-resolved OpenAPI document.
+	ValidateDocument(document *Document, resource uri.URI) error
+
+	// ComponentValidator is used to validate the structural integrity of
+	// OpenAPI components, including JSON Schemas.
+	Validator(openapiVers semver.Version, jsonschemaDialect uri.URI) (ComponentValidator, error)
 }
 
 // NewStdValidator creates and returns a new StdValidator.
@@ -112,35 +145,76 @@ func NewValidator(compiler Compiler, resources ...fs.FS) (*StdValidator, error) 
 		return nil, fmt.Errorf("failed to compile schemas: %w", err)
 	}
 	return &StdValidator{
-		schemas: compiled,
+		Schemas: compiled,
 	}, nil
 }
 
 // StdValidator is an implemtation of the Validator interface.
 type StdValidator struct {
-	schemas CompiledSchemas
+	Schemas CompiledSchemas
 }
 
-// Validate implements Validator
-func (sv *StdValidator) Validate(data []byte, kind Kind, _ *uri.URI, openapi semver.Version) error {
-	if isRefJSON(data) {
-		kind = KindReference
+// ComponentValidator implements Validator
+func (sv *StdValidator) Validator(openapi semver.Version, dialect uri.URI) (ComponentValidator, error) {
+	js, ok := sv.Schemas.JSONSchema[dialect]
+	if !ok {
+		return nil, fmt.Errorf("openapi: JSON Schema dialect %q not found", dialect)
 	}
-	switch kind {
-	case KindSchema:
 
-		return sv.ValidateSchema(data)
+	oa, ok := sv.Schemas.OpenAPI[openapi]
+	if !ok {
+		return nil, fmt.Errorf("openapi: OpenAPI version %q not found", openapi)
 	}
+	return &StdComponentValidator{
+		OpenAPIVersion:           openapi,
+		OpenAPISchemas:           oa,
+		DefaultJSONSchema:        js,
+		DefaultJSONSchemaDialect: dialect,
+		JSONSchemas:              sv.Schemas.JSONSchema,
+	}, nil
 }
 
-// ValidateDocument implements Validator
-func (*StdValidator) ValidateDocument(document *Document) error {
-	panic("unimplemented")
+// Validate should validate the fully-resolved OpenAPI document.
+//
+// ValidateDocument is currently a no-op.
+func (*StdValidator) ValidateDocument(document *Document, rsource uri.URI) error {
+	return nil
 }
 
-// ValidateSchema implements Validator
-func (*StdValidator) ValidateSchema(data []byte, uri *uri.URI, dialect *uri.URI) error {
-	panic("unimplemented")
+func (sv *StdValidator) ValidateDocumentData(data []byte, resource uri.URI) error {
+	ovd, ok := TryGetOpenAPIVersion(data)
+	if !ok {
+		return NewValidationError(ErrMissingOpenAPIVersion, KindDocument, resource)
+	}
+	ov, err := semver.NewVersion(ovd)
+	if err != nil {
+		return NewSemVerError(err, ovd, resource)
+	}
+
+	if err = sv.Schemas.OpenAPI[*ov][KindDocument].Validate(data); err != nil {
+		return NewValidationError(err, KindDocument, resource)
+	}
+	return nil
+}
+
+type StdComponentValidator struct {
+	OpenAPIVersion           semver.Version
+	DefaultJSONSchema        CompiledSchema
+	DefaultJSONSchemaDialect uri.URI
+	JSONSchemas              map[uri.URI]CompiledSchema
+	OpenAPISchemas           map[Kind]CompiledSchema
+}
+
+// ValidateComponent implements ComponentValidator
+func (scv *StdComponentValidator) Validate(data []byte, kind Kind, resource uri.URI) error {
+	s, ok := scv.OpenAPISchemas[kind]
+	if !ok {
+		return NewError(fmt.Errorf("openapi: schema not found for %s", kind), resource)
+	}
+	if err := s.Validate(data); err != nil {
+		return NewValidationError(err, kind, resource)
+	}
+	return nil
 }
 
 // CompiledSchema is an interface satisfied by a JSON Schema implementation	that
@@ -159,12 +233,6 @@ type CompiledSchema interface {
 type Compiler interface {
 	AddResource(id string, r io.Reader) error
 	Compile(url string) (CompiledSchema, error)
-}
-
-// JSONSchemaResources used in the StdValidator
-type JSONSchemaResources struct {
-	Version string // uri of the json schema
-	Schema  CompiledSchema
 }
 
 // CompiledSchemas are used in the the StdValidator
@@ -241,7 +309,7 @@ func openAPISchemaVMap(openAPISchemas []map[string]uri.URI) (map[semver.Version]
 			}
 
 			if _, errs := supportedVersions.Validate(vers); err != nil {
-				return nil, &SupportedVersionError{Version: k, Errs: errs}
+				return nil, &UnsupportedVersionError{Version: k, Errs: errs}
 			}
 
 			k = fmt.Sprintf("%d.%d", vers.Major(), vers.Minor())
