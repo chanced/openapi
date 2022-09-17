@@ -1,7 +1,11 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // ServerVariable for server URL template substitution.
@@ -72,6 +76,24 @@ func (sv *ServerVariable) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*sv = ServerVariable(v)
 	return err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (sv ServerVariable) MarshalYAML() (interface{}, error) {
+	j, err := sv.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (sv *ServerVariable) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, sv)
 }
 
 func (sv *ServerVariable) Anchors() (*Anchors, error) {
