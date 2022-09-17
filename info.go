@@ -3,6 +3,8 @@ package openapi
 import (
 	"encoding/json"
 
+	"github.com/Masterminds/semver"
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcodefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -11,11 +13,15 @@ import (
 // if needed, and MAY be presented in editing or documentation generation tools
 // for convenience.
 type Info struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// Version of the OpenAPI document (which is distinct from the OpenAPI
 	// Specification version or the API implementation version).
 	//
 	// 	*required*
 	Version Text `json:"version"`
+
 	// The title of the API.
 	//
 	// 	*required*
@@ -37,9 +43,91 @@ type Info struct {
 
 	// License information for the exposed API.
 	License *License `json:"license,omitempty" bson:"license,omitempty"`
-
-	Extensions `json:"-"`
 }
+
+func (*Info) Anchors() (*Anchors, error) { return nil, nil }
+
+func (*Info) Kind() Kind { return KindInfo }
+
+func (*Info) Refs() []Ref { return nil }
+
+func (i *Info) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	err := ptr.Validate()
+	if err != nil {
+		return nil, err
+	}
+	if ptr.IsRoot() {
+		return i, nil
+	}
+	tok, _ := ptr.NextToken()
+	switch tok {
+	case "contact":
+		if i.Contact == nil {
+			return nil, newErrNotFound(i.absolute, tok)
+		}
+		return i.Contact, nil
+	case "license":
+		return i.License, nil
+	}
+	return nil, newErrNotResolvable(i.AbsolutePath(), tok)
+}
+
+func (i *Info) edges() []node {
+	edges := appendEdges(nil, i.Contact)
+	edges = appendEdges(edges, i.License)
+	return edges
+}
+
+func (i *Info) isNil() bool {
+	return i == nil
+}
+
+func (i *Info) location() Location {
+	return i.Location
+}
+
+func (i *Info) SemVer() (*semver.Version, error) {
+	return semver.NewVersion(i.Version.String())
+}
+
+func (*Info) mapKind() Kind { return KindUndefined }
+
+func (i *Info) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return i, nil
+	}
+	tok, _ := ptr.NextToken()
+	switch tok {
+	case "contact":
+		if i.Contact == nil {
+			return nil, newErrNotFound(i.AbsolutePath(), tok)
+		}
+		return i.Contact, nil
+	case "license":
+		if i.License == nil {
+			return nil, newErrNotFound(i.AbsolutePath(), tok)
+		}
+		return i.License, nil
+	default:
+		return nil, newErrNotResolvable(i.AbsolutePath(), tok)
+	}
+}
+
+func (i *Info) setLocation(loc Location) error {
+	if i == nil {
+		return nil
+	}
+	i.Location = loc
+	if err := i.Contact.setLocation(loc.Append("contact")); err != nil {
+		return err
+	}
+	if err := i.License.setLocation(loc.Append("license")); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (*Info) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals JSON
 func (i Info) MarshalJSON() ([]byte, error) {
@@ -56,6 +144,7 @@ func (i *Info) UnmarshalJSON(data []byte) error {
 	*i = Info(v)
 	return err
 }
+
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
 func (i Info) MarshalYAML() (interface{}, error) {
 	j, err := i.MarshalJSON()
@@ -73,3 +162,5 @@ func (i *Info) UnmarshalYAML(value *yaml.Node) error {
 	}
 	return json.Unmarshal(j, i)
 }
+
+var _ node = (*Info)(nil)

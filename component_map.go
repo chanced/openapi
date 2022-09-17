@@ -217,4 +217,4 @@ func (cm *ComponentMap[T]) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-var _ node = (*ComponentMap[*Server])(nil) // _ Walker = (*ComponentMap[*Server])(nil)
+var _ node = (*ComponentMap[*Server])(nil)

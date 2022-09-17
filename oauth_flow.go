@@ -303,7 +303,6 @@ func (f *OAuthFlows) UnmarshalYAML(value *yaml.Node) error {
 
 var (
 	_ node = (*OAuthFlow)(nil)
-	// _ Walker = (*OAuthFlow)(nil)
+
 	_ node = (*OAuthFlows)(nil)
-	// _ Walker = (*OAuthFlows)(nil)
 )

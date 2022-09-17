@@ -180,4 +180,4 @@ func (*MediaType) sliceKind() Kind { return KindUndefined }
 
 func (mt *MediaType) isNil() bool { return mt == nil }
 
-var _ node = (*MediaType)(nil) // _ Walker = (*MediaType)(nil)
+var _ node = (*MediaType)(nil)

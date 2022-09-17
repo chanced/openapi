@@ -121,7 +121,6 @@ func (e *Example) isNil() bool { return e == nil }
 
 var (
 	_ node = (*Example)(nil)
-	// _ Walker = (*Example)(nil)
+
 	_ node = (*ExampleMap)(nil)
-	// _ Walker = (*ExampleMap)(nil)
 )

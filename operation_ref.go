@@ -52,7 +52,6 @@ func (or *OperationRef) URI() *uri.URI {
 	return or.Ref
 }
 
-// Anchors implements node
 func (*OperationRef) Anchors() (*Anchors, error) { return nil, nil }
 
 func (*OperationRef) Kind() Kind      { return KindOperationRef }
@@ -138,7 +137,6 @@ var (
 	_ node = (*OperationRef)(nil)
 	_ Ref  = (*OperationRef)(nil)
 	_ ref  = (*OperationRef)(nil)
-	// _ Walker = (*OperationRef)(nil)
 )
 
 // func (or *OperationRef) Walk(v Visitor) error {

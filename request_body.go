@@ -127,4 +127,4 @@ func (rb *RequestBody) setLocation(loc Location) error {
 	return nil
 }
 
-var _ node = (*RequestBody)(nil) // _ Walker = (*RequestBody)(nil)
+var _ node = (*RequestBody)(nil)

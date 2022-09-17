@@ -309,7 +309,6 @@ func (s *Scope) isNil() bool { return s == nil }
 
 var (
 	_ node = (*Scope)(nil)
-	// _ Walker = (*Scope)(nil)
+
 	_ node = (*Scopes)(nil)
-	// _ Walker = (*Scopes)(nil)
 )

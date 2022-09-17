@@ -29,7 +29,6 @@ func (tl *TagSlice) edges() []node {
 	return edges
 }
 
-// Kind implements node
 func (*TagSlice) Kind() Kind { return KindTagSlice }
 
 func (ts *TagSlice) Refs() []Ref {
@@ -43,7 +42,6 @@ func (ts *TagSlice) Refs() []Ref {
 	return refs
 }
 
-// ResolveNodeByPointer implements node
 func (ts TagSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
@@ -69,12 +67,10 @@ func (ts *TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	return ts.Items[idx].resolveNodeByPointer(nxt)
 }
 
-// MarshalJSON implements node
 func (ts *TagSlice) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ts.Items)
 }
 
-// UnmarshalJSON implements node
 func (ts *TagSlice) UnmarshalJSON(data []byte) error {
 	var items []*Tag
 	if err := json.Unmarshal(data, &items); err != nil {
@@ -104,12 +100,10 @@ func (t *TagSlice) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, t)
 }
 
-// isNil implements node
 func (ts *TagSlice) isNil() bool {
 	return ts == nil
 }
 
-// location implements node
 func (ts TagSlice) location() Location {
 	return ts.Location
 }
@@ -118,10 +112,13 @@ func (*TagSlice) mapKind() Kind   { return KindUndefined }
 func (*TagSlice) sliceKind() Kind { return KindUndefined }
 
 func (ts *TagSlice) setLocation(loc Location) error {
+	if ts == nil {
+		return nil
+	}
 	ts.Location = loc
 	return nil
 }
 
 func (TagSlice) Anchors() (*Anchors, error) { return nil, nil }
 
-var _ node = (*TagSlice)(nil) // _ Walker = (*TagSlice)(nil)
+var _ node = (*TagSlice)(nil)

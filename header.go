@@ -219,4 +219,4 @@ func (h *Header) setLocation(loc Location) error {
 }
 func (h *Header) isNil() bool { return h == nil }
 
-var _ node = (*Header)(nil) // _ Walker = (*Header)(nil)
+var _ node = (*Header)(nil)

@@ -123,4 +123,4 @@ func (t *Tag) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, t)
 }
 
-var _ node = (*Tag)(nil) // _ Walker = (*Tag)(nil)
+var _ node = (*Tag)(nil)

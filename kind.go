@@ -3,69 +3,70 @@ package openapi
 type Kind uint16
 
 const (
-	KindUndefined               Kind = iota
-	KindDocument                     // *Document
-	KindExample                      // *Example
-	KindExampleMap                   // *ExampleMap
-	KindExampleComponent             // *Component[*Example]
-	KindSchema                       // *Schema
-	KindSchemaSlice                  // *SchemaSlice
-	KindSchemaMap                    // *SchemaMap
-	KindSchemaRef                    // *SchemaRef
-	KindDiscriminator                // *Discriminator
-	KindHeader                       // *Header
-	KindHeaderMap                    // *HeaderMap
-	KindHeaderSlice                  // *HeaderSlice
-	KindHeaderComponent              // *Component[*Header]
-	KindLink                         // *Link
-	KindLinkComponent                // *Component[*Link]
-	KindLinkMap                      // *LinkMap
-	KindResponse                     // *Response
-	KindResponseMap                  // *ResponseMap
-	KindResponseComponent            // *Component[*Response]
-	KindParameter                    // *Parameter
-	KindParameterComponent           // *Component[*Parameter]
-	KindParameterSlice               // *ParameterSlice
-	KindParameterMap                 // *ParameterMap
-	KindPaths                        // *Paths
-	KindPathItem                     // *PathItem
-	KindPathItemComponent            // *Component[*PathItem]
-	KindPathItemMap                  // *PathItemMap
-	KindRequestBody                  // *RequestBody
-	KindRequestBodyMap               // *RequestBodyMap
-	KindRequestBodyComponent         // *Component[*RequestBody]
-	KindCallbacks                    // *Callbacks
-	KindCallbacksComponent           // *Component[*Callbacks]
-	KindCallbacksMap                 // *CallbacksMap
-	KindSecurityRequirements         // *SecurityRequirements
-	KindSecurityRequirement          // *SecurityRequirement
-	KindSecurityRequirementItem      // *SecurityRequirementItem
-	KindSecurityScheme               // *SecurityScheme
-	KindSecuritySchemeComponent      // *Component[*SecurityScheme]
-	KindSecuritySchemeMap            // *SecuritySchemeMap
-	KindOperation                    // *Operation
-	KindOperationRef                 // *OperationRef
-	KindLicense                      // *License
-	KindTag                          // *Tag
-	KindTagSlice                     // *TagSlice
-	KindMediaType                    // *MediaType
-	KindMediaTypeMap                 // *MediaTypeMap
-	KindInfo                         // *Info
-	KindContact                      // *Contact
-	KindEncoding                     // *Encoding
-	KindEncodingMap                  // *EncodingMap
-	KindExternalDocs                 // *ExternalDocs
-	KindReference                    // *Reference
-	KindServer                       // *Server
-	KindServerComponent              // *Component[*Server]
-	KindServerSlice                  // *ServerSlice
-	KindServerVariable               // *ServerVariable
-	KindServerVariableMap            // *ServerVariableMap
-	KindOAuthFlow                    // *OAuthFlow
-	KindOAuthFlows                   // *OAuthFlows
-	KindXML                          // *XML
-	KindScope                        // *Scope
-	KindScopes                       // *Scopes
+	KindUndefined                Kind = iota
+	KindDocument                      // *Document
+	KindComponents                    // *Components
+	KindExample                       // *Example
+	KindExampleMap                    // *ExampleMap
+	KindExampleComponent              // *Component[*Example]
+	KindSchema                        // *Schema
+	KindSchemaSlice                   // *SchemaSlice
+	KindSchemaMap                     // *SchemaMap
+	KindSchemaRef                     // *SchemaRef
+	KindDiscriminator                 // *Discriminator
+	KindHeader                        // *Header
+	KindHeaderMap                     // *HeaderMap
+	KindHeaderSlice                   // *HeaderSlice
+	KindHeaderComponent               // *Component[*Header]
+	KindLink                          // *Link
+	KindLinkComponent                 // *Component[*Link]
+	KindLinkMap                       // *LinkMap
+	KindResponse                      // *Response
+	KindResponseMap                   // *ResponseMap
+	KindResponseComponent             // *Component[*Response]
+	KindParameter                     // *Parameter
+	KindParameterComponent            // *Component[*Parameter]
+	KindParameterSlice                // *ParameterSlice
+	KindParameterMap                  // *ParameterMap
+	KindPaths                         // *Paths
+	KindPathItem                      // *PathItem
+	KindPathItemComponent             // *Component[*PathItem]
+	KindPathItemMap                   // *PathItemMap
+	KindRequestBody                   // *RequestBody
+	KindRequestBodyMap                // *RequestBodyMap
+	KindRequestBodyComponent          // *Component[*RequestBody]
+	KindCallbacks                     // *Callbacks
+	KindCallbacksComponent            // *Component[*Callbacks]
+	KindCallbacksMap                  // *CallbacksMap
+	KindSecurityRequirementSlice      // *SecurityRequirements
+	KindSecurityRequirement           // *SecurityRequirement
+	KindSecurityRequirementItem       // *SecurityRequirementItem
+	KindSecurityScheme                // *SecurityScheme
+	KindSecuritySchemeComponent       // *Component[*SecurityScheme]
+	KindSecuritySchemeMap             // *SecuritySchemeMap
+	KindOperation                     // *Operation
+	KindOperationRef                  // *OperationRef
+	KindLicense                       // *License
+	KindTag                           // *Tag
+	KindTagSlice                      // *TagSlice
+	KindMediaType                     // *MediaType
+	KindMediaTypeMap                  // *MediaTypeMap
+	KindInfo                          // *Info
+	KindContact                       // *Contact
+	KindEncoding                      // *Encoding
+	KindEncodingMap                   // *EncodingMap
+	KindExternalDocs                  // *ExternalDocs
+	KindReference                     // *Reference
+	KindServer                        // *Server
+	KindServerComponent               // *Component[*Server]
+	KindServerSlice                   // *ServerSlice
+	KindServerVariable                // *ServerVariable
+	KindServerVariableMap             // *ServerVariableMap
+	KindOAuthFlow                     // *OAuthFlow
+	KindOAuthFlows                    // *OAuthFlows
+	KindXML                           // *XML
+	KindScope                         // *Scope
+	KindScopes                        // *Scopes
 )
 
 func (k Kind) String() string {
@@ -74,6 +75,8 @@ func (k Kind) String() string {
 		return "Undefined"
 	case KindDocument:
 		return "Document"
+	case KindComponents:
+		return "Components"
 	case KindExample:
 		return "Example"
 	case KindExampleMap:
@@ -138,8 +141,8 @@ func (k Kind) String() string {
 		return "CallbacksComponent"
 	case KindCallbacksMap:
 		return "CallbacksMap"
-	case KindSecurityRequirements:
-		return "SecurityRequirements"
+	case KindSecurityRequirementSlice:
+		return "SecurityRequirementSlice"
 	case KindSecurityRequirement:
 		return "SecurityRequirement"
 	case KindSecurityRequirementItem:
@@ -199,4 +202,11 @@ func (k Kind) String() string {
 	default:
 		return "Invalid"
 	}
+}
+
+func objSliceKind(n node) Kind {
+	if sn, ok := n.(objSlicedNode); ok {
+		return sn.(objSlicedNode).objSliceKind()
+	}
+	return KindUndefined
 }

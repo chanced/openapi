@@ -3,6 +3,7 @@ package openapi
 import "github.com/chanced/uri"
 
 type Ref interface {
+	Node
 	URI() *uri.URI
 	IsResolved() bool
 	Kind() Kind
@@ -12,6 +13,23 @@ type Ref interface {
 type ref interface {
 	Ref
 	resolve(v Node) error
+}
+
+// IsRef returns true for the following types:
+//   - *Reference
+//   - *SchemaRef
+//   - *OperationRef
+func IsRef(node Node) bool {
+	switch node.Kind() {
+	case KindReference, KindSchemaRef, KindOperationRef:
+		_, ok := node.(Ref)
+		if !ok {
+			panic("node is not a Ref. This is a bug. Please report it to github.com/chanced/openapi")
+		}
+		return true
+	default:
+		return false
+	}
 }
 
 var (

@@ -272,6 +272,7 @@ func (p *PathItem) UnmarshalJSON(data []byte) error {
 	*p = PathItem(v)
 	return nil
 }
+
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
 func (p PathItem) MarshalYAML() (interface{}, error) {
 	j, err := p.MarshalJSON()
@@ -378,4 +379,4 @@ func (pi *PathItem) isNil() bool { return pi == nil }
 //		return nil
 //	}
 
-var _ node = (*PathItem)(nil) // _ Walker = (*PathItem)(nil)
+var _ node = (*PathItem)(nil)

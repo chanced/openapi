@@ -30,21 +30,37 @@ const (
 )
 
 var (
-	OpenAPI31SchemaURI  = *uri.MustParse(OPEN_API_3_1_SCHEMA)
-	OpenAPI30SchemaURI  = *uri.MustParse(OPEN_API_3_0_SCHEMA)
-	JSONSchema202012URI = *uri.MustParse(JSON_SCHEMA_2020_12)
-	JSONSchema201909URI = *uri.MustParse(JSON_SCHEMA_2019_09)
-	v30Constraints      = mustParseConstraints("3.1.0, < 3.2.0")
-	v31Constraints      = mustParseConstraints(">= 3.0.0, < 3.1.0")
-	supportedVersions   = mustParseConstraints(">= 3.0.0, < 3.2.0")
-	v31                 = *semver.MustParse("3.1")
-	v30                 = *semver.MustParse("3.0")
+	// OpenAPI31Schema is the URI for the JSON Schema of OpenAPI 3.1
+	OpenAPI31Schema = *uri.MustParse(OPEN_API_3_1_SCHEMA)
+	// OpenAPI30Schema is the URI for the JSON Schema of OpenAPI 3.0
+	OpenAPI30Schema = *uri.MustParse(OPEN_API_3_0_SCHEMA)
+	// JSONSchema202012SchemaURI is the URI for JSON Schema 2020-12
+	JSONSchemaDialect202012 = *uri.MustParse(JSON_SCHEMA_2020_12)
+	// JSONSchemaDialect201909 is the URI for JSON Schema 2019-09
+	JSONSchemaDialect201909 = *uri.MustParse(JSON_SCHEMA_2019_09)
+	// JSONSchemaDialect07 is the URI for JSON Schema 07
+	JSONSchemaDialect07 = *uri.MustParse("http://json-schema.org/draft-07/schema#")
+	// JSONSchemaDialect04 is the URI for JSON Schema 04
+	JSONSchemaDialect04 = *uri.MustParse("http://json-schema.org/draft-04/schema#")
+	// SemanticVersion3_0 is a semantic versioning constraint for 3.0:
+	//	>= 3.0.0, < 3.1.0
+	SemanticVersion3_0 = mustParseConstraints(">= 3.0.0, < 3.1.0")
+	// SemanticVersion3_0 is a semantic versioning constraint for 3.1:
+	//	>= 3.1.0, < 3.2.0
+	SemanticVersion3_1 = mustParseConstraints(">= 3.1.0, < 3.2.0")
+	// SupportedVersions is a semantic versioning constraint for versions
+	// supported by openapi
+	//
+	// This is currently:
+	//	>= 3.0.0, < 3.2.0
+	SupportedVersions = mustParseConstraints(">= 3.0.0, < 3.2.0")
+	// Version3_1 is a semantic version for 3.1.x
+	Version3_1 = *semver.MustParse("3.1")
+	// Version3_0 is a semantic version for 3.0.x
+	Version3_0 = *semver.MustParse("3.0")
 )
 
-var (
-	_ Validator          = (*StdValidator)(nil)
-	_ ComponentValidator = (*StdComponentValidator)(nil)
-)
+var _ Validator = (*StdValidator)(nil)
 
 // TryGetSchemaDialect attempts to extract the schema dialect from raw JSON
 // data.
@@ -74,15 +90,19 @@ func TryGetOpenAPIVersion(data []byte) (string, bool) {
 	return "", false
 }
 
-type ComponentValidator interface {
-	// Validate should validate the structural integrity of a of an OpenAPI
+type Validator interface {
+	// Validate should validate the fully-resolved OpenAPI document.
+	ValidateDocument(document *Document, resource uri.URI) error
+
+	// ValidateComponent should validate the structural integrity of a of an OpenAPI
 	// document or component.
 	//
-	// If $ref is present in the data, the Kind will be KindReference.
+	// If $ref is present in the data and the data is not a Schema, the Kind will be KindReference.
 	// Otherwise, it will be the Kind of the data being loaded.
 	//
-	// openapi will only ever call Validate for the following:
-	//    - Schema (KindSchema)
+	// openapi should only ever call Validate for the following:
+	//    - OpenAPI Document (KindDocument)
+	//    - JSON Schema (KindSchema)
 	//    - Components (KindComponents)
 	//    - Callbacks (KindCallbacks)
 	//    - Example (KindExample)
@@ -96,27 +116,9 @@ type ComponentValidator interface {
 	//    - Response (KindResponse)
 	//    - SecurityScheme (KindSecurityScheme)
 	//
-	// For Schemas, the Schema's $schema field should be considered
-	//
 	// StdComponentValidator will return an error if CompiledSchemas does not contain
 	// a CompiledSchema for the given Kind.
-	//
-	// resource is the URI of the data being validated. It is used for error reporting.
-	//
-	Validate(data []byte, kind Kind, resource uri.URI) error
-}
-
-type Validator interface {
-	// ValidateDocument should validate the structural integrity of a of an OpenAPI
-	// document.
-	ValidateDocumentData(data []byte, resource uri.URI) error
-
-	// Validate should validate the fully-resolved OpenAPI document.
-	ValidateDocument(document *Document, resource uri.URI) error
-
-	// ComponentValidator is used to validate the structural integrity of
-	// OpenAPI components, including JSON Schemas.
-	Validator(openapiVers semver.Version, jsonschemaDialect uri.URI) (ComponentValidator, error)
+	Validate(data []byte, kind Kind, openapi semver.Version, jsonschema uri.URI) error
 }
 
 // NewStdValidator creates and returns a new StdValidator.
@@ -154,59 +156,15 @@ type StdValidator struct {
 	Schemas CompiledSchemas
 }
 
-// ComponentValidator implements Validator
-func (sv *StdValidator) Validator(openapi semver.Version, dialect uri.URI) (ComponentValidator, error) {
-	js, ok := sv.Schemas.JSONSchema[dialect]
-	if !ok {
-		return nil, fmt.Errorf("openapi: JSON Schema dialect %q not found", dialect)
-	}
-
-	oa, ok := sv.Schemas.OpenAPI[openapi]
-	if !ok {
-		return nil, fmt.Errorf("openapi: OpenAPI version %q not found", openapi)
-	}
-	return &StdComponentValidator{
-		OpenAPIVersion:           openapi,
-		OpenAPISchemas:           oa,
-		DefaultJSONSchema:        js,
-		DefaultJSONSchemaDialect: dialect,
-		JSONSchemas:              sv.Schemas.JSONSchema,
-	}, nil
-}
-
 // Validate should validate the fully-resolved OpenAPI document.
 //
-// ValidateDocument is currently a no-op.
+// This currently only validates with JSON Schema.
 func (*StdValidator) ValidateDocument(document *Document, rsource uri.URI) error {
+	panic("not done")
 	return nil
 }
 
-func (sv *StdValidator) ValidateDocumentData(data []byte, resource uri.URI) error {
-	ovd, ok := TryGetOpenAPIVersion(data)
-	if !ok {
-		return NewValidationError(ErrMissingOpenAPIVersion, KindDocument, resource)
-	}
-	ov, err := semver.NewVersion(ovd)
-	if err != nil {
-		return NewSemVerError(err, ovd, resource)
-	}
-
-	if err = sv.Schemas.OpenAPI[*ov][KindDocument].Validate(data); err != nil {
-		return NewValidationError(err, KindDocument, resource)
-	}
-	return nil
-}
-
-type StdComponentValidator struct {
-	OpenAPIVersion           semver.Version
-	DefaultJSONSchema        CompiledSchema
-	DefaultJSONSchemaDialect uri.URI
-	JSONSchemas              map[uri.URI]CompiledSchema
-	OpenAPISchemas           map[Kind]CompiledSchema
-}
-
-// ValidateComponent implements ComponentValidator
-func (scv *StdComponentValidator) Validate(data []byte, kind Kind, resource uri.URI) error {
+func (sv *StdValidator) Validate(data []byte, resource uri.URI) error {
 	s, ok := scv.OpenAPISchemas[kind]
 	if !ok {
 		return NewError(fmt.Errorf("openapi: schema not found for %s", kind), resource)
@@ -214,7 +172,6 @@ func (scv *StdComponentValidator) Validate(data []byte, kind Kind, resource uri.
 	if err := s.Validate(data); err != nil {
 		return NewValidationError(err, kind, resource)
 	}
-	return nil
 }
 
 // CompiledSchema is an interface satisfied by a JSON Schema implementation	that
@@ -308,7 +265,7 @@ func openAPISchemaVMap(openAPISchemas []map[string]uri.URI) (map[semver.Version]
 				return nil, fmt.Errorf("failed to parse openAPISchemaID version: %w", err)
 			}
 
-			if _, errs := supportedVersions.Validate(vers); err != nil {
+			if _, errs := SupportedVersions.Validate(vers); err != nil {
 				return nil, &UnsupportedVersionError{Version: k, Errs: errs}
 			}
 
@@ -321,11 +278,11 @@ func openAPISchemaVMap(openAPISchemas []map[string]uri.URI) (map[semver.Version]
 			res[*vers] = v
 		}
 	}
-	if _, ok := res[v31]; !ok {
-		res[v31] = OpenAPI31SchemaURI
+	if _, ok := res[Version3_1]; !ok {
+		res[Version3_1] = OpenAPI31Schema
 	}
-	if _, ok := res[v30]; !ok {
-		res[v30] = OpenAPI30SchemaURI
+	if _, ok := res[Version3_0]; !ok {
+		res[Version3_0] = OpenAPI30Schema
 	}
 	return res, nil
 }
@@ -361,11 +318,11 @@ func CompileSchemas(compiler Compiler, openAPISchemas ...map[string]uri.URI) (Co
 func compileJSONSchemaSchemas(c Compiler) (map[uri.URI]CompiledSchema, error) {
 	var err error
 	jsonschemas := make(map[uri.URI]CompiledSchema, 2)
-	jsonschemas[JSONSchema202012URI], err = c.Compile(JSON_SCHEMA_2020_12)
+	jsonschemas[JSONSchemaDialect202012], err = c.Compile(JSON_SCHEMA_2020_12)
 	if err != nil {
 		return nil, fmt.Errorf("openapi: failed to compile JSON Schema 2020-12: %w", err)
 	}
-	jsonschemas[JSONSchema201909URI], err = c.Compile(JSON_SCHEMA_2019_09)
+	jsonschemas[JSONSchemaDialect201909], err = c.Compile(JSON_SCHEMA_2019_09)
 	if err != nil {
 		return nil, fmt.Errorf("openapi: failed to compile JSON Schema 2019-09: %w", err)
 	}

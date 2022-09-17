@@ -162,4 +162,4 @@ func (e *Encoding) UnmarshalYAML(value *yaml.Node) error {
 
 func (e *Encoding) isNil() bool { return e == nil }
 
-var _ node = (*Encoding)(nil) // _ Walker = (*Encoding)(nil)
+var _ node = (*Encoding)(nil)

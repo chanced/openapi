@@ -145,4 +145,4 @@ func (p *Paths) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, p)
 }
 
-var _ node = (*Paths)(nil) // _ Walker = (*Paths)(nil)
+var _ node = (*Paths)(nil)

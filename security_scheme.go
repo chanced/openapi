@@ -177,4 +177,4 @@ func (*SecurityScheme) Kind() Kind      { return KindSecurityScheme }
 func (*SecurityScheme) mapKind() Kind   { return KindSecuritySchemeMap }
 func (*SecurityScheme) sliceKind() Kind { return KindUndefined }
 
-var _ node = (*SecurityScheme)(nil) // _ Walker = (*SecurityScheme)(nil)
+var _ node = (*SecurityScheme)(nil)

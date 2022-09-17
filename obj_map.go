@@ -28,8 +28,11 @@ func (*ObjMap[T]) Kind() Kind {
 	var t T
 	return t.Kind()
 }
-func (*ObjMap[T]) mapKind() Kind   { return KindUndefined }
-func (*ObjMap[T]) sliceKind() Kind { return KindUndefined }
+func (*ObjMap[T]) mapKind() Kind { return KindUndefined }
+func (*ObjMap[T]) sliceKind() Kind {
+	var t T
+	return objSliceKind(t)
+}
 
 func (om *ObjMap[T]) Refs() []Ref {
 	if om == nil {

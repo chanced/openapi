@@ -226,4 +226,4 @@ func (c *Component[T]) Anchors() (*Anchors, error) {
 
 func (c *Component[T]) isNil() bool { return c == nil }
 
-var _ node = (*Component[*Server])(nil) // _ Walker = (*Component[*Server])(nil)
+var _ node = (*Component[*Server])(nil)
