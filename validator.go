@@ -92,7 +92,7 @@ func TryGetOpenAPIVersion(data []byte) (string, bool) {
 
 type Validator interface {
 	// Validate should validate the fully-resolved OpenAPI document.
-	ValidateDocument(document *Document, resource uri.URI) error
+	ValidateDocument(document *Document) error
 
 	// ValidateComponent should validate the structural integrity of a of an OpenAPI
 	// document or component.

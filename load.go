@@ -9,16 +9,8 @@ import (
 	"github.com/chanced/uri"
 )
 
-type resolver struct {
-	primaryResource []byte
-	resources       map[string][]byte
-	fn              func(context.Context, *uri.URI) (Kind, []byte, error)
-	uri             *uri.URI
-	document        *Document
-	// id rather have map[string]*Callback and so on, but that causes a circular dependency
-	// and I have no idea transcodefmt
-	components map[Kind]map[string]node
-	nodes      map[string]node
+type LoadOpts struct {
+	DefaultSchemaDialect *uri.URI
 }
 
 func mergeLoadOpts(opts []LoadOpts) LoadOpts {
@@ -111,6 +103,7 @@ type loader struct {
 	opts      LoadOpts
 	fn        func(context.Context, uri.URI, Kind) (Kind, []byte, error)
 	validator Validator
+	doc       *Document
 	nodes     map[uri.URI]nodectx
 	refs      []refctx
 }
