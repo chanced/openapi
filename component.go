@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 type Component[T node] struct {
@@ -132,6 +134,23 @@ func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 		// resolutions just yet. If before population, Object may be nil at this call.
 		return c.Object.resolveNodeByPointer(nxt)
 	}
+}
+
+func (c *Component[T]) MarshalYAML() (interface{}, error) {
+	j, err := c.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (c *Component[T]) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, c)
 }
 
 func (*Component[T]) mapKind() Kind {

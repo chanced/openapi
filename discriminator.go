@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 // Discriminator can be used to aid in serialization, deserialization, and
 // validation of request bodies or response payloads which may be one of a
@@ -46,6 +52,23 @@ func (d *Discriminator) UnmarshalJSON(data []byte) error {
 	}
 	*d = Discriminator(v)
 	return nil
+}
+
+func (d Discriminator) MarshalYAML() (interface{}, error) {
+	j, err := d.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (d *Discriminator) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, d)
 }
 
 func (d *Discriminator) Anchors() (*Anchors, error) { return nil, nil }

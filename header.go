@@ -1,8 +1,12 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // HeaderMap holds reusable HeaderMap.
@@ -164,6 +168,42 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*h = Header(v)
 	return err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (h Header) MarshalYAML() (interface{}, error) {
+	j, err := h.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (h *Header) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, h)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (s Schema) MarshalYAML() (interface{}, error) {
+	j, err := s.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (s *Schema) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, s)
 }
 
 func (h *Header) setLocation(loc Location) error {

@@ -7,8 +7,10 @@ import (
 	"reflect"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
 	"github.com/tidwall/gjson"
+	"gopkg.in/yaml.v3"
 )
 
 // ErrNotReference indicates not a reference
@@ -132,6 +134,24 @@ func (r *Reference) UnmarshalJSON(data []byte) error {
 	}
 	*r = Reference(v)
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (r Reference) MarshalYAML() (interface{}, error) {
+	j, err := r.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (r *Reference) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, r)
 }
 
 func (r *Reference) String() string {

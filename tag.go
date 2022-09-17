@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 type TagMap = ObjMap[*Tag]
 
@@ -97,6 +103,24 @@ func (t *Tag) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*t = Tag(v)
 	return err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (t Tag) MarshalYAML() (interface{}, error) {
+	j, err := t.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (t *Tag) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, t)
 }
 
 var _ node = (*Tag)(nil) // _ Walker = (*Tag)(nil)

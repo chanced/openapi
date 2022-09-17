@@ -1,8 +1,12 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // ParameterMap is a map of Parameter
@@ -315,6 +319,24 @@ func (p *Parameter) UnmarshalJSON(data []byte) error {
 func (*Parameter) Kind() Kind      { return KindParameter }
 func (*Parameter) mapKind() Kind   { return KindParameterMap }
 func (*Parameter) sliceKind() Kind { return KindParameterSlice }
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (p Parameter) MarshalYAML() (interface{}, error) {
+	j, err := p.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (p *Parameter) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, p)
+}
 
 func (p *Parameter) setLocation(loc Location) error {
 	if p == nil {

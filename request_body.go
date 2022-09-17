@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 // RequestBodyMap is a map of RequestBody
 type RequestBodyMap = ComponentMap[*RequestBody]
@@ -93,6 +99,24 @@ func (rb *RequestBody) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*rb = RequestBody(v)
 	return err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (rb RequestBody) MarshalYAML() (interface{}, error) {
+	j, err := rb.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (rb *RequestBody) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, rb)
 }
 
 func (rb *RequestBody) setLocation(loc Location) error {

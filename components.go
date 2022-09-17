@@ -1,5 +1,12 @@
 package openapi
 
+import (
+	"encoding/json"
+
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
+
 // ComponentMap is a pseudo map consisting of Components with type T.
 
 func newComponent[T node](ref *Reference, obj T) Component[T] {
@@ -125,4 +132,21 @@ func (c *Components) UnmarshalJSON(data []byte) error {
 	}
 	*c = Components(v)
 	return nil
+}
+
+func (c Components) MarshalYAML() (interface{}, error) {
+	j, err := c.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (c *Components) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, c)
 }

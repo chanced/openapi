@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
 	"github.com/tidwall/gjson"
+	"gopkg.in/yaml.v3"
 )
 
 type PathItemEntry struct {
@@ -123,6 +125,24 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 		return err == nil
 	})
 	return err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (p Paths) MarshalYAML() (interface{}, error) {
+	j, err := p.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (p *Paths) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, p)
 }
 
 var _ node = (*Paths)(nil) // _ Walker = (*Paths)(nil)

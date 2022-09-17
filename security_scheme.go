@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 const (
 	// SecuritySchemeTypeAPIKey = "apiKey"
@@ -147,6 +153,24 @@ func (ss SecurityScheme) MarshalJSON() ([]byte, error) {
 	type securityscheme SecurityScheme
 
 	return marshalExtendedJSON(securityscheme(ss))
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (ss SecurityScheme) MarshalYAML() (interface{}, error) {
+	j, err := ss.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (ss *SecurityScheme) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, ss)
 }
 
 func (*SecurityScheme) Kind() Kind      { return KindSecurityScheme }

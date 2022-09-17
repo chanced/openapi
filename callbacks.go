@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
 	"github.com/tidwall/gjson"
+	"gopkg.in/yaml.v3"
 )
 
 // CallbacksMap is a map of reusable Callback Objects.
@@ -127,6 +129,23 @@ func (c *Callbacks) setLocation(loc Location) error {
 	}
 	c.Location = loc
 	return c.Items.setLocation(loc)
+}
+
+func (c Callbacks) MarshalYAML() (interface{}, error) {
+	j, err := c.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (c *Callbacks) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, c)
 }
 
 // func (c *Callbacks) Walk(v Visitor) error {

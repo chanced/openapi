@@ -1,9 +1,13 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 // ExampleMap is an object to hold reusable ExampleMap.
@@ -86,6 +90,24 @@ func (e *Example) UnmarshalJSON(data []byte) error {
 	}
 	*e = Example(v)
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (e Example) MarshalYAML() (interface{}, error) {
+	j, err := e.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (e *Example) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, e)
 }
 
 func (e *Example) setLocation(loc Location) error {

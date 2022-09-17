@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // ComponentSlice is a slice of Components of type T
@@ -108,6 +110,23 @@ func (cs *ComponentSlice[T]) Anchors() (*Anchors, error) {
 		}
 	}
 	return anchors, nil
+}
+
+func (cs *ComponentSlice[T]) MarshalYAML() (interface{}, error) {
+	j, err := cs.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (cs *ComponentSlice[T]) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, cs)
 }
 
 func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }

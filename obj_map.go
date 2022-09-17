@@ -7,7 +7,9 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
 	"github.com/tidwall/gjson"
+	"gopkg.in/yaml.v3"
 )
 
 type ObjMapEntry[T node] struct {
@@ -153,6 +155,24 @@ func (om *ObjMap[T]) MarshalJSON() ([]byte, error) {
 	}
 	b.WriteByte('}')
 	return b.Bytes(), err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (om ObjMap[T]) MarshalYAML() (interface{}, error) {
+	j, err := om.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (om *ObjMap[T]) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, om)
 }
 
 func (om *ObjMap[T]) Anchors() (*Anchors, error) {

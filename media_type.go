@@ -1,8 +1,12 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // ContentMap / MediaTypeMap is a map containing descriptions of potential response payloads. The key is
@@ -133,6 +137,24 @@ func (mt *MediaType) UnmarshalJSON(data []byte) error {
 	}
 	*mt = MediaType(v)
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (mt MediaType) MarshalYAML() (interface{}, error) {
+	j, err := mt.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (mt *MediaType) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, mt)
 }
 
 func (mt *MediaType) setLocation(loc Location) error {

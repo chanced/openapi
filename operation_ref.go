@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 type OperationRef struct {
@@ -83,6 +85,24 @@ func (or *OperationRef) UnmarshalJSON(data []byte) error {
 	}
 	or.Ref = &uri
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (or OperationRef) MarshalYAML() (interface{}, error) {
+	j, err := or.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (or *OperationRef) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, or)
 }
 
 func (o *OperationRef) isNil() bool { return o == nil }

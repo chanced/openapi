@@ -1,8 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"github.com/chanced/jsonpointer"
+	"gopkg.in/yaml.v3"
+)
 
 type Node interface {
+	// Kind returns the Kind for the given Node
 	Kind() Kind
 	// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
 	// attempts to resolve the Node.
@@ -21,30 +25,30 @@ type Node interface {
 	// and does not start with a slash
 	ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 
+	// Anchors returns a list of all Anchors in the Node and all decendants.
 	Anchors() (*Anchors, error)
 
+	// Refs returns a list of all Refs from the Node and all descendants.
 	Refs() []Ref
-}
 
-// IsRef returns true if the Node is any of the following:
-//   - *Reference
-//   - *SchemaRef
-//   - *OperationRef
-func IsRef(n Node) bool {
-	switch n.Kind() {
-	case KindReference, KindSchemaRef, KindOperationRef:
-		return true
-	default:
-		return false
-	}
+	// MarshalJSON marshals JSON
+	//
+	// MarshalJSON satisfies the json.Marshaler interface
+	MarshalJSON() ([]byte, error)
+	// UnmarshalJSON unmarshals JSON
+	//
+	// UnmarshalJSON satisfies the json.Unmarshaler interface
+	UnmarshalJSON(data []byte) error
+
+	// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+	MarshalYAML() (interface{}, error)
+
+	// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+	UnmarshalYAML(value *yaml.Node) error
 }
 
 type node interface {
 	Node
-	// MarshalJSON marshals JSON
-	MarshalJSON() ([]byte, error)
-	// UnmarshalJSON unmarshals JSON
-	UnmarshalJSON(data []byte) error
 
 	setLocation(loc Location) error
 	// init(ctx context.Context, resolver *resolver) error

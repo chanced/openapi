@@ -6,7 +6,9 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 type SchemaRef struct {
@@ -109,6 +111,24 @@ func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 
 func (sr SchemaRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sr.Ref)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (sr SchemaRef) MarshalYAML() (interface{}, error) {
+	j, err := sr.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (sr *SchemaRef) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, sr)
 }
 
 func (sr *SchemaRef) isNil() bool { return sr == nil }

@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 type SchemaSlice struct {
@@ -91,6 +93,24 @@ func (ss *SchemaSlice) UnmarshalJSON(data []byte) error {
 	}
 	*ss = SchemaSlice{Items: v}
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (ss SchemaSlice) MarshalYAML() (interface{}, error) {
+	j, err := ss.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (ss *SchemaSlice) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, ss)
 }
 
 func (*SchemaSlice) mapKind() Kind   { return KindUndefined }

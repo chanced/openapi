@@ -6,6 +6,8 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // TODO: make SecurityRequirement an ordered slice.
@@ -91,6 +93,24 @@ func (sri *SecurityRequirementItem) UnmarshalJSON(data []byte) error {
 		}
 		return nil
 	}
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (sri SecurityRequirementItem) MarshalYAML() (interface{}, error) {
+	j, err := sri.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (sri *SecurityRequirementItem) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, sri)
 }
 
 // SecurityRequirement lists the required security schemes to execute this

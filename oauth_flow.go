@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 // OAuthFlow configuration details for a supported OAuth Flow
 type OAuthFlow struct {
@@ -112,6 +118,25 @@ func (o *OAuthFlow) UnmarshalJSON(data []byte) error {
 	*o = OAuthFlow(v)
 	return nil
 }
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (o OAuthFlow) MarshalYAML() (interface{}, error) {
+	j, err := o.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (o *OAuthFlow) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, o)
+}
+
 func (o *OAuthFlow) isNil() bool { return o == nil }
 
 // OAuthFlows allows configuration of the supported OAuth Flows.
@@ -256,6 +281,24 @@ func (f *OAuthFlows) UnmarshalJSON(data []byte) error {
 	}
 	*f = OAuthFlows(v)
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (f OAuthFlows) MarshalYAML() (interface{}, error) {
+	j, err := f.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (f *OAuthFlows) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, f)
 }
 
 var (

@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 // EncodingMap is a ComponentMap between a property name and its encoding information. The
 // key, being the property name, MUST exist in the schema as a property. The
@@ -135,6 +141,25 @@ func (e *Encoding) UnmarshalJSON(data []byte) error {
 	*e = Encoding(v)
 	return nil
 }
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (e Encoding) MarshalYAML() (interface{}, error) {
+	j, err := e.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (e *Encoding) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, e)
+}
+
 func (e *Encoding) isNil() bool { return e == nil }
 
 var _ node = (*Encoding)(nil) // _ Walker = (*Encoding)(nil)

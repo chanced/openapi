@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/jsonpointer"
+import (
+	"encoding/json"
+
+	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
 
 // PathItem describes the operations available on a single path. A PathItem Item MAY
 // be empty, due to ACL constraints. The path itself is still exposed to the
@@ -265,6 +271,23 @@ func (p *PathItem) UnmarshalJSON(data []byte) error {
 	}
 	*p = PathItem(v)
 	return nil
+}
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (p PathItem) MarshalYAML() (interface{}, error) {
+	j, err := p.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (p *PathItem) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, p)
 }
 
 func (*PathItem) Kind() Kind { return KindPathItem }

@@ -181,12 +181,12 @@ func (cm *ComponentMap[T]) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.JSONToYAML(j)
+	return transcodefmt.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler
 func (cm *ComponentMap[T]) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLToJSON([]byte(value.Value))
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}

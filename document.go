@@ -1,8 +1,12 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/Masterminds/semver"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 // Document root object of the Document document.
@@ -86,6 +90,24 @@ func (d *Document) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*d = Document(v)
 	return err
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (d Document) MarshalYAML() (interface{}, error) {
+	j, err := d.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (d *Document) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, d)
 }
 
 func (d *Document) Anchors() (*Anchors, error) {

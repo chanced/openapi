@@ -1,7 +1,11 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // OperationItem is an *Operation and the HTTP Method it is associated with
@@ -250,6 +254,24 @@ func (o *Operation) UnmarshalJSON(data []byte) error {
 	}
 	*o = Operation(v)
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (o Operation) MarshalYAML() (interface{}, error) {
+	j, err := o.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (o *Operation) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, o)
 }
 
 func (*Operation) Kind() Kind      { return KindOperation }

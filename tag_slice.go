@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 type TagSlice struct {
@@ -82,6 +84,24 @@ func (ts *TagSlice) UnmarshalJSON(data []byte) error {
 		Items: items,
 	}
 	return nil
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (t TagSlice) MarshalYAML() (interface{}, error) {
+	j, err := t.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (t *TagSlice) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, t)
 }
 
 // isNil implements node

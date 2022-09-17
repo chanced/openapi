@@ -5,6 +5,8 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
 )
 
 // LinkMap is a Map of either LinkMap or References to LinkMap
@@ -119,6 +121,23 @@ func (l *Link) UnmarshalJSON(data []byte) error {
 	}
 	*l = Link(lv)
 	return nil
+}
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (l Link) MarshalYAML() (interface{}, error) {
+	j, err := l.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (l *Link) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, l)
 }
 
 // DecodeRequestBody decodes l.RequestBody into dst

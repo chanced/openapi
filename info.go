@@ -1,5 +1,12 @@
 package openapi
 
+import (
+	"encoding/json"
+
+	"github.com/chanced/transcodefmt"
+	"gopkg.in/yaml.v3"
+)
+
 // Info provides metadata about the API. The metadata MAY be used by the clients
 // if needed, and MAY be presented in editing or documentation generation tools
 // for convenience.
@@ -48,4 +55,21 @@ func (i *Info) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*i = Info(v)
 	return err
+}
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (i Info) MarshalYAML() (interface{}, error) {
+	j, err := i.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (i *Info) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, i)
 }

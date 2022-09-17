@@ -7,7 +7,9 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcodefmt"
 	"github.com/tidwall/gjson"
+	"gopkg.in/yaml.v3"
 )
 
 type SchemaItem struct {
@@ -161,6 +163,23 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 		return err == nil
 	})
 	return err
+}
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (sm SchemaMap) MarshalYAML() (interface{}, error) {
+	j, err := sm.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (sm *SchemaMap) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, sm)
 }
 
 var _ node = (*SchemaMap)(nil) // _ Walker = (*SchemaMap)(nil)

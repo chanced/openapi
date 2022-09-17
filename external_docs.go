@@ -1,8 +1,12 @@
 package openapi
 
 import (
+	"encoding/json"
+
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 // ExternalDocs allows referencing an external resource for extended
@@ -82,6 +86,23 @@ func (ed *ExternalDocs) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*ed = ExternalDocs(v)
 	return err
+}
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (ed ExternalDocs) MarshalYAML() (interface{}, error) {
+	j, err := ed.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (ed *ExternalDocs) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, ed)
 }
 
 func (ed *ExternalDocs) setLocation(loc Location) error {

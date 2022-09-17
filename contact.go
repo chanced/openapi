@@ -1,6 +1,12 @@
 package openapi
 
-import "github.com/chanced/uri"
+import (
+	"encoding/json"
+
+	"github.com/chanced/transcodefmt"
+	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
+)
 
 // Contact information for the exposed API.
 type Contact struct {
@@ -27,4 +33,21 @@ func (c *Contact) UnmarshalJSON(data []byte) error {
 	err := unmarshalExtendedJSON(data, &v)
 	*c = Contact(v)
 	return err
+}
+
+func (c Contact) MarshalYAML() (interface{}, error) {
+	j, err := c.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcodefmt.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (c *Contact) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, c)
 }
