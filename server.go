@@ -130,4 +130,4 @@ func (s *Server) UnmarshalYAML(value *yaml.Node) error {
 
 func (s *Server) isNil() bool { return s == nil }
 
-var _ node = (*Server)(nil) // _ Walker = (*Server)(nil)
+var _ node = (*Server)(nil)

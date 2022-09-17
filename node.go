@@ -2,14 +2,25 @@ package openapi
 
 import (
 	"github.com/chanced/jsonpointer"
+	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
 )
 
 type Node interface {
+	// AbsolutePath returns the absolute path of the node in URI form.
+	// This includes the URI path of the resource and the JSON pointer
+	// of the node.
+	//
+	// e.g. openapi.json#/components/schemas/Example
+	AbsolutePath() uri.URI
+
+	// RelativePath returns the path as a JSON pointer for the Node.
+	RelativePath() jsonpointer.Pointer
+
 	// Kind returns the Kind for the given Node
 	Kind() Kind
-	// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
-	// attempts to resolve the Node.
+	// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the
+	// pointer and then attempts to resolve the Node.
 	//
 	// # Errors
 	//
@@ -60,6 +71,11 @@ type node interface {
 	location() Location
 	isNil() bool
 	edges() []node
+}
+
+type objSlicedNode interface {
+	node
+	objSliceKind() Kind
 }
 
 func downcastNodes(n []node) []Node {

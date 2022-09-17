@@ -87,6 +87,7 @@ func (ed *ExternalDocs) UnmarshalJSON(data []byte) error {
 	*ed = ExternalDocs(v)
 	return err
 }
+
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
 func (ed ExternalDocs) MarshalYAML() (interface{}, error) {
 	j, err := ed.MarshalJSON()
@@ -114,4 +115,4 @@ func (ed *ExternalDocs) setLocation(loc Location) error {
 }
 func (ed *ExternalDocs) isNil() bool { return ed == nil }
 
-var _ node = (*ExternalDocs)(nil) // _ Walker = (*ExternalDocs)(nil)
+var _ node = (*ExternalDocs)(nil)

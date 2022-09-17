@@ -9,16 +9,24 @@ import (
 	"github.com/chanced/uri"
 )
 
-type resolver struct {
-	primaryResource []byte
-	resources       map[string][]byte
-	fn              func(context.Context, *uri.URI) (Kind, []byte, error)
-	uri             *uri.URI
-	document        *Document
-	// id rather have map[string]*Callback and so on, but that causes a circular dependency
-	// and I have no idea transcodefmt
-	components map[Kind]map[string]node
-	nodes      map[string]node
+type loader struct {
+	fn         func(context.Context, uri.URI) (Kind, []byte, error)
+	validator  Validator
+	document   *Document
+	components map[Kind]map[uri.URI]node
+	nodes      map[uri.URI]node
+}
+
+func newLoader(doc *Document, v Validator, fn func(context.Context, uri.URI) (Kind, []byte, error)) *loader {
+	nodes := map[uri.URI]node{
+		doc.AbsolutePath(): doc,
+	}
+
+	return &loader{
+		document:  doc,
+		validator: v,
+		fn:        fn,
+	}
 }
 
 // kind identifies source data's shape (e.g. JSON Schema or a second OpenAPI
@@ -44,7 +52,7 @@ type resolver struct {
 // have a reference to "example.json#/foo/bar" which has an anchor "#baz", that
 // is located at the root of "example.json", it will not be found and an error
 // will be returned upon parsing.
-func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
+func Load(ctx context.Context, documentURI string, v Validator, fn func(context.Context, *uri.URI) (Kind, []byte, error)) (*Document, error) {
 	if fn == nil {
 		panic("fn cannot be nil")
 	}
@@ -60,34 +68,39 @@ func Load(ctx context.Context, documentURI string, compiler Compiler, fn func(co
 	}
 
 	if docURI.Fragment != "" {
-		return nil, fmt.Errorf("documentURI may not contain a fragment: received \"%s\"", docURI)
+		return nil, NewError(fmt.Errorf("documentURI may not contain a fragment: received \"%s\"", docURI), *docURI)
 	}
 
-	src, data, err := fn(ctx, docURI)
-
-	_ = src
-
+	src, d, err := fn(ctx, docURI)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load OpenAPI Document: %w", err)
+		return nil, NewError(fmt.Errorf("failed to load OpenAPI Document: %w", err), *docURI)
+	}
+	if src != KindDocument {
+		return nil, NewError(fmt.Errorf("documentURI must be an OpenAPI document: received \"%s\"", docURI), *docURI)
+	}
+
+	if err = v.ValidateDocumentData(d, *docURI); err != nil {
+		return nil, NewError(err, *docURI)
 	}
 
 	var doc Document
-	if err := doc.UnmarshalJSON(data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal OpenAPI Document: %w", err)
+	if err := doc.UnmarshalJSON(d); err != nil {
+		return nil, NewError(fmt.Errorf("failed to unmarshal OpenAPI Document: %w", err), *docURI)
 	}
-	loader := resolver{
-		resources: map[string][]byte{
-			docURI.String(): data,
-		},
-		fn:  fn,
-		uri: docURI,
+
+	loader := loader{
+		validator:  v,
+		document:   &doc,
+		components: map[Kind]map[uri.URI]node{KindDocument},
+		fn:         fn,
+		uri:        docURI,
 	}
 	_ = loader
 	panic("not done")
 	// return loader, nil
 }
 
-func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node) (node, error) {
+func (r *loader) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node) (node, error) {
 	if u.Fragment != "" {
 		nu := *u
 		nu.Fragment = ""
@@ -100,7 +113,7 @@ func (r *resolver) resolve(ctx context.Context, kind Kind, u *uri.URI, dst node)
 	panic("not done")
 }
 
-func (r *resolver) findTopMostNode(u *uri.URI) (node, error) {
+func (r *loader) findTopMostNode(u *uri.URI) (node, error) {
 	if u.Fragment != "" {
 		// see if its a jsonpointer first
 		ptr, err := jsonpointer.Parse(u.Fragment)

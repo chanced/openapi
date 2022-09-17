@@ -58,7 +58,6 @@ func (c *Callbacks) isNil() bool {
 	return c == nil
 }
 
-// anchors implements node
 func (c *Callbacks) Anchors() (*Anchors, error) {
 	if c == nil {
 		return nil, nil
@@ -163,4 +162,4 @@ func (c *Callbacks) UnmarshalYAML(value *yaml.Node) error {
 // 	return c.Items.Walk(v)
 // }
 
-var _ node = (*Callbacks)(nil) // _ Walker = (*Callbacks)(nil)
+var _ node = (*Callbacks)(nil)

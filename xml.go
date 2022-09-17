@@ -112,4 +112,4 @@ func (xml *XML) Edges() []Node {
 }
 func (xml *XML) edges() []node { return nil }
 
-var _ node = (*XML)(nil) // _ Walker = (*XML)(nil)
+var _ node = (*XML)(nil)

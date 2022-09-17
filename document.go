@@ -2,8 +2,10 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Masterminds/semver"
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcodefmt"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
@@ -71,11 +73,153 @@ type Document struct {
 	// To make security optional, an empty security requirement ({})
 	// can be included in the array.
 	//
-	Security []SecurityRequirement `json:"security,omitempty"`
+	Security *SecurityRequirementSlice `json:"security,omitempty"`
 
 	// Additional external documentation.
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
+
+func (*Document) Kind() Kind { return KindDocument }
+
+func (d *Document) Refs() []Ref {
+	var refs []Ref
+	if d.Info != nil {
+		refs = append(refs, d.Info.Refs()...)
+	}
+	if d.Tags != nil {
+		refs = append(refs, d.Tags.Refs()...)
+	}
+	if d.Servers != nil {
+		refs = append(refs, d.Servers.Refs()...)
+	}
+	if d.Paths != nil {
+		refs = append(refs, d.Paths.Refs()...)
+	}
+	if d.Webhooks != nil {
+		refs = append(refs, d.Webhooks.Refs()...)
+	}
+	if d.Components != nil {
+		refs = append(refs, d.Components.Refs()...)
+	}
+	if d.ExternalDocs != nil {
+		refs = append(refs, d.ExternalDocs.Refs()...)
+	}
+	if d.Security != nil {
+		refs = append(refs, d.Security.Refs()...)
+	}
+	return refs
+}
+
+func (d *Document) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	return d.resolveNodeByPointer(ptr)
+}
+
+func (d *Document) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return d, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	switch tok {
+	case "tags":
+		if d.Tags == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Tags.resolveNodeByPointer(nxt)
+	case "servers":
+		if d.Servers == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Servers.resolveNodeByPointer(nxt)
+	case "paths":
+		if d.Paths == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Paths.resolveNodeByPointer(nxt)
+	case "webhooks":
+		if d.Webhooks == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Webhooks.resolveNodeByPointer(nxt)
+	case "components":
+		if d.Components == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Components.resolveNodeByPointer(nxt)
+	case "externalDocs":
+		if d.ExternalDocs == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.ExternalDocs.resolveNodeByPointer(nxt)
+	case "info":
+		if d.Info == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Info.resolveNodeByPointer(nxt)
+	case "security":
+		if d.Security == nil {
+			return nil, newErrNotFound(d.AbsolutePath(), tok)
+		}
+		return d.Security.resolveNodeByPointer(nxt)
+	default:
+		return nil, newErrNotResolvable(d.AbsolutePath(), tok)
+	}
+}
+
+func (d *Document) edges() []node {
+	edges := appendEdges(nil, d.Info)
+	edges = appendEdges(edges, d.Tags)
+	edges = appendEdges(edges, d.Servers)
+	edges = appendEdges(edges, d.Paths)
+	edges = appendEdges(edges, d.Webhooks)
+	edges = appendEdges(edges, d.Components)
+	edges = appendEdges(edges, d.Security)
+	edges = appendEdges(edges, d.ExternalDocs)
+	return edges
+}
+
+func (d *Document) isNil() bool {
+	return d == nil
+}
+
+func (*Document) mapKind() Kind { return KindUndefined }
+
+func (d *Document) setLocation(loc Location) error {
+	if d == nil {
+		return fmt.Errorf("cannot set location on nil Document")
+	}
+	d.Location = loc
+
+	if err := d.Info.setLocation(loc.Append("info")); err != nil {
+		return err
+	}
+	if err := d.Tags.setLocation(loc.Append("tags")); err != nil {
+		return err
+	}
+	if err := d.Servers.setLocation(loc.Append("servers")); err != nil {
+		return err
+	}
+	if err := d.Paths.setLocation(loc.Append("paths")); err != nil {
+		return err
+	}
+	if err := d.Webhooks.setLocation(loc.Append("webhooks")); err != nil {
+		return err
+	}
+	if err := d.Components.setLocation(loc.Append("components")); err != nil {
+		return err
+	}
+	if err := d.Security.setLocation(loc.Append("security")); err != nil {
+		return err
+	}
+	if err := d.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (*Document) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals JSON
 func (d Document) MarshalJSON() ([]byte, error) {
@@ -116,6 +260,7 @@ func (d *Document) Anchors() (*Anchors, error) {
 	}
 	var anchors *Anchors
 	var err error
+
 	if anchors, err = anchors.merge(d.Paths.Anchors()); err != nil {
 		return nil, err
 	}
@@ -125,5 +270,22 @@ func (d *Document) Anchors() (*Anchors, error) {
 	if anchors, err = anchors.merge(d.Webhooks.Anchors()); err != nil {
 		return nil, err
 	}
+	if anchors, err = anchors.merge(d.Servers.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(d.Tags.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(d.Security.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(d.Info.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(d.ExternalDocs.Anchors()); err != nil {
+		return nil, err
+	}
 	return anchors, nil
 }
+
+var _ node = (*Document)(nil)

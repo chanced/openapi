@@ -26,10 +26,8 @@ func (cs *ComponentSlice[T]) edges() []node {
 	return edges
 }
 
-// ref implements node
 func (*ComponentSlice[T]) ref() Ref { return nil }
 
-// Refs implements node
 func (cs *ComponentSlice[T]) Refs() []Ref {
 	var refs []Ref
 	for _, item := range cs.Items {
@@ -131,7 +129,7 @@ func (cs *ComponentSlice[T]) UnmarshalYAML(value *yaml.Node) error {
 
 func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
 
-var _ node = (*ComponentSlice[*Server])(nil) // _ Walker = (*ComponentSlice[*Server])(nil)
+var _ node = (*ComponentSlice[*Server])(nil)
 
 // func (cs *ComponentSlice[T]) Walk(v Visitor) error {
 // 	var t T

@@ -12,8 +12,10 @@ import (
 
 // TODO: make SecurityRequirement an ordered slice.
 
-// SecurityRequirements is a list of SecurityRequirement
-type SecurityRequirements = ObjMap[*SecurityRequirement]
+// SecurityRequirementMap is a list of SecurityRequirement
+type SecurityRequirementMap = ObjMap[*SecurityRequirement]
+
+type SecurityRequirementSlice = ObjSlice[*SecurityRequirement]
 
 type SecurityRequirementItem struct {
 	Location
@@ -39,10 +41,10 @@ func (sri *SecurityRequirementItem) setLocation(loc Location) error {
 	return nil
 }
 
-func (*SecurityRequirementItem) Kind() Kind      { return KindSecurityRequirementItem }
-func (*SecurityRequirementItem) mapKind() Kind   { return KindSecurityRequirement }
-func (*SecurityRequirementItem) sliceKind() Kind { return KindUndefined }
-
+func (*SecurityRequirementItem) Kind() Kind         { return KindSecurityRequirementItem }
+func (*SecurityRequirementItem) mapKind() Kind      { return KindSecurityRequirement }
+func (*SecurityRequirementItem) sliceKind() Kind    { return KindUndefined }
+func (*SecurityRequirementItem) objSliceKind() Kind { return KindSecurityRequirementSlice }
 func (sri *SecurityRequirementItem) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if err := ptr.Validate(); err != nil {
 		return nil, err
@@ -137,11 +139,10 @@ type SecurityRequirement = ObjMap[*SecurityRequirementItem]
 
 var (
 	_ node = (*SecuritySchemeMap)(nil)
-	// _ Walker = (*SecuritySchemeMap)(nil)
-	_ node = (*SecurityRequirements)(nil)
-	// _ Walker = (*SecurityRequirements)(nil)
+
+	_ node = (*SecurityRequirementMap)(nil)
+
 	_ node = (*SecurityRequirement)(nil)
-	// _ Walker = (*SecurityRequirement)(nil)
+
 	_ node = (*SecurityRequirementItem)(nil)
-	// _ Walker = (*SecurityRequirementItem)(nil)
 )

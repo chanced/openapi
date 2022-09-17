@@ -198,4 +198,4 @@ func (r *Response) setLocation(loc Location) error {
 	return nil
 }
 
-var _ node = (*Response)(nil) // _ Walker = (*Response)(nil)
+var _ node = (*Response)(nil)

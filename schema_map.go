@@ -43,7 +43,6 @@ func (sm *SchemaMap) edges() []node {
 	return edges
 }
 
-// Refs implements node
 func (sm *SchemaMap) Refs() []Ref {
 	if sm == nil {
 		return nil
@@ -164,6 +163,7 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	})
 	return err
 }
+
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
 func (sm SchemaMap) MarshalYAML() (interface{}, error) {
 	j, err := sm.MarshalJSON()
@@ -182,4 +182,4 @@ func (sm *SchemaMap) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, sm)
 }
 
-var _ node = (*SchemaMap)(nil) // _ Walker = (*SchemaMap)(nil)
+var _ node = (*SchemaMap)(nil)

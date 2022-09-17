@@ -3,6 +3,7 @@ package openapi
 import (
 	"encoding/json"
 
+	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcodefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -35,6 +36,141 @@ type Components struct {
 	Links           *LinkMap           `json:"links,omitempty"`
 	Callbacks       *CallbacksMap      `json:"callbacks,omitempty"`
 	PathItems       *PathItemMap       `json:"pathItems,omitempty"`
+}
+
+func (*Components) Kind() Kind { return KindComponents }
+
+func (c *Components) Refs() []Ref {
+	if c == nil {
+		return nil
+	}
+	var refs []Ref
+	if c.Schemas != nil {
+		refs = append(refs, c.Schemas.Refs()...)
+	}
+	if c.Responses != nil {
+		refs = append(refs, c.Responses.Refs()...)
+	}
+	if c.Parameters != nil {
+		refs = append(refs, c.Parameters.Refs()...)
+	}
+	if c.Examples != nil {
+		refs = append(refs, c.Examples.Refs()...)
+	}
+	if c.RequestBodies != nil {
+		refs = append(refs, c.RequestBodies.Refs()...)
+	}
+	if c.Headers != nil {
+		refs = append(refs, c.Headers.Refs()...)
+	}
+	if c.SecuritySchemes != nil {
+		refs = append(refs, c.SecuritySchemes.Refs()...)
+	}
+	if c.Links != nil {
+		refs = append(refs, c.Links.Refs()...)
+	}
+	if c.Callbacks != nil {
+		refs = append(refs, c.Callbacks.Refs()...)
+	}
+	if c.PathItems != nil {
+		refs = append(refs, c.PathItems.Refs()...)
+	}
+	return refs
+}
+
+func (c *Components) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if err := ptr.Validate(); err != nil {
+		return nil, err
+	}
+	if c == nil {
+		return nil, nil
+	}
+	return c.resolveNodeByPointer(ptr)
+}
+
+func (c *Components) edges() []node {
+	if c == nil {
+		return nil
+	}
+	edges := appendEdges(nil, c.Schemas)
+	edges = appendEdges(edges, c.Responses)
+	edges = appendEdges(edges, c.Parameters)
+	edges = appendEdges(edges, c.Examples)
+	edges = appendEdges(edges, c.RequestBodies)
+	edges = appendEdges(edges, c.Headers)
+	edges = appendEdges(edges, c.SecuritySchemes)
+	edges = appendEdges(edges, c.Links)
+	edges = appendEdges(edges, c.Callbacks)
+	edges = appendEdges(edges, c.PathItems)
+	return edges
+}
+
+func (c *Components) isNil() bool {
+	return c == nil
+}
+
+func (*Components) mapKind() Kind   { return KindUndefined }
+func (*Components) sliceKind() Kind { return KindUndefined }
+
+func (c *Components) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+	if ptr.IsRoot() {
+		return c, nil
+	}
+	nxt, tok, _ := ptr.Next()
+	switch tok {
+	case "schemas":
+		if c.Schemas == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Schemas.resolveNodeByPointer(nxt)
+	case "responses":
+		if c.Responses == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Responses.resolveNodeByPointer(nxt)
+	case "parameters":
+		if c.Parameters == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Parameters.resolveNodeByPointer(nxt)
+	case "examples":
+		if c.Examples == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Examples.resolveNodeByPointer(nxt)
+	case "requestBodies":
+		if c.RequestBodies == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.RequestBodies.resolveNodeByPointer(nxt)
+	case "headers":
+		if c.Headers == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Headers.resolveNodeByPointer(nxt)
+	case "securitySchemes":
+		if c.SecuritySchemes == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.SecuritySchemes.resolveNodeByPointer(nxt)
+	case "links":
+		if c.Links == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Links.resolveNodeByPointer(nxt)
+	case "callbacks":
+		if c.Callbacks == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.Callbacks.resolveNodeByPointer(nxt)
+	case "pathItems":
+		if c.PathItems == nil {
+			return nil, newErrNotFound(c.AbsolutePath(), tok)
+		}
+		return c.PathItems.resolveNodeByPointer(nxt)
+	default:
+		return nil, newErrNotResolvable(c.AbsolutePath(), tok)
+	}
 }
 
 func (c *Components) Anchors() (*Anchors, error) {
@@ -150,3 +286,5 @@ func (c *Components) UnmarshalYAML(value *yaml.Node) error {
 	}
 	return json.Unmarshal(j, c)
 }
+
+var _ node = (*Components)(nil)

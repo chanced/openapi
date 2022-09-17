@@ -122,6 +122,7 @@ func (l *Link) UnmarshalJSON(data []byte) error {
 	*l = Link(lv)
 	return nil
 }
+
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
 func (l Link) MarshalYAML() (interface{}, error) {
 	j, err := l.MarshalJSON()
@@ -170,4 +171,4 @@ func (l *Link) isNil() bool { return l == nil }
 // operations that use the same parameter name in different locations (e.g.
 // path.id).
 
-var _ node = (*Link)(nil) // _ Walker = (*Link)(nil)
+var _ node = (*Link)(nil)
