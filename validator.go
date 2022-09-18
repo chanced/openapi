@@ -42,12 +42,12 @@ var (
 	JSONSchemaDialect07 = *uri.MustParse("http://json-schema.org/draft-07/schema#")
 	// JSONSchemaDialect04 is the URI for JSON Schema 04
 	JSONSchemaDialect04 = *uri.MustParse("http://json-schema.org/draft-04/schema#")
-	// SemanticVersion3_0 is a semantic versioning constraint for 3.0:
+	// VersionConstraints3_0 is a semantic versioning constraint for 3.0:
 	//	>= 3.0.0, < 3.1.0
-	SemanticVersion3_0 = mustParseConstraints(">= 3.0.0, < 3.1.0")
+	VersionConstraints3_0 = mustParseConstraints(">= 3.0.0, < 3.1.0")
 	// SemanticVersion3_0 is a semantic versioning constraint for 3.1:
 	//	>= 3.1.0, < 3.2.0
-	SemanticVersion3_1 = mustParseConstraints(">= 3.1.0, < 3.2.0")
+	VersionConstraints3_1 = mustParseConstraints(">= 3.1.0, < 3.2.0")
 	// SupportedVersions is a semantic versioning constraint for versions
 	// supported by openapi
 	//

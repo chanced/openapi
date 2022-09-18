@@ -8,7 +8,7 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
-	"github.com/chanced/transcodefmt"
+	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
 )
@@ -90,12 +90,12 @@ func (s Scope) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (s *Scope) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}
@@ -293,12 +293,12 @@ func (s Scopes) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (s *Scopes) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}

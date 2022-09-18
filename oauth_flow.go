@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/chanced/jsonpointer"
-	"github.com/chanced/transcodefmt"
+	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
 
@@ -125,12 +125,12 @@ func (o OAuthFlow) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (o *OAuthFlow) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}
@@ -289,12 +289,12 @@ func (f OAuthFlows) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (f *OAuthFlows) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}

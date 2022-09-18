@@ -2,8 +2,9 @@ package openapi_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
+
+	"github.com/chanced/uri"
 )
 
 type Spike1 struct {
@@ -43,37 +44,42 @@ func (c *C) R1() interface{} { return &c.One }
 func (c *C) R2() interface{} { return &c.Two }
 
 func TestSpike(t *testing.T) {
-	ones := []S{
-		&Spike1{Key: "1one", Val: "1one"},
-		&Spike1{Key: "1two", Val: "1two"},
-		&Spike1{Key: "1three", Val: "1three"},
+	u, err := uri.Parse("#asd")
+	if err != nil {
+		t.Fatal(err)
 	}
-	twos := []S{
-		&Spike2{Key2: "2one", Val2: "2one"},
-		&Spike2{Key2: "2two", Val2: "2two"},
-		&Spike2{Key2: "2three", Val2: "2three"},
-	}
-	_ = ones
-	_ = twos
-	c := &C{}
+	fmt.Println("u:", u)
+	// ones := []S{
+	// 	&Spike1{Key: "1one", Val: "1one"},
+	// 	&Spike1{Key: "1two", Val: "1two"},
+	// 	&Spike1{Key: "1three", Val: "1three"},
+	// }
+	// twos := []S{
+	// 	&Spike2{Key2: "2one", Val2: "2one"},
+	// 	&Spike2{Key2: "2two", Val2: "2two"},
+	// 	&Spike2{Key2: "2three", Val2: "2three"},
+	// }
+	// _ = ones
+	// _ = twos
+	// c := &C{}
 
-	r1 := reflect.ValueOf(c.R1())
-	v1 := reflect.ValueOf(ones[0])
-	r1.Elem().Set(v1)
-	fmt.Println(c.One)
-	fmt.Println(r1.Type())
+	// r1 := reflect.ValueOf(c.R1())
+	// v1 := reflect.ValueOf(ones[0])
+	// r1.Elem().Set(v1)
+	// fmt.Println(c.One)
+	// fmt.Println(r1.Type())
 
-	v2 := reflect.ValueOf(twos[0])
+	// v2 := reflect.ValueOf(twos[0])
 
-	fmt.Println("v2 assignable to r1.Type.Elem()", v2.Type().AssignableTo(r1.Type().Elem()))
-	fmt.Println("v1 assignable to r1.Type.Elem()", v1.Type().AssignableTo(r1.Type().Elem()))
+	// fmt.Println("v2 assignable to r1.Type.Elem()", v2.Type().AssignableTo(r1.Type().Elem()))
+	// fmt.Println("v1 assignable to r1.Type.Elem()", v1.Type().AssignableTo(r1.Type().Elem()))
 
-	v := &V{}
+	// v := &V{}
 
-	x := &X{v: &v.S}
-	xr := reflect.ValueOf(x.v)
+	// x := &X{v: &v.S}
+	// xr := reflect.ValueOf(x.v)
 
-	fmt.Println(xr.CanAddr())
+	// fmt.Println(xr.CanAddr())
 
-	fmt.Printf("V.S: %+v\n", v.S)
+	// fmt.Printf("V.S: %+v\n", v.S)
 }

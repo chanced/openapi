@@ -107,30 +107,25 @@ type loader struct {
 	refs      []refctx
 }
 
-func (l *loader) load(ctx context.Context, u uri.URI, ek Kind, v *semver.Version, dialect *uri.URI) (Node, error) {
-	k, d, err := l.loadData(ctx, u, ek)
+func (l *loader) load(ctx context.Context, u uri.URI, ek Kind, v *semver.Version, d *uri.URI) (Node, error) {
+	if n, ok := l.nodes[u]; ok {
+		return n.node, nil
+	}
+	k, data, err := l.loadData(ctx, u, ek)
 	if err != nil {
 		return nil, err
 	}
 	switch k {
 	case KindDocument:
-		return l.openDocument(ctx, d, u)
+		return l.loadDocument(ctx, data, u)
 	case KindSchema:
-		return l.openSchema(ctx, d, u, dialect)
+		return l.loadSchema(ctx, data, u, *v)
 	case KindCallbacks, KindExample, KindHeader, KindPathItem, KindOperation,
 		KindRequestBody, KindResponse, KindLink, KindSecurityScheme:
-		return l.openComponent(ctx, d, u, k, v, dialect)
+		return l.loadNode(ctx, data, *v, *d)
 	default:
-		return nil, NewError(fmt.Errorf("unable to open external kind: %s", k), u)
+		return nil, NewError(fmt.Errorf("loading %s as an external resource is not currently supported", k), u)
 	}
-}
-
-func (l *loader) openSchema(ctx context.Context, d []byte, u uri.URI, dialect *uri.URI) (*Schema, error) {
-	panic("not implemented")
-}
-
-func (l *loader) openComponent(ctx context.Context, d []byte, u uri.URI, k Kind, openapi *semver.Version, dialect *uri.URI) (Node, error) {
-	panic("not implemented")
 }
 
 func (l *loader) loadData(ctx context.Context, u uri.URI, ek Kind) (Kind, []byte, error) {
@@ -148,7 +143,7 @@ func (l *loader) loadData(ctx context.Context, u uri.URI, ek Kind) (Kind, []byte
 	return k, d, nil
 }
 
-func (l *loader) openDocument(ctx context.Context, data []byte, u uri.URI) (*Document, error) {
+func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Document, error) {
 	var err error
 
 	vs, ok := TryGetOpenAPIVersion(data)
@@ -163,7 +158,7 @@ func (l *loader) openDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		return nil, NewError(fmt.Errorf("failed to determine OpenAPI version; ensure that the OpenAPI document has an openapi field"), u)
 	}
 
-	sd, err := l.tryGetSchemaDialect(data, v)
+	sd, err := l.getJSONSchemaDialect(data, v)
 	if err != nil {
 		return nil, NewError(fmt.Errorf("failed to determine OpenAPI schema dialect: %w", err), u)
 	}
@@ -192,71 +187,102 @@ func (l *loader) openDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		jsonschema: *sd,
 	}
 
-	if err = l.traverse(doc.edges(), *v, sd); err != nil {
+	if err = l.traverse(&doc, doc.edges(), *v, *sd); err != nil {
 		return nil, err
 	}
+	// we only traverse the references after the top-level document is fully
+	// materialized.
+	if l.doc == nil {
+		l.doc = &doc
+	} else {
+		return &doc, nil
+	}
+
 	var r refctx
+	var nodes []nodectx
 	for len(l.refs) > 0 {
-		r, l.refs = l.refs[0], l.refs[1:]
-		n, err := l.resolveRef(ctx, r)
-		if err != nil {
-			return nil, err
+		for len(l.refs) > 0 {
+			r, l.refs = l.refs[0], l.refs[1:]
+			n, err := l.resolveRef(ctx, r)
+			nodes = append(nodes, n)
+			if err != nil {
+				return nil, err
+			}
 		}
-		if err = l.traverse(n.edges(), *v, sd); err != nil {
-			return nil, err
+		for _, n := range nodes {
+			if err = l.traverse(n.root, n.edges(), n.openapi, n.jsonschema); err != nil {
+				return nil, err
+			}
 		}
+		nodes = nil
 	}
 	if err = l.validator.ValidateDocument(&doc); err != nil {
 		return nil, err
 	}
-	for len(l.refs) > 0 {
-		nodes := make([]nodectx, 0, len(l.refs))
-		for _, r := range l.refs {
-			n, err := l.resolveRef(ctx, r)
-			if err != nil {
-				return nil, err
-			}
-			nodes = append(nodes, n)
-		}
-	}
-
 	return &doc, nil
 }
 
-func (l *loader) resolveRef(ctx context.Context, ref refctx) (nodectx, error) {
-	u := ref.ref.URI()
+func (l *loader) resolveRef(ctx context.Context, r refctx) (nodectx, error) {
+	u := r.ref.URI()
 	if u == nil {
-		return nodectx{}, NewValidationError(fmt.Errorf("error: ref URI cannot be empty"), ref.Kind(), ref.AbsolutePath())
+		return nodectx{}, NewValidationError(fmt.Errorf("error: ref URI cannot be empty"), r.Kind(), r.AbsolutePath())
 	}
 
 	// check to see if the node has already been loaded
 	if pn, ok := l.nodes[*u]; ok {
-		// this node has already been loaded
+		// if so, return it
 		return pn, nil
 	}
 
-	// check to see if the node has fragment containing a fragment if so, we
-	// need to load the root document and then traverse to the fragment.
-	//
+	// check to see if the node has fragment if so, we need to load the data and
+	// then traverse to the fragment.
 	if u.Fragment != "" || u.RawFragment != "" {
 		var a string
-		_ = a
-		// The fragment should be a jsonpointer unless a schema and then it can be
-		// either a json pointer or an anchor
+		// The fragment should be a jsonpointer unless it the referenced node is
+		// schema. If so, it can be either a json pointer or an anchor
+		//
 		// checking to see if its a json pointer first
 		p, err := jsonpointer.Parse(u.Fragment)
 		_ = p
 		if err != nil {
 			// if its not a json pointer, then it could be an anchor if the node kind is a schema
-			if ref.Kind() == KindSchema {
+			if r.Kind() == KindSchema {
 				a = u.Fragment
 			} else {
-				return nodectx{}, NewValidationError(fmt.Errorf("error: ref URI fragment must be a json pointer: %w", err), ref.Kind(), ref.AbsolutePath())
+				return nodectx{}, NewValidationError(fmt.Errorf("ref URI fragment must be a json pointer: %w", err), r.Kind(), r.AbsolutePath())
 			}
 		}
-		uc := *u
-		uc.Fragment = ""
-		uc.RawFragment = ""
+		// checking to see if this is a ref relative to the current resource
+		if u.Host == "" && u.Path == "" {
+			if a != "" {
+				as, err := r.Anchors()
+				if err != nil {
+					return nodectx{}, NewValidationError(fmt.Errorf("failed to get anchors: %w", err), r.Kind(), r.AbsolutePath())
+				}
+				if as == nil {
+					return nodectx{}, NewError(fmt.Errorf("failed to retrieve anchors"), r.AbsolutePath())
+				}
+			}
+			r.ref.re
+		}
+
+		// now if the resource is
+	}
+	uc := *u
+	uc.Fragment = ""
+	uc.RawFragment = ""
+
+	if rn, ok := l.nodes[uc]; ok {
+		_ = rn
+		// this node has already been loaded
+		// if a != "" {
+		// 	n, err := rn.ResolveNodeByPointer()
+		// 	_ = n
+		// 	if err != nil {
+		// 		return nodectx{}, NewValidationError(fmt.Errorf("failed to resolve ref URI fragment: %w", err), r.Kind(), r.AbsolutePath())
+		// 	}
+
+		// }
 
 		// checking to see if the loader has encountered the referenced root resource
 		var nk Kind
@@ -270,17 +296,17 @@ func (l *loader) resolveRef(ctx context.Context, ref refctx) (nodectx, error) {
 			// the loader has encountered the referenced root resource so we can
 			// load it first
 			k, d, err := l.loadData(ctx, uc, nk)
+			_ = d
 			if err != nil {
 				return nodectx{}, err
 			}
 
 			switch k {
 			case KindDocument:
-				doc, err := l.openDocument(ctx, d, uc)
-				_ = doc
-				if err != nil {
-					return nodectx{}, err
-				}
+				// doc, err := l.load(ctx, )
+
+			case KindSchema:
+
 			}
 		}
 
@@ -288,28 +314,45 @@ func (l *loader) resolveRef(ctx context.Context, ref refctx) (nodectx, error) {
 	panic("not done")
 }
 
-func (l *loader) traverse(nodes []node, openapi semver.Version, jsonschema *uri.URI) error {
+func (l *loader) getDocumentSchemaDialect(doc *Document) (*uri.URI, error) {
+	if doc.JSONSchemaDialect != nil {
+		return doc.JSONSchemaDialect, nil
+	}
+	if l.opts.DefaultSchemaDialect != nil {
+		return l.opts.DefaultSchemaDialect, nil
+	}
+	if VersionConstraints3_1.Check(&doc.OpenAPI) {
+		return &JSONSchemaDialect202012, nil
+	}
+	if VersionConstraints3_0.Check(&doc.OpenAPI) {
+		return &JSONSchemaDialect201909, nil
+	}
+	return nil, fmt.Errorf("failed to determine OpenAPI schema dialect")
+}
+
+func (l *loader) traverse(root Node, nodes []node, openapi semver.Version, jsonschema uri.URI) error {
 	for _, n := range nodes {
-		nc, err := newNodeCtx(n, &openapi, jsonschema)
+		nc, err := newNodeCtx(n, &openapi, &jsonschema)
 		if err != nil {
 			return err
 		}
 		l.nodes[n.AbsolutePath()] = nc
 
 		if !IsRef(n) {
-			if err := l.traverse(n.edges(), nc.openapi, &nc.jsonschema); err != nil {
+			if err := l.traverse(root, n.edges(), nc.openapi, nc.jsonschema); err != nil {
 				return err
 			}
 		} else {
 			r := n.(ref)
-			l.refs = append(l.refs, refctx{ref: r, openapi: nc.openapi, jsonschema: nc.jsonschema})
+			l.refs = append(l.refs, refctx{root: root, ref: r, openapi: nc.openapi, jsonschema: nc.jsonschema})
+
 		}
 	}
 
 	return nil
 }
 
-func (l *loader) loadSchema(data []byte, u uri.URI) (*Schema, error) {
+func (l *loader) loadSchema(ctx context.Context, data []byte, u uri.URI, v semver.Version) (*Schema, error) {
 	var s Schema
 	if err := s.UnmarshalJSON(data); err != nil {
 		return nil, NewError(fmt.Errorf("failed to unmarshal JSON Schema: %w", err), u)
@@ -317,7 +360,11 @@ func (l *loader) loadSchema(data []byte, u uri.URI) (*Schema, error) {
 	return &s, nil
 }
 
-func (l *loader) tryGetSchemaDialect(data []byte, v *semver.Version) (*uri.URI, error) {
+func (l *loader) loadNode(ctx context.Context, data []byte, v semver.Version, s uri.URI) (nodectx, error) {
+	panic("not implemented")
+}
+
+func (l *loader) getJSONSchemaDialect(data []byte, v *semver.Version) (*uri.URI, error) {
 	sds, ok := TryGetSchemaDialect(data)
 	var sd *uri.URI
 	var err error
@@ -329,18 +376,14 @@ func (l *loader) tryGetSchemaDialect(data []byte, v *semver.Version) (*uri.URI, 
 		}
 	case l.opts.DefaultSchemaDialect != nil:
 		sd = l.opts.DefaultSchemaDialect
-	case checkVersion(SemanticVersion3_0, v):
+	case checkVersion(VersionConstraints3_1, v):
 		sd = &JSONSchemaDialect202012
-	case checkVersion(SemanticVersion3_1, v):
+	case checkVersion(VersionConstraints3_0, v):
 		sd = &JSONSchemaDialect201909
 	default:
 		return nil, nil
 	}
 	return sd, nil
-}
-
-func (l *loader) loadNode(data []byte, v semver.Version, s uri.URI) (nodectx, error) {
-	panic("not implemented")
 }
 
 // func (l *loader) resolve(ctx context.Context, kind Kind, u uri.URI, dst node) (node, error) {
@@ -361,9 +404,11 @@ type nodectx struct {
 	node
 	openapi    semver.Version
 	jsonschema uri.URI
+	root       Node
 }
 type refctx struct {
 	ref
+	root       Node
 	openapi    semver.Version
 	jsonschema uri.URI
 }
@@ -371,20 +416,7 @@ type refctx struct {
 func newNodeCtx(n node, openapi *semver.Version, jsonschema *uri.URI) (nodectx, error) {
 	switch t := n.(type) {
 	case *Document:
-		switch {
-		case t.JSONSchemaDialect != nil:
-			jsonschema = t.JSONSchemaDialect
-		case SemanticVersion3_1.Check(&t.OpenAPI):
-			jsonschema = &JSONSchemaDialect202012
-		case SemanticVersion3_1.Check(&t.OpenAPI):
-			jsonschema = &JSONSchemaDialect201909
-		}
-		if jsonschema == nil {
-			return nodectx{}, fmt.Errorf("failed to determine jsonschema dialect for Document", t.AbsolutePath())
-		}
-		if len(t.OpenAPI.String()) == 0 {
-			return nodectx{}, fmt.Errorf("OpenAPI version must be defined")
-		}
+		panic("not implemented")
 	case *Schema:
 		if t.Schema != nil {
 			jsonschema = t.Schema

@@ -7,7 +7,7 @@ import (
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
-	"github.com/chanced/transcodefmt"
+	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
 )
@@ -166,12 +166,12 @@ func (om ObjMap[T]) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (om *ObjMap[T]) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}

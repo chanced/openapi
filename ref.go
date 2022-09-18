@@ -2,6 +2,17 @@ package openapi
 
 import "github.com/chanced/uri"
 
+type RefKind uint8
+
+const (
+	RefKindUndefined RefKind = iota
+	RefKindReference
+	RefKindSchemaRef
+	RefKindSchemaDynamicRef
+	RefKindSchemaRecursiveRef
+	RefKindOperationRef
+)
+
 type Ref interface {
 	Node
 	URI() *uri.URI

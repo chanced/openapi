@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/chanced/jsonpointer"
-	"github.com/chanced/transcodefmt"
+	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
 )
@@ -141,12 +141,12 @@ func (c *Component[T]) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler
 func (c *Component[T]) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}

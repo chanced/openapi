@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/chanced/openapi"
-	"github.com/chanced/transcodefmt"
+	"github.com/chanced/transcode"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -24,7 +24,7 @@ func TestUnmarshal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	petstore, err := transcodefmt.JSONFromYAML(ps)
+	petstore, err := transcode.JSONFromYAML(ps)
 	if err != nil {
 		t.Fatal(err)
 	}

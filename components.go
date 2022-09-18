@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/chanced/jsonpointer"
-	"github.com/chanced/transcodefmt"
+	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
 
@@ -29,13 +29,13 @@ type Components struct {
 	Schemas         *SchemaMap         `json:"schemas,omitempty"`
 	Responses       *ResponseMap       `json:"responses,omitempty"`
 	Parameters      *ParameterMap      `json:"parameters,omitempty"`
-	Examples        *ExampleMap        `json:"examples,omitempty"`
 	RequestBodies   *RequestBodyMap    `json:"requestBodies,omitempty"`
 	Headers         *HeaderMap         `json:"headers,omitempty"`
 	SecuritySchemes *SecuritySchemeMap `json:"securitySchemes,omitempty"`
 	Links           *LinkMap           `json:"links,omitempty"`
 	Callbacks       *CallbacksMap      `json:"callbacks,omitempty"`
 	PathItems       *PathItemMap       `json:"pathItems,omitempty"`
+	Examples        *ExampleMap        `json:"examples,omitempty"` //
 }
 
 func (*Components) Kind() Kind { return KindComponents }
@@ -275,12 +275,12 @@ func (c Components) MarshalYAML() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return transcodefmt.YAMLFromJSON(j)
+	return transcode.YAMLFromJSON(j)
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler
 func (c *Components) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcodefmt.YAMLFromJSON([]byte(value.Value))
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
 	}
