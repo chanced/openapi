@@ -35,7 +35,6 @@ func mergeLoadOpts(opts []LoadOpts) LoadOpts {
 // Resources that can be referenced are:
 //   - OpenAPI Document (KindDocument)
 //   - JSON Schema (KindSchema)
-//   - Components (KindComponents)
 //   - Callbacks (KindCallbacks)
 //   - Example (KindExample)
 //   - Header (KindHeader)
@@ -82,7 +81,7 @@ func Load(ctx context.Context, documentURI string, validator Validator, fn func(
 		return nil, NewError(fmt.Errorf("documentURI may not contain a fragment: received \"%s\"", docURI), *docURI)
 	}
 	l := newLoader(validator, fn, mergeLoadOpts(opts))
-	n, err := l.load(ctx, *docURI, KindDocument)
+	n, err := l.load(ctx, *docURI, KindDocument, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -108,27 +107,30 @@ type loader struct {
 	refs      []refctx
 }
 
-func (l *loader) load(ctx context.Context, u uri.URI, ek Kind) (Node, error) {
-	_, d, err := l.loadData(ctx, u, ek)
+func (l *loader) load(ctx context.Context, u uri.URI, ek Kind, v *semver.Version, dialect *uri.URI) (Node, error) {
+	k, d, err := l.loadData(ctx, u, ek)
 	if err != nil {
 		return nil, err
 	}
-	doc, err := l.openDocument(ctx, d, u)
-	for len(l.refs) > 0 {
-		nodes := make([]nodectx, 0, len(l.refs))
-		for _, r := range l.refs {
-			n, err := l.resolveRef(ctx, r)
-			if err != nil {
-				return nil, err
-			}
-			nodes = append(nodes, n)
-		}
-
+	switch k {
+	case KindDocument:
+		return l.openDocument(ctx, d, u)
+	case KindSchema:
+		return l.openSchema(ctx, d, u, dialect)
+	case KindCallbacks, KindExample, KindHeader, KindPathItem, KindOperation,
+		KindRequestBody, KindResponse, KindLink, KindSecurityScheme:
+		return l.openComponent(ctx, d, u, k, v, dialect)
+	default:
+		return nil, NewError(fmt.Errorf("unable to open external kind: %s", k), u)
 	}
+}
 
-	panic("not done")
+func (l *loader) openSchema(ctx context.Context, d []byte, u uri.URI, dialect *uri.URI) (*Schema, error) {
+	panic("not implemented")
+}
 
-	return doc, nil
+func (l *loader) openComponent(ctx context.Context, d []byte, u uri.URI, k Kind, openapi *semver.Version, dialect *uri.URI) (Node, error) {
+	panic("not implemented")
 }
 
 func (l *loader) loadData(ctx context.Context, u uri.URI, ek Kind) (Kind, []byte, error) {
@@ -169,7 +171,7 @@ func (l *loader) openDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		return nil, NewError(fmt.Errorf("failed to determine OpenAPI schema dialect"), u)
 	}
 
-	if err = l.validator.Validate(data, KindDocument, *v, *sd); err != nil {
+	if err = l.validator.Validate(data, u, KindDocument, *v, *sd); err != nil {
 		return nil, NewValidationError(err, KindDocument, u)
 	}
 
@@ -207,6 +209,16 @@ func (l *loader) openDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	if err = l.validator.ValidateDocument(&doc); err != nil {
 		return nil, err
 	}
+	for len(l.refs) > 0 {
+		nodes := make([]nodectx, 0, len(l.refs))
+		for _, r := range l.refs {
+			n, err := l.resolveRef(ctx, r)
+			if err != nil {
+				return nil, err
+			}
+			nodes = append(nodes, n)
+		}
+	}
 
 	return &doc, nil
 }
@@ -227,15 +239,17 @@ func (l *loader) resolveRef(ctx context.Context, ref refctx) (nodectx, error) {
 	// need to load the root document and then traverse to the fragment.
 	//
 	if u.Fragment != "" || u.RawFragment != "" {
-		var anc string
+		var a string
+		_ = a
 		// The fragment should be a jsonpointer unless a schema and then it can be
 		// either a json pointer or an anchor
 		// checking to see if its a json pointer first
-		ptr, err := jsonpointer.Parse(u.Fragment)
+		p, err := jsonpointer.Parse(u.Fragment)
+		_ = p
 		if err != nil {
 			// if its not a json pointer, then it could be an anchor if the node kind is a schema
 			if ref.Kind() == KindSchema {
-				anc = u.Fragment
+				a = u.Fragment
 			} else {
 				return nodectx{}, NewValidationError(fmt.Errorf("error: ref URI fragment must be a json pointer: %w", err), ref.Kind(), ref.AbsolutePath())
 			}
@@ -263,6 +277,7 @@ func (l *loader) resolveRef(ctx context.Context, ref refctx) (nodectx, error) {
 			switch k {
 			case KindDocument:
 				doc, err := l.openDocument(ctx, d, uc)
+				_ = doc
 				if err != nil {
 					return nodectx{}, err
 				}
@@ -270,6 +285,7 @@ func (l *loader) resolveRef(ctx context.Context, ref refctx) (nodectx, error) {
 		}
 
 	}
+	panic("not done")
 }
 
 func (l *loader) traverse(nodes []node, openapi semver.Version, jsonschema *uri.URI) error {

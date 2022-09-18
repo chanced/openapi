@@ -118,7 +118,7 @@ type Validator interface {
 	//
 	// StdComponentValidator will return an error if CompiledSchemas does not contain
 	// a CompiledSchema for the given Kind.
-	Validate(data []byte, kind Kind, openapi semver.Version, jsonschema uri.URI) error
+	Validate(data []byte, resource uri.URI, kind Kind, openapi semver.Version, jsonschema uri.URI) error
 }
 
 // NewStdValidator creates and returns a new StdValidator.
@@ -159,19 +159,20 @@ type StdValidator struct {
 // Validate should validate the fully-resolved OpenAPI document.
 //
 // This currently only validates with JSON Schema.
-func (*StdValidator) ValidateDocument(document *Document, rsource uri.URI) error {
+func (*StdValidator) ValidateDocument(document *Document) error {
 	panic("not done")
 	return nil
 }
 
-func (sv *StdValidator) Validate(data []byte, resource uri.URI) error {
-	s, ok := scv.OpenAPISchemas[kind]
+func (sv *StdValidator) Validate(data []byte, resource uri.URI, kind Kind, openapi semver.Version, jsonschema uri.URI) error {
+	s, ok := sv.Schemas.OpenAPI[openapi][kind]
 	if !ok {
-		return NewError(fmt.Errorf("openapi: schema not found for %s", kind), resource)
+		return fmt.Errorf("openapi: schema not found for %s", kind)
 	}
 	if err := s.Validate(data); err != nil {
 		return NewValidationError(err, kind, resource)
 	}
+	return nil
 }
 
 // CompiledSchema is an interface satisfied by a JSON Schema implementation	that
