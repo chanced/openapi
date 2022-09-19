@@ -73,11 +73,11 @@ func (s *Server) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch tok {
 	case "variables":
 		if s.Variables == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Variables.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(s.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
 	}
 }
 

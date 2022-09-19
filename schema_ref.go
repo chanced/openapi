@@ -11,10 +11,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type SchemaRefType uint8
+
+const (
+	SchamRefTypeUndefined SchemaRefType = iota
+	SchemaRefTypeRef
+	SchemaRefTypeDynamic
+	SchemaRefTypeRecursive
+)
+
 type SchemaRef struct {
 	Location
 	Ref    *uri.URI `json:"-"`
 	Schema *Schema  `json:"-"`
+
+	SchemaRefKind SchemaRefType `json:"-"`
 }
 
 func (sr *SchemaRef) Edges() []Node {
@@ -23,6 +34,22 @@ func (sr *SchemaRef) Edges() []Node {
 	}
 	return downcastNodes(sr.edges())
 }
+
+func (sr *SchemaRef) RefType() RefType {
+	switch sr.SchemaRefKind {
+	case SchemaRefTypeRef:
+		return RefTypeSchema
+	case SchemaRefTypeDynamic:
+		return RefTypeSchemaDynamicRef
+	case SchemaRefTypeRecursive:
+		return RefTypeSchemaRecursiveRef
+	default:
+		return RefTypeUndefined
+	}
+}
+
+func (sr *SchemaRef) RefKind() Kind { return KindSchema }
+
 func (sr *SchemaRef) edges() []node { return []node{sr.Schema} }
 
 func (*SchemaRef) Refs() []Ref { return nil }
@@ -44,6 +71,14 @@ func (sr *SchemaRef) Resolved() Node {
 	return sr.Schema
 }
 
+// func (sr *SchemaRef) Clone() *SchemaRef {
+// 	if sr == nil {
+// 		return nil
+// 	}
+// 	c := *sr
+// 	return &c
+// }
+
 func (sr *SchemaRef) resolve(n Node) error {
 	if n == nil {
 		return fmt.Errorf("node is nil")
@@ -53,7 +88,7 @@ func (sr *SchemaRef) resolve(n Node) error {
 		sr.Schema = s
 		return nil
 	}
-	return fmt.Errorf("openapi: cannot resolve %s to SchemaRef", n.Kind())
+	return NewResolutionError(sr, KindSchema, n.Kind())
 }
 
 func (*SchemaRef) Anchors() (*Anchors, error) { return nil, nil }
@@ -69,7 +104,7 @@ func (sr *SchemaRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	tok, _ := ptr.NextToken()
 	if !ptr.IsRoot() {
 		if sr.Ref != nil {
-			return nil, newErrNotResolvable(sr.Location.AbsolutePath(), tok)
+			return nil, newErrNotResolvable(sr.Location.AbsoluteLocation(), tok)
 		}
 	}
 	return sr, nil
@@ -79,17 +114,18 @@ func (sr *SchemaRef) setLocation(l Location) error {
 	if sr == nil {
 		return nil
 	}
-	if sr.Schema != nil {
-		if sr.Ref != nil {
-			nl, err := NewLocation(*sr.Ref)
-			if err != nil {
-				return err
-			}
-			sr.Schema.setLocation(nl)
-			return nil
-		}
-		return sr.Schema.setLocation(l)
-	}
+	sr.Location = l
+	// if sr.Schema != nil {
+	// 	if sr.Ref != nil {
+	// 		nl, err := NewLocation(*sr.Ref)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		sr.Schema.setLocation(nl)
+	// 		return nil
+	// 	}
+	// 	return sr.Schema.setLocation(l)
+	// }
 	return nil
 }
 

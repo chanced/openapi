@@ -70,14 +70,18 @@ func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	tok, _ := ptr.NextToken()
 	v := om.Get(Text(tok))
 	if v.isNil() {
-		return nil, newErrNotFound(om.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
 	}
 	return nil, nil
 }
 
-func (om ObjMap[T]) setLocation(loc Location) error {
+func (om *ObjMap[T]) setLocation(loc Location) error {
+	if om == nil {
+		return nil
+	}
+	om.Location = loc
 	for _, kv := range om.Items {
-		if err := kv.Value.setLocation(loc); err != nil {
+		if err := kv.Value.setLocation(loc.Append(string(kv.Key))); err != nil {
 			return err
 		}
 	}
@@ -96,6 +100,11 @@ func (om *ObjMap[T]) Get(key Text) T {
 }
 
 func (om *ObjMap[T]) Set(key Text, obj T) {
+	if om == nil || om.Items == nil {
+		*om = ObjMap[T]{
+			Items: []ObjMapEntry[T]{},
+		}
+	}
 	for i, kv := range om.Items {
 		if kv.Key == key {
 			om.Items[i] = ObjMapEntry[T]{

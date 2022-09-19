@@ -53,9 +53,6 @@ import (
 // arbitrary properties.
 // A Schema represents compiled version of json-schema.
 type Schema struct {
-	// Always will be assigned if the schema value is a boolean
-	Always *bool `json:"-"`
-
 	Schema *uri.URI `json:"$schema,omitempty"`
 
 	// The value of $id is a URI-reference without a fragment that resolves
@@ -398,7 +395,7 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	}
 	anchors := &Anchors{}
 	if s.Anchor != "" {
-		anchors.Regular[s.Anchor] = Anchor{
+		anchors.Standard[s.Anchor] = Anchor{
 			Location: s.Location.Append("$anchor"),
 			In:       s,
 			Name:     s.Anchor,
@@ -515,121 +512,121 @@ func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch tok {
 	case "ref":
 		if s.Ref == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Ref.resolveNodeByPointer(nxt)
 	case "definitions":
 		if s.Definitions == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Definitions.resolveNodeByPointer(nxt)
 	case "dynamicRef":
 		if s.DynamicRef == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.DynamicRef.resolveNodeByPointer(nxt)
 	case "not":
 		if s.Not == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Not.resolveNodeByPointer(nxt)
 	case "allOf":
 		if s.AllOf == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.AllOf.resolveNodeByPointer(nxt)
 	case "anyOf":
 		if s.AnyOf == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.AnyOf.resolveNodeByPointer(nxt)
 	case "oneOf":
 		if s.OneOf == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.OneOf.resolveNodeByPointer(nxt)
 	case "if":
 		if s.If == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.If.resolveNodeByPointer(nxt)
 	case "then":
 		if s.Then == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Then.resolveNodeByPointer(nxt)
 	case "else":
 		if s.Else == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Else.resolveNodeByPointer(nxt)
 	case "properties":
 		if s.Properties == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Properties.resolveNodeByPointer(nxt)
 	case "propertyNames":
 		if s.PropertyNames == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.PropertyNames.resolveNodeByPointer(nxt)
 	case "patternProperties":
 		if s.PatternProperties == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.PatternProperties.resolveNodeByPointer(nxt)
 	case "additionalProperties":
 		if s.AdditionalProperties == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.AdditionalProperties.resolveNodeByPointer(nxt)
 	case "dependentSchemas":
 		if s.DependentSchemas == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.DependentSchemas.resolveNodeByPointer(nxt)
 	case "unevaluatedProperties":
 		if s.UnevaluatedProperties == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.UnevaluatedProperties.resolveNodeByPointer(nxt)
 	case "items":
 		if s.Items == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Items.resolveNodeByPointer(nxt)
 	case "unevaluatedItems":
 		if s.UnevaluatedItems == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
 	case "additionalItems":
 		if s.AdditionalItems == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.AdditionalItems.resolveNodeByPointer(nxt)
 	case "prefixItems":
 		if s.PrefixItems == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.PrefixItems.resolveNodeByPointer(nxt)
 	case "contains":
 		if s.Contains == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.Contains.resolveNodeByPointer(nxt)
 	case "recursiveRef":
 		if s.RecursiveRef == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.RecursiveRef.resolveNodeByPointer(nxt)
 	case "xml":
 		if s.XML == nil {
-			return nil, newErrNotFound(s.AbsolutePath(), tok)
+			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 		}
 		return s.XML.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(s.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
 	}
 }
 
@@ -644,17 +641,13 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 	// trimming the last }
 	b.Write(data[:len(data)-1])
 
-	if s.Always != nil && b.Len() <= 2 {
-		if len(s.Keywords) > 0 || len(s.Extensions) > 0 {
-			if !*s.Always {
-				b.WriteString(`"not":{}`)
-			}
-		} else if b.Len() <= 2 {
-			if *s.Always {
-				return []byte(`true`), nil
-			} else {
-				return []byte(`false`), nil
-			}
+	if len(s.Keywords) == 0 && len(s.Extensions) == 0 && b.Len() < 10 {
+		bs := b.String()
+		switch bs {
+		case "{":
+			return []byte("true"), nil
+		case `{"not":true`:
+			return []byte("false"), nil
 		}
 	}
 	if s.Keywords != nil {
@@ -691,10 +684,13 @@ func (s *Schema) UnmarshalJSON(data []byte) error {
 }
 
 func (s *Schema) unmarshalJSONBool(data []byte) error {
-	var b bool
-	err := json.Unmarshal(data, &b)
-	*s = Schema{Always: &b}
-	return err
+	if jsonx.IsTrue(data) {
+		*s = Schema{}
+		return nil
+	} else {
+		*s = Schema{Not: &Schema{}}
+		return nil
+	}
 }
 
 func (s *Schema) unmarshalJSONObj(data []byte) error {
@@ -724,31 +720,37 @@ func (s *Schema) unmarshalJSONObj(data []byte) error {
 			res.Keywords[k] = v
 		}
 	}
+	if err != nil {
+		return err
+	}
+	if res.Ref != nil {
+		res.Ref.SchemaRefKind = SchemaRefTypeRef
+	}
+	if res.DynamicRef != nil {
+		s.DynamicRef.SchemaRefKind = SchemaRefTypeDynamic
+	}
+	if res.RecursiveRef != nil {
+		s.RecursiveRef.SchemaRefKind = SchemaRefTypeRecursive
+	}
 	*s = res
+
 	return nil
 }
 
-// IsStrings returns false
-func (s *Schema) IsStrings() bool {
-	return false
-}
-
-// IsBool returns false
-func (s *Schema) IsBool() bool {
-	return false
-}
-
-// SetKeyword encodes and sets the keyword key to the encoded value
+// SetKeyword marshals value and sets the encoded json to key in Keywords
+//
+// If setting the value as []byte, it should be in the form of json.RawMessage
+// or jsonx.RawMessage as both types implement json.Marshaler
 func (s *Schema) SetKeyword(key string, value interface{}) error {
 	b, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
-	return s.SetEncodedKeyword(key, b)
+	return s.setEncodedKeyword(key, b)
 }
 
 // SetEncodedKeyword sets the keyword key to value
-func (s *Schema) SetEncodedKeyword(key string, value []byte) error {
+func (s *Schema) setEncodedKeyword(key string, value []byte) error {
 	if strings.HasPrefix(key, "x-") {
 		return errors.New("keyword keys may not start with \"x-\"")
 	}
@@ -841,15 +843,18 @@ func (*Schema) mapKind() Kind   { return KindSchemaMap }
 func (*Schema) sliceKind() Kind { return KindSchemaSlice }
 
 func (s *Schema) setLocation(loc Location) error {
+	if s == nil {
+		return nil
+	}
 	s.Location = loc
 
-	if err := s.Ref.setLocation(loc.Append("ref")); err != nil {
+	if err := s.Ref.setLocation(loc.Append("$ref")); err != nil {
 		return err
 	}
-	if err := s.Definitions.setLocation(loc.Append("definitions")); err != nil {
+	if err := s.Definitions.setLocation(loc.Append("$defs")); err != nil {
 		return err
 	}
-	if err := s.DynamicRef.setLocation(loc.Append("dynamicRef")); err != nil {
+	if err := s.DynamicRef.setLocation(loc.Append("$dynamicRef")); err != nil {
 		return err
 	}
 	if err := s.Not.setLocation(loc.Append("not")); err != nil {
@@ -888,6 +893,7 @@ func (s *Schema) setLocation(loc Location) error {
 	if err := s.DependentSchemas.setLocation(loc.Append("dependentSchemas")); err != nil {
 		return err
 	}
+
 	if err := s.UnevaluatedProperties.setLocation(loc.Append("unevaluatedProperties")); err != nil {
 		return err
 	}
@@ -906,7 +912,7 @@ func (s *Schema) setLocation(loc Location) error {
 	if err := s.Contains.setLocation(loc.Append("contains")); err != nil {
 		return err
 	}
-	if err := s.RecursiveRef.setLocation(loc.Append("recursiveRef")); err != nil {
+	if err := s.RecursiveRef.setLocation(loc.Append("$recursiveRef")); err != nil {
 		return err
 	}
 	if err := s.Discriminator.setLocation(loc.Append("discriminator")); err != nil {

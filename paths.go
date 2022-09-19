@@ -77,7 +77,7 @@ func (p *Paths) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	nxt, tok, _ := ptr.Next()
 	v := p.Items.Get(Text(tok))
 	if v == nil {
-		return nil, newErrNotFound(p.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(p.Location.AbsoluteLocation(), tok)
 	}
 	return v.resolveNodeByPointer(nxt)
 }
@@ -120,6 +120,9 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)
+			if p.Items == nil {
+				p.Items = &ObjMap[*PathItem]{}
+			}
 			p.Items.Set(Text(key.String()), &v)
 		}
 		return err == nil

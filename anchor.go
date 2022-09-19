@@ -28,7 +28,7 @@ type Anchor struct {
 }
 
 type Anchors struct {
-	Regular   map[Text]Anchor // $anchor
+	Standard  map[Text]Anchor // $anchor
 	Recursive *Anchor         // $recursiveAnchor
 	Dynamic   map[Text]Anchor // $dynamicAnchor
 }
@@ -48,15 +48,15 @@ func (a *Anchors) merge(b *Anchors, err error) (*Anchors, error) {
 
 	if a == nil {
 		return &Anchors{
-			Regular: b.Regular,
-			Dynamic: b.Dynamic,
+			Standard: b.Standard,
+			Dynamic:  b.Dynamic,
 		}, nil
 	}
-	for k, bv := range b.Regular {
-		if av, ok := a.Regular[k]; ok {
+	for k, bv := range b.Standard {
+		if av, ok := a.Standard[k]; ok {
 			return nil, &DuplicateAnchorError{&av, &bv}
 		}
-		a.Regular[k] = bv
+		a.Standard[k] = bv
 	}
 
 	for k, bv := range b.Dynamic {

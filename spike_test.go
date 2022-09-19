@@ -44,11 +44,19 @@ func (c *C) R1() interface{} { return &c.One }
 func (c *C) R2() interface{} { return &c.Two }
 
 func TestSpike(t *testing.T) {
-	u, err := uri.Parse("#asd")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("u:", u)
+	m := map[uri.URI]string{}
+	m[uri.URI{Path: "/foo", Fragment: "f"}] = "foo"
+	_, ok := m[uri.URI{Path: "/foo", Fragment: "f"}]
+	fmt.Println(ok)
+
+	// u, err := uri.Parse("#asd")
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// fmt.Println("u:", u)
+
+	// _, ok := i.(json.RawMessage)
+
 	// ones := []S{
 	// 	&Spike1{Key: "1one", Val: "1one"},
 	// 	&Spike1{Key: "1two", Val: "1two"},

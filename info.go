@@ -69,7 +69,7 @@ func (i *Info) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	case "license":
 		return i.License, nil
 	}
-	return nil, newErrNotResolvable(i.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(i.AbsoluteLocation(), tok)
 }
 
 func (i *Info) edges() []node {
@@ -100,16 +100,16 @@ func (i *Info) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch tok {
 	case "contact":
 		if i.Contact == nil {
-			return nil, newErrNotFound(i.AbsolutePath(), tok)
+			return nil, newErrNotFound(i.AbsoluteLocation(), tok)
 		}
 		return i.Contact, nil
 	case "license":
 		if i.License == nil {
-			return nil, newErrNotFound(i.AbsolutePath(), tok)
+			return nil, newErrNotFound(i.AbsoluteLocation(), tok)
 		}
 		return i.License, nil
 	default:
-		return nil, newErrNotResolvable(i.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(i.AbsoluteLocation(), tok)
 	}
 }
 

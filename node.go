@@ -7,15 +7,15 @@ import (
 )
 
 type Node interface {
-	// AbsolutePath returns the absolute path of the node in URI form.
+	// AbsoluteLocation returns the absolute path of the node in URI form.
 	// This includes the URI path of the resource and the JSON pointer
 	// of the node.
 	//
 	// e.g. openapi.json#/components/schemas/Example
-	AbsolutePath() uri.URI
+	AbsoluteLocation() uri.URI
 
-	// RelativePath returns the path as a JSON pointer for the Node.
-	RelativePath() jsonpointer.Pointer
+	// RelativeLocation returns the path as a JSON pointer for the Node.
+	RelativeLocation() jsonpointer.Pointer
 
 	// Kind returns the Kind for the given Node
 	Kind() Kind

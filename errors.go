@@ -26,6 +26,8 @@ var (
 
 	// ErrInvalidPrerelease is returned when the pre-release of a semver is an invalid format
 	ErrInvalidSemVerPrerelease = errors.New("invalid semantic version prerelease string")
+
+	ErrInvalidResolution = errors.New("openapi: invalid resolution")
 )
 
 type Error struct {
@@ -41,7 +43,7 @@ func NewError(err error, resource uri.URI) error {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Err, e.ResourceURI.String())
+	return fmt.Sprintf("%s: [%q]", e.Err, e.ResourceURI.String())
 }
 
 func (e *Error) Unwrap() error {
@@ -172,4 +174,28 @@ func translateSemVerErr(err error) error {
 		return ErrInvalidSemVerPrerelease
 	}
 	return err
+}
+
+type ResolutionError struct {
+	URI      uri.URI
+	Expected Kind
+	Actual   Kind
+	RefType  RefType
+}
+
+func (e *ResolutionError) Error() string {
+	return fmt.Sprintf("%v cannot resolve %s to %s for %s: %s", ErrInvalidResolution, e.Actual, e.Expected, e.RefType, e.URI)
+}
+
+func (e *ResolutionError) Unwrap() error {
+	return ErrInvalidResolution
+}
+
+func NewResolutionError(r Ref, expected, actual Kind) error {
+	return &ResolutionError{
+		URI:      r.AbsoluteLocation(),
+		Actual:   actual,
+		Expected: expected,
+		RefType:  r.RefType(),
+	}
 }

@@ -90,6 +90,9 @@ func (os *ObjSlice[T]) edges() []node {
 }
 
 func (os *ObjSlice[T]) setLocation(loc Location) error {
+	if os == nil {
+		return nil
+	}
 	os.Location = loc
 	return nil
 }
@@ -107,7 +110,7 @@ func (os *ObjSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 		return nil, newErrNotResolvable(os.absolute, tok)
 	}
 	if idx >= len(os.Items) {
-		return nil, newErrNotFound(os.AbsolutePath(), tok)
+		return nil, newErrNotFound(os.AbsoluteLocation(), tok)
 	}
 	return os.Items[idx].resolveNodeByPointer(nxt)
 }

@@ -68,11 +68,11 @@ func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 			return t.ExternalDocs, nil
 		}
 		if t.ExternalDocs == nil {
-			return nil, newErrNotFound(t.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(t.Location.AbsoluteLocation(), tok)
 		}
 		return t.ExternalDocs.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(t.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(t.Location.AbsoluteLocation(), tok)
 	}
 }
 

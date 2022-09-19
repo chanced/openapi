@@ -59,7 +59,7 @@ func (cs *ComponentSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node
 		return nil, err
 	}
 	if idx < 0 || idx >= len(cs.Items) {
-		return nil, newErrNotFound(cs.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(cs.Location.AbsoluteLocation(), tok)
 	}
 	return cs.Items[idx].resolveNodeByPointer(nxt)
 }
@@ -87,6 +87,9 @@ func (ComponentSlice[T]) sliceKind() Kind {
 }
 
 func (cs *ComponentSlice[T]) setLocation(loc Location) error {
+	if cs == nil {
+		return nil
+	}
 	cs.Location = loc
 	for i, c := range cs.Items {
 		if err := c.setLocation(loc.Append(strconv.Itoa(i))); err != nil {

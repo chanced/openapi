@@ -206,7 +206,7 @@ func (k Kind) String() string {
 
 func objSliceKind(n node) Kind {
 	if sn, ok := n.(objSlicedNode); ok {
-		return sn.(objSlicedNode).objSliceKind()
+		return sn.objSliceKind()
 	}
 	return KindUndefined
 }

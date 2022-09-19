@@ -100,7 +100,7 @@ func (l *Link) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return l, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(l.Location.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(l.Location.AbsoluteLocation(), tok)
 }
 
 func (*Link) mapKind() Kind   { return KindLinkMap }

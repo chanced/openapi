@@ -62,34 +62,6 @@ var (
 
 var _ Validator = (*StdValidator)(nil)
 
-// TryGetSchemaDialect attempts to extract the schema dialect from raw JSON
-// data.
-//
-// TryGetSchemaDialect will check the following fields in order:
-//   - $schema
-//   - jsonSchemaDialect
-func TryGetSchemaDialect(data []byte) (string, bool) {
-	id := gjson.GetBytes(data, "$schema")
-	if id.Exists() {
-		return id.String(), true
-	}
-	id = gjson.GetBytes(data, "jsonSchemaDialect")
-	if id.Exists() {
-		return id.String(), true
-	}
-	return "", false
-}
-
-// TryGetOpenAPIVersion attempts to extract the OpenAPI version from raw JSON
-// data and parse it as a semver.Version.
-func TryGetOpenAPIVersion(data []byte) (string, bool) {
-	v := gjson.GetBytes(data, "openapi")
-	if v.Exists() {
-		return v.String(), true
-	}
-	return "", false
-}
-
 type Validator interface {
 	// Validate should validate the fully-resolved OpenAPI document.
 	ValidateDocument(document *Document) error
@@ -160,7 +132,13 @@ type StdValidator struct {
 //
 // This currently only validates with JSON Schema.
 func (*StdValidator) ValidateDocument(document *Document) error {
-	panic("not done")
+	// TODO: Re-validate doc bytes and nested refs with JSON Schema It feels
+	// cheesy but it is the best way to ensure that we can properly validate the
+	// document after it has been resolved. This is needed for cases like when
+	// encoding or called by end-users.
+	//
+	// Beyond that, the openapi spec claims there are validations which json
+	// schema can not fully encompass. Those will need to be added here.
 	return nil
 }
 
@@ -271,11 +249,7 @@ func openAPISchemaVMap(openAPISchemas []map[string]uri.URI) (map[semver.Version]
 			}
 
 			k = fmt.Sprintf("%d.%d", vers.Major(), vers.Minor())
-			vers, err = semver.NewVersion(k)
-			if err != nil {
-				// this should never happen
-				panic(fmt.Errorf("failed to parse semver %q: %v", k, err))
-			}
+			vers, _ = semver.NewVersion(k)
 			res[*vers] = v
 		}
 	}

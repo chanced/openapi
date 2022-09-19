@@ -2,23 +2,43 @@ package openapi
 
 import "github.com/chanced/uri"
 
-type RefKind uint8
-
 const (
-	RefKindUndefined RefKind = iota
-	RefKindReference
-	RefKindSchemaRef
-	RefKindSchemaDynamicRef
-	RefKindSchemaRecursiveRef
-	RefKindOperationRef
+	RefTypeUndefined RefType = iota
+	RefTypeComponent
+	RefTypeSchema
+	RefTypeSchemaDynamicRef
+	RefTypeSchemaRecursiveRef
+	RefTypeOperationRef
 )
+
+type RefType uint8
+
+func (rk RefType) String() string {
+	switch rk {
+	case RefTypeComponent:
+		return "Reference"
+	case RefTypeSchema:
+		return "SchemaRef"
+	case RefTypeSchemaDynamicRef:
+		return "SchemaRef"
+	case RefTypeSchemaRecursiveRef:
+		return "SchemaRef"
+	case RefTypeOperationRef:
+		return "OperationRef"
+	default:
+		return "Undefined"
+	}
+}
 
 type Ref interface {
 	Node
 	URI() *uri.URI
 	IsResolved() bool
-	Kind() Kind
 	Resolved() Node
+	// ReferencedKind returns the Kind for the referenced node
+	RefKind() Kind
+	// RefType returns the RefType for the reference
+	RefType() RefType
 }
 
 type ref interface {

@@ -22,7 +22,7 @@ type SchemaItem struct {
 // Under the hood, SchemaMap is a slice of SchemaEntry
 type SchemaMap struct {
 	Location
-	Items []SchemaItem
+	Items []*SchemaItem
 }
 
 func (sm *SchemaMap) Edges() []Node {
@@ -86,13 +86,13 @@ func (sm *SchemaMap) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	tok, _ := ptr.NextToken()
 	v := sm.Get(Text(tok))
 	if v == nil {
-		return nil, newErrNotFound(sm.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(sm.Location.AbsoluteLocation(), tok)
 	}
 	return v.resolveNodeByPointer(ptr)
 }
 
 func (sm *SchemaMap) Set(key Text, s *Schema) {
-	se := SchemaItem{
+	se := &SchemaItem{
 		Key:    key,
 		Schema: s,
 	}
@@ -109,6 +109,8 @@ func (sm *SchemaMap) setLocation(loc Location) error {
 	if sm == nil {
 		return nil
 	}
+	sm.Location = loc
+
 	for _, e := range sm.Items {
 		err := e.Schema.setLocation(loc.Append(e.Key.String()))
 		if err != nil {
@@ -158,7 +160,7 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		var s Schema
 		err = json.Unmarshal([]byte(value.Raw), &s)
-		sm.Items = append(sm.Items, SchemaItem{Key: Text(key.String()), Schema: &s})
+		sm.Items = append(sm.Items, &SchemaItem{Key: Text(key.String()), Schema: &s})
 		return err == nil
 	})
 	return err

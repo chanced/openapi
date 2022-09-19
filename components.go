@@ -120,56 +120,56 @@ func (c *Components) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	switch tok {
 	case "schemas":
 		if c.Schemas == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Schemas.resolveNodeByPointer(nxt)
 	case "responses":
 		if c.Responses == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Responses.resolveNodeByPointer(nxt)
 	case "parameters":
 		if c.Parameters == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Parameters.resolveNodeByPointer(nxt)
 	case "examples":
 		if c.Examples == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Examples.resolveNodeByPointer(nxt)
 	case "requestBodies":
 		if c.RequestBodies == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.RequestBodies.resolveNodeByPointer(nxt)
 	case "headers":
 		if c.Headers == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Headers.resolveNodeByPointer(nxt)
 	case "securitySchemes":
 		if c.SecuritySchemes == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.SecuritySchemes.resolveNodeByPointer(nxt)
 	case "links":
 		if c.Links == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Links.resolveNodeByPointer(nxt)
 	case "callbacks":
 		if c.Callbacks == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.Callbacks.resolveNodeByPointer(nxt)
 	case "pathItems":
 		if c.PathItems == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		return c.PathItems.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(c.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(c.AbsoluteLocation(), tok)
 	}
 }
 

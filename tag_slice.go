@@ -56,13 +56,13 @@ func (ts *TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	nxt, tok, _ := ptr.Next()
 	idx, err := tok.Int()
 	if err != nil {
-		return nil, newErrNotResolvable(ts.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
 	}
 	if idx < 0 {
-		return nil, newErrNotResolvable(ts.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
 	}
 	if idx >= len(ts.Items) {
-		return nil, newErrNotFound(ts.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(ts.Location.AbsoluteLocation(), tok)
 	}
 	return ts.Items[idx].resolveNodeByPointer(nxt)
 }

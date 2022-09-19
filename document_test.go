@@ -1,7 +1,6 @@
 package openapi_test
 
 import (
-	"embed"
 	"encoding/json"
 	"io"
 	"testing"
@@ -10,9 +9,6 @@ import (
 	"github.com/chanced/transcode"
 	"github.com/google/go-cmp/cmp"
 )
-
-//go:embed testdata
-var testdata embed.FS
 
 func TestUnmarshal(t *testing.T) {
 	f, err := testdata.Open("testdata/documents/petstore.yaml")

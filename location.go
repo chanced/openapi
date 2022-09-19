@@ -28,13 +28,13 @@ func (l Location) String() string {
 	return l.absolute.String()
 }
 
-func (l Location) AbsolutePath() uri.URI {
+func (l Location) AbsoluteLocation() uri.URI {
 	return l.absolute
 }
 
-// RelativePath returns a jsonpointer.Pointer of the path from the
+// RelativeLocation returns a jsonpointer.Pointer of the path from the
 // containing resource file.
-func (l Location) RelativePath() jsonpointer.Pointer {
+func (l Location) RelativeLocation() jsonpointer.Pointer {
 	return l.relative
 }
 

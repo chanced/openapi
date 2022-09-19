@@ -102,21 +102,21 @@ func (mt *MediaType) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	switch tok {
 	case "schema":
 		if mt.Schema == nil {
-			return nil, newErrNotFound(mt.AbsolutePath(), tok)
+			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
 		}
 		return mt.Schema.resolveNodeByPointer(nxt)
 	case "examples":
 		if mt.Examples == nil {
-			return nil, newErrNotFound(mt.AbsolutePath(), tok)
+			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
 		}
 		return mt.Examples.resolveNodeByPointer(nxt)
 	case "encoding":
 		if mt.Encoding == nil {
-			return nil, newErrNotFound(mt.AbsolutePath(), tok)
+			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
 		}
 		return mt.Encoding.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(mt.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(mt.Location.AbsoluteLocation(), tok)
 
 	}
 }

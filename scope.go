@@ -44,7 +44,7 @@ func (s *Scope) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return s, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(s.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(s.AbsoluteLocation(), tok)
 }
 
 func (s Scope) MarshalJSON() ([]byte, error) {
@@ -103,6 +103,9 @@ func (s *Scope) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (s *Scope) setLocation(loc Location) error {
+	if s == nil {
+		return nil
+	}
 	s.Location = loc
 	return nil
 }
@@ -159,7 +162,7 @@ func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 			return v.ResolveNodeByPointer(ptr)
 		}
 	}
-	return nil, newErrNotFound(s.AbsolutePath(), tok)
+	return nil, newErrNotFound(s.AbsoluteLocation(), tok)
 }
 
 func (s *Scopes) Edges() []Node {

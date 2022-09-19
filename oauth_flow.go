@@ -80,11 +80,11 @@ func (f *OAuthFlow) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	switch tok {
 	case "scopes":
 		if f.Scopes == nil {
-			return nil, newErrNotFound(f.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
 		return f.Scopes.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(f.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
 	}
 }
 
@@ -218,26 +218,26 @@ func (f *OAuthFlows) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	switch tok {
 	case "implicit":
 		if f.Implicit == nil {
-			return nil, newErrNotFound(f.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
 		return f.Implicit.resolveNodeByPointer(nxt)
 	case "password":
 		if f.Password == nil {
-			return nil, newErrNotFound(f.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
 		return f.Password.resolveNodeByPointer(nxt)
 	case "clientCredentials":
 		if f.ClientCredentials == nil {
-			return nil, newErrNotFound(f.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
 		return f.ClientCredentials.resolveNodeByPointer(nxt)
 	case "authorizationCode":
 		if f.AuthorizationCode == nil {
-			return nil, newErrNotFound(f.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
 		}
 		return f.AuthorizationCode.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(f.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
 	}
 }
 

@@ -3,6 +3,7 @@ package openapi
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
@@ -26,7 +27,7 @@ type ComponentEntry[V node] struct {
 // Under the hood, ComponentMap is of a slice of ComponentField[T]
 type ComponentMap[T node] struct {
 	Location
-	Items []ComponentEntry[T]
+	Items []*ComponentEntry[T]
 }
 
 func (cm *ComponentMap[T]) edges() []node {
@@ -69,12 +70,12 @@ func (*ComponentMap[T]) sliceKind() Kind { return KindUndefined }
 func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
 	var err error
 	*cm = ComponentMap[T]{
-		Items: make([]ComponentEntry[T], 0),
+		Items: make([]*ComponentEntry[T], 0),
 	}
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		var comp Component[T]
 		err = comp.UnmarshalJSON([]byte(value.Raw))
-		cm.Items = append(cm.Items, ComponentEntry[T]{
+		cm.Items = append(cm.Items, &ComponentEntry[T]{
 			Key:       Text(key.String()),
 			Component: &comp,
 		})
@@ -99,7 +100,7 @@ func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 
 	if nxt.IsRoot() {
 		if n == nil {
-			return nil, newErrNotFound(c.AbsolutePath(), tok)
+			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
 		}
 		if n.Reference != nil {
 			return n.Reference, nil
@@ -107,10 +108,10 @@ func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 		if !n.Object.isNil() {
 			return n.Object, nil
 		}
-		return nil, newErrNotFound(c.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
 	}
 	if n == nil {
-		return nil, newErrNotFound(c.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
 	}
 	return n.resolveNodeByPointer(nxt)
 }
@@ -155,13 +156,13 @@ func (cm *ComponentMap[T]) Set(key Text, value *Component[T]) {
 	}
 	for i, v := range cm.Items {
 		if v.Key == key {
-			cm.Items[i] = ComponentEntry[T]{
+			cm.Items[i] = &ComponentEntry[T]{
 				Key:       key,
 				Component: value,
 			}
 		}
 	}
-	cm.Items = append(cm.Items, ComponentEntry[T]{
+	cm.Items = append(cm.Items, &ComponentEntry[T]{
 		Key:       key,
 		Component: value,
 	})
@@ -194,10 +195,21 @@ func (cm *ComponentMap[T]) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (cm *ComponentMap[T]) setLocation(loc Location) error {
+	if cm == nil {
+		return nil
+	}
+	var t T
+	fmt.Printf("\n\n!!!!!!!!!\n setting ComponentMap[%s] to %s\n\n", t.Kind(), loc)
+
+	cm.Location = loc
 	for _, kv := range cm.Items {
-		if err := kv.Component.setLocation(loc); err != nil {
+		if err := kv.Component.setLocation(loc.Append(kv.Key.String())); err != nil {
 			return err
 		}
+	}
+
+	for _, kv := range cm.Items {
+		fmt.Println(kv.Component.AbsoluteLocation())
 	}
 	return nil
 }

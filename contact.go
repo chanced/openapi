@@ -42,7 +42,7 @@ func (c *Contact) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return c, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(c.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(c.AbsoluteLocation(), tok)
 }
 
 func (*Contact) edges() []node        { return nil }

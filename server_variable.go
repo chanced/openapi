@@ -51,7 +51,7 @@ func (sv *ServerVariable) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 		return sv, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(sv.Location.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(sv.Location.AbsoluteLocation(), tok)
 }
 
 func (*ServerVariable) Kind() Kind      { return KindServerVariable }
@@ -59,6 +59,9 @@ func (*ServerVariable) mapKind() Kind   { return KindServerVariableMap }
 func (*ServerVariable) sliceKind() Kind { return KindUndefined }
 
 func (sv *ServerVariable) setLocation(loc Location) error {
+	if sv == nil {
+		return nil
+	}
 	sv.Location = loc
 	return nil
 }

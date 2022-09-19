@@ -58,6 +58,7 @@ func (c *Component[T]) MakeReference(ref uri.URI) error {
 	if err != nil {
 		return err
 	}
+
 	return c.Object.setLocation(loc)
 }
 
@@ -128,7 +129,7 @@ func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 		if nxt.IsRoot() {
 			return c.Reference, nil
 		}
-		return nil, newErrNotResolvable(c.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(c.Location.AbsoluteLocation(), tok)
 	default:
 		// TODO: this may need to change. Not sure when I need to perform these
 		// resolutions just yet. If before population, Object may be nil at this call.
@@ -209,6 +210,7 @@ func (c *Component[T]) setLocation(loc Location) error {
 	if c == nil {
 		return nil
 	}
+	c.Location = loc
 	if c.Reference != nil {
 		return c.Reference.setLocation(loc)
 	} else if !c.Object.isNil() {

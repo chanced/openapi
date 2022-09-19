@@ -67,7 +67,7 @@ func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return e, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(e.Location.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
 }
 
 func (*Example) Kind() Kind      { return KindExample }

@@ -92,9 +92,10 @@ func (l *License) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 }
 
 func (l *License) setLocation(loc Location) error {
-	if l != nil {
-		l.Location = loc
+	if l == nil {
+		return nil
 	}
+	l.Location = loc
 	return nil
 }
 

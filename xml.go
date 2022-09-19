@@ -53,7 +53,7 @@ func (x *XML) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 		return x, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(x.Location.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(x.Location.AbsoluteLocation(), tok)
 }
 
 func (*XML) Kind() Kind      { return KindXML }

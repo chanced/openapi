@@ -16,6 +16,8 @@ type OperationRef struct {
 	Operation *Operation
 }
 
+func (*OperationRef) RefType() RefType { return RefTypeOperationRef }
+func (*OperationRef) RefKind() Kind    { return KindOperation }
 func (or *OperationRef) Edges() []Node {
 	if or == nil {
 		return nil
@@ -70,7 +72,7 @@ func (or *OperationRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, err
 		return or, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(or.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(or.AbsoluteLocation(), tok)
 }
 
 func (or OperationRef) MarshalJSON() ([]byte, error) {
@@ -106,6 +108,9 @@ func (or *OperationRef) UnmarshalYAML(value *yaml.Node) error {
 
 func (o *OperationRef) isNil() bool { return o == nil }
 func (op *OperationRef) setLocation(loc Location) error {
+	if op == nil {
+		return nil
+	}
 	op.Location = loc
 	return nil
 }

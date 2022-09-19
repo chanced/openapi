@@ -158,56 +158,56 @@ func (pi *PathItem) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	switch tok {
 	case "get":
 		if pi.Get == nil {
-			return nil, newErrNotFound(pi.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 		}
 		return pi.resolveNodeByPointer(nxt)
 	case "put":
 		if pi.Put == nil {
-			return nil, newErrNotFound(pi.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 		}
 		return pi.Put.resolveNodeByPointer(nxt)
 	case "post":
 		if pi.Post == nil {
-			return nil, newErrNotFound(pi.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.Location.AbsoluteLocation(), tok)
 		}
 		return pi.Post.resolveNodeByPointer(nxt)
 	case "delete":
 		if pi.Delete == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Delete.resolveNodeByPointer(nxt)
 	case "options":
 		if pi.Options == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Options.resolveNodeByPointer(nxt)
 	case "head":
 		if pi.Head == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Head.resolveNodeByPointer(nxt)
 	case "patch":
 		if pi.Patch == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Patch.resolveNodeByPointer(nxt)
 	case "trace":
 		if pi.Trace == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Trace.resolveNodeByPointer(nxt)
 	case "servers":
 		if pi.Servers == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Servers.resolveNodeByPointer(nxt)
 	case "parameters":
 		if pi.Parameters == nil {
-			return nil, newErrNotFound(pi.AbsolutePath(), tok)
+			return nil, newErrNotFound(pi.AbsoluteLocation(), tok)
 		}
 		return pi.Parameters.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(pi.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(pi.Location.AbsoluteLocation(), tok)
 	}
 }
 

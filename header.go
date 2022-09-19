@@ -137,16 +137,16 @@ func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch nxt {
 	case "schema":
 		if h.Schema == nil {
-			return nil, newErrNotFound(h.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
 		}
 		return h.Schema.resolveNodeByPointer(nxt)
 	case "examples":
 		if h.Examples == nil {
-			return nil, newErrNotFound(h.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
 		}
 		return h.Examples.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(h.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
 	}
 }
 
@@ -207,6 +207,9 @@ func (s *Schema) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (h *Header) setLocation(loc Location) error {
+	if h == nil {
+		return nil
+	}
 	h.Location = loc
 	if err := h.Examples.setLocation(loc.Append("examples")); err != nil {
 		return err

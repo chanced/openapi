@@ -161,6 +161,7 @@ paths:
 components:
     schemas:
         FilterItem:
+            description: /components/schemas/FilterItem
             type: object
             properties:
                 include:
@@ -168,15 +169,19 @@ components:
                 exclude:
                     type: string
         StringMap:
+            description: /components/schemas/StringMap
             type: object
             additionalProperties:
                 type: string
         PetFilter:
             type: object
+            description: /components/schemas/PetFilter
             properties:
                 tags:
+                    description: /components/schemas/PetFilter/tags
                     type: array
                     items:
+                        description: /components/schemas/PetFilter/properties/tags/items
                         type: string
                 kind:
                     type: string

@@ -16,9 +16,6 @@ func TestSchema(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if s.Always == nil || !*s.Always {
-		t.Error("expected Always to be true")
-	}
 	sb, err := s.MarshalJSON()
 	if err != nil {
 		t.Error(err)

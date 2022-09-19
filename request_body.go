@@ -72,11 +72,11 @@ func (rb *RequestBody) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 	switch tok {
 	case "content":
 		if rb.Content == nil {
-			return nil, newErrNotFound(rb.AbsolutePath(), tok)
+			return nil, newErrNotFound(rb.AbsoluteLocation(), tok)
 		}
 		return rb.Content.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(rb.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(rb.Location.AbsoluteLocation(), tok)
 	}
 }
 
@@ -120,6 +120,9 @@ func (rb *RequestBody) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (rb *RequestBody) setLocation(loc Location) error {
+	if rb == nil {
+		return nil
+	}
 	rb.Location = loc
 	if err := rb.Content.setLocation(loc.Append("content")); err != nil {
 		return err

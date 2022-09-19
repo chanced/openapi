@@ -5,9 +5,39 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/semver"
-	"github.com/chanced/jsonpointer"
+	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
+	"github.com/sanity-io/litter"
+	"github.com/tidwall/gjson"
 )
+
+// TryGetSchemaDialect attempts to extract the schema dialect from raw JSON
+// data.
+//
+// TryGetSchemaDialect will check the following fields in order:
+//   - $schema
+//   - jsonSchemaDialect
+func TryGetSchemaDialect(data []byte) (string, bool) {
+	id := gjson.GetBytes(data, "$schema")
+	if id.Exists() {
+		return id.String(), true
+	}
+	id = gjson.GetBytes(data, "jsonSchemaDialect")
+	if id.Exists() {
+		return id.String(), true
+	}
+	return "", false
+}
+
+// TryGetOpenAPIVersion attempts to extract the OpenAPI version from raw JSON
+// data and parse it as a semver.Version.
+func TryGetOpenAPIVersion(data []byte) (string, bool) {
+	v := gjson.GetBytes(data, "openapi")
+	if v.Exists() {
+		return v.String(), true
+	}
+	return "", false
+}
 
 type LoadOpts struct {
 	DefaultSchemaDialect *uri.URI
@@ -71,7 +101,6 @@ func Load(ctx context.Context, documentURI string, validator Validator, fn func(
 	if documentURI == "" {
 		return nil, fmt.Errorf("documentURI cannot be empty")
 	}
-
 	docURI, err := uri.Parse(documentURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse documentURI: %w", err)
@@ -89,7 +118,7 @@ func Load(ctx context.Context, documentURI string, validator Validator, fn func(
 }
 
 func newLoader(v Validator, fn func(context.Context, uri.URI, Kind) (Kind, []byte, error), opts LoadOpts) *loader {
-	nodes := make(map[uri.URI]nodectx)
+	nodes := make(map[string]nodectx)
 	return &loader{
 		validator: v,
 		fn:        fn,
@@ -99,32 +128,34 @@ func newLoader(v Validator, fn func(context.Context, uri.URI, Kind) (Kind, []byt
 }
 
 type loader struct {
-	opts      LoadOpts
-	fn        func(context.Context, uri.URI, Kind) (Kind, []byte, error)
-	validator Validator
-	doc       *Document
-	nodes     map[uri.URI]nodectx
-	refs      []refctx
+	opts          LoadOpts
+	fn            func(context.Context, uri.URI, Kind) (Kind, []byte, error)
+	validator     Validator
+	doc           *Document
+	nodes         map[string]nodectx
+	refs          []refctx
+	recursiveRefs []refctx
+	dynamicRefs   []refctx
 }
 
-func (l *loader) load(ctx context.Context, u uri.URI, ek Kind, v *semver.Version, d *uri.URI) (Node, error) {
-	if n, ok := l.nodes[u]; ok {
+func (l *loader) load(ctx context.Context, location uri.URI, ek Kind, openapi *semver.Version, dialect *uri.URI) (Node, error) {
+	if n, ok := l.nodes[location.String()]; ok {
 		return n.node, nil
 	}
-	k, data, err := l.loadData(ctx, u, ek)
+	k, data, err := l.loadData(ctx, location, ek)
 	if err != nil {
 		return nil, err
 	}
 	switch k {
 	case KindDocument:
-		return l.loadDocument(ctx, data, u)
+		return l.loadDocument(ctx, data, location)
 	case KindSchema:
-		return l.loadSchema(ctx, data, u, *v)
+		return l.loadSchema(ctx, data, location, *openapi)
 	case KindCallbacks, KindExample, KindHeader, KindPathItem, KindOperation,
 		KindRequestBody, KindResponse, KindLink, KindSecurityScheme:
-		return l.loadNode(ctx, data, *v, *d)
+		return l.loadNode(ctx, data, *openapi, *dialect)
 	default:
-		return nil, NewError(fmt.Errorf("loading %s as an external resource is not currently supported", k), u)
+		return nil, NewError(fmt.Errorf("loading %s as an external resource is not currently supported", k), location)
 	}
 }
 
@@ -132,6 +163,11 @@ func (l *loader) loadData(ctx context.Context, u uri.URI, ek Kind) (Kind, []byte
 	k, d, err := l.fn(ctx, u, ek)
 	if err != nil {
 		return k, d, err
+	}
+
+	d, err = transcode.JSONFromYAML(d)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to transcode data: %w", err)
 	}
 
 	if k == KindUndefined && ek != KindUndefined {
@@ -181,13 +217,19 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	if err = doc.setLocation(loc); err != nil {
 		return nil, NewError(err, u)
 	}
-	l.nodes[u] = nodectx{
+	l.nodes[u.String()] = nodectx{
 		node:       &doc,
-		openapi:    doc.OpenAPI,
+		openapi:    *doc.OpenAPI,
 		jsonschema: *sd,
 	}
+	dc := &nodectx{
+		node:       &doc,
+		openapi:    *doc.OpenAPI,
+		jsonschema: *sd,
+	}
+	dc.root = dc
 
-	if err = l.traverse(&doc, doc.edges(), *v, *sd); err != nil {
+	if err = l.traverse(dc, doc.edges(), *v, *sd); err != nil {
 		return nil, err
 	}
 	// we only traverse the references after the top-level document is fully
@@ -204,7 +246,9 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		for len(l.refs) > 0 {
 			r, l.refs = l.refs[0], l.refs[1:]
 			n, err := l.resolveRef(ctx, r)
-			nodes = append(nodes, n)
+			if n != nil {
+				nodes = append(nodes, *n)
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -216,102 +260,173 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		}
 		nodes = nil
 	}
+	for len(l.recursiveRefs) > 0 {
+		panic("not done")
+	}
+	for len(l.dynamicRefs) > 0 {
+		panic("not done")
+	}
 	if err = l.validator.ValidateDocument(&doc); err != nil {
 		return nil, err
 	}
 	return &doc, nil
 }
 
-func (l *loader) resolveRef(ctx context.Context, r refctx) (nodectx, error) {
-	u := r.ref.URI()
+func (l *loader) resolveRef(ctx context.Context, r refctx) (*nodectx, error) {
+	u := r.URI()
+
 	if u == nil {
-		return nodectx{}, NewValidationError(fmt.Errorf("error: ref URI cannot be empty"), r.Kind(), r.AbsolutePath())
+		return nil, NewValidationError(fmt.Errorf("error: ref URI cannot be empty"), r.Kind(), r.AbsoluteLocation())
 	}
 
-	// check to see if the node has already been loaded
-	if pn, ok := l.nodes[*u]; ok {
-		// if so, return it
-		return pn, nil
+	if u.Host == "" && u.Path == "" {
+		return l.resolveLocalRef(ctx, r)
+	} else {
+		return l.resolveRemoteRef(ctx, r)
+	}
+}
+
+func (l *loader) resolveRemoteRef(ctx context.Context, r refctx) (*nodectx, error) {
+	u := r.URI()
+
+	// let's see if we've already loaded this node
+	ur := *u
+	ur.Fragment = ""
+	ur.RawFragment = ""
+	if _, ok := l.nodes[ur.String()]; ok {
+		switch r.RefType() {
+		case RefTypeSchemaDynamicRef:
+			l.dynamicRefs = append(l.dynamicRefs, r)
+			return nil, nil
+		case RefTypeSchemaRecursiveRef:
+			l.recursiveRefs = append(l.recursiveRefs, r)
+			return nil, nil
+		}
+		// then we should have the node in stock
+		if n, ok := l.nodes[u.String()]; ok {
+			return &n, r.resolve(n.node)
+		} else {
+			// otherwise something went awry
+			return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		}
+	}
+	// otherwise we need to load the root resource
+	// first we need to load the resource
+
+	// we need to check to see if there is a reference pointing to the root first
+	// so we know what the expected type is
+	urs := ur.String()
+	for _, x := range l.refs {
+		if x.URI().String() == urs {
+			// found it. we load that one first.
+			if _, err := l.load(ctx, ur, x.RefKind(), nil, nil); err != nil {
+				return nil, err
+			}
+			break
+		}
 	}
 
-	// check to see if the node has fragment if so, we need to load the data and
-	// then traverse to the fragment.
-	if u.Fragment != "" || u.RawFragment != "" {
-		var a string
-		// The fragment should be a jsonpointer unless it the referenced node is
-		// schema. If so, it can be either a json pointer or an anchor
-		//
-		// checking to see if its a json pointer first
-		p, err := jsonpointer.Parse(u.Fragment)
-		_ = p
-		if err != nil {
-			// if its not a json pointer, then it could be an anchor if the node kind is a schema
-			if r.Kind() == KindSchema {
-				a = u.Fragment
-			} else {
-				return nodectx{}, NewValidationError(fmt.Errorf("ref URI fragment must be a json pointer: %w", err), r.Kind(), r.AbsolutePath())
-			}
+	// now check to see if we've found it.
+	if _, ok := l.nodes[ur.String()]; !ok {
+		if _, err := l.load(ctx, ur, KindUndefined, &r.openapi, &r.jsonschema); err != nil {
+			return nil, err
 		}
-		// checking to see if this is a ref relative to the current resource
-		if u.Host == "" && u.Path == "" {
-			if a != "" {
-				as, err := r.Anchors()
-				if err != nil {
-					return nodectx{}, NewValidationError(fmt.Errorf("failed to get anchors: %w", err), r.Kind(), r.AbsolutePath())
-				}
-				if as == nil {
-					return nodectx{}, NewError(fmt.Errorf("failed to retrieve anchors"), r.AbsolutePath())
-				}
-			}
-			r.ref.re
-		}
-
-		// now if the resource is
 	}
-	uc := *u
-	uc.Fragment = ""
-	uc.RawFragment = ""
-
-	if rn, ok := l.nodes[uc]; ok {
-		_ = rn
-		// this node has already been loaded
-		// if a != "" {
-		// 	n, err := rn.ResolveNodeByPointer()
-		// 	_ = n
-		// 	if err != nil {
-		// 		return nodectx{}, NewValidationError(fmt.Errorf("failed to resolve ref URI fragment: %w", err), r.Kind(), r.AbsolutePath())
-		// 	}
-
-		// }
-
-		// checking to see if the loader has encountered the referenced root resource
-		var nk Kind
-		for _, r := range l.refs {
-			if *r.ref.URI() == uc {
-				nk = r.Kind()
-				break
-			}
-		}
-		if nk != KindUndefined {
-			// the loader has encountered the referenced root resource so we can
-			// load it first
-			k, d, err := l.loadData(ctx, uc, nk)
-			_ = d
-			if err != nil {
-				return nodectx{}, err
-			}
-
-			switch k {
-			case KindDocument:
-				// doc, err := l.load(ctx, )
-
-			case KindSchema:
-
-			}
-		}
-
+	// checking to make sure the root node is loaded
+	_, ok := l.nodes[ur.String()]
+	if !ok {
+		// otherwise we return an error
+		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
-	panic("not done")
+	switch r.RefType() {
+	// since we found it, we need to bail if this is a dynamicRef or a recursiveRef
+	case RefTypeSchemaDynamicRef:
+		l.dynamicRefs = append(l.dynamicRefs, r)
+		return nil, nil
+	case RefTypeSchemaRecursiveRef:
+		l.recursiveRefs = append(l.recursiveRefs, r)
+		return nil, nil
+	}
+
+	// we should have the node in stock
+	if n, ok := l.nodes[u.String()]; ok {
+		return &n, r.resolve(n.node)
+	}
+
+	// otherwise we may be dealing with an anchor
+	a := Text(u.Fragment).TrimPrefix("#")
+
+	rn, ok := l.nodes[ur.String()]
+	if !ok {
+		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+	}
+
+	if a == "" {
+		// we should have already resolved it?
+		if err := r.resolve(rn.node); err != nil {
+			return nil, err
+		}
+		return &rn, nil
+	}
+
+	if a.HasPrefix("/") {
+		// we aren't dealing with an anchor
+		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+	}
+
+	as, err := rn.Anchors()
+	if err != nil {
+		return nil, NewError(fmt.Errorf("error: failed to resolve anchors: %w", err), r.AbsoluteLocation())
+	}
+
+	an, ok := as.Standard[a]
+	if !ok {
+		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+	}
+
+	x, ok := l.nodes[an.AbsoluteLocation().String()]
+	if !ok {
+		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+	}
+	if err := r.resolve(x.node); err != nil {
+		return nil, err
+	}
+	return &x, nil
+}
+
+func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error) {
+	u := r.AbsoluteLocation()
+	u.Fragment = r.URI().Fragment
+	u.RawFragment = r.URI().RawFragment
+	fmt.Println("u:", u)
+
+	// if this is a $recursiveRef or a $dynamicRef, we need to cycle
+	// through all the refs first so we kick the can down the road.
+	switch r.RefType() {
+	case RefTypeSchemaDynamicRef:
+		l.dynamicRefs = append(l.dynamicRefs, r)
+		return nil, nil
+	case RefTypeSchemaRecursiveRef:
+		l.recursiveRefs = append(l.recursiveRefs, r)
+		return nil, nil
+	}
+	// check to see if this node has already been loaded
+	if n, ok := l.nodes[u.String()]; ok {
+		// resolve it and move along
+		if err := r.resolve(n.node); err != nil {
+			return nil, err
+		}
+		return &n, nil
+	} else {
+
+		for k, v := range l.nodes {
+			if k == u.String() {
+				fmt.Println("found it:", k, v)
+			}
+		}
+		// otherwise something went awry
+		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+	}
 }
 
 func (l *loader) getDocumentSchemaDialect(doc *Document) (*uri.URI, error) {
@@ -321,34 +436,38 @@ func (l *loader) getDocumentSchemaDialect(doc *Document) (*uri.URI, error) {
 	if l.opts.DefaultSchemaDialect != nil {
 		return l.opts.DefaultSchemaDialect, nil
 	}
-	if VersionConstraints3_1.Check(&doc.OpenAPI) {
+	if VersionConstraints3_1.Check(doc.OpenAPI) {
 		return &JSONSchemaDialect202012, nil
 	}
-	if VersionConstraints3_0.Check(&doc.OpenAPI) {
+	if VersionConstraints3_0.Check(doc.OpenAPI) {
 		return &JSONSchemaDialect201909, nil
 	}
 	return nil, fmt.Errorf("failed to determine OpenAPI schema dialect")
 }
 
-func (l *loader) traverse(root Node, nodes []node, openapi semver.Version, jsonschema uri.URI) error {
+func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, jsonschema uri.URI) error {
 	for _, n := range nodes {
 		nc, err := newNodeCtx(n, &openapi, &jsonschema)
 		if err != nil {
 			return err
 		}
-		l.nodes[n.AbsolutePath()] = nc
+		if n.AbsoluteLocation().String() == "#" {
+			fmt.Println("\nnode with empty absolute location:")
+			litter.Dump(n)
+		}
+		l.nodes[n.AbsoluteLocation().String()] = nc
 
-		if !IsRef(n) {
-			if err := l.traverse(root, n.edges(), nc.openapi, nc.jsonschema); err != nil {
-				return err
-			}
-		} else {
+		if IsRef(n) {
 			r := n.(ref)
-			l.refs = append(l.refs, refctx{root: root, ref: r, openapi: nc.openapi, jsonschema: nc.jsonschema})
-
+			if !r.IsResolved() {
+				l.refs = append(l.refs, refctx{root: root, ref: r, openapi: nc.openapi, jsonschema: nc.jsonschema})
+			}
+			return nil
+		}
+		if err := l.traverse(root, n.edges(), nc.openapi, nc.jsonschema); err != nil {
+			return err
 		}
 	}
-
 	return nil
 }
 
@@ -386,29 +505,15 @@ func (l *loader) getJSONSchemaDialect(data []byte, v *semver.Version) (*uri.URI,
 	return sd, nil
 }
 
-// func (l *loader) resolve(ctx context.Context, kind Kind, u uri.URI, dst node) (node, error) {
-// 	if n, ok := l.nodes[u]; ok {
-// 		return n, nil
-// 	}
-
-// 	src, d, err := l.fn(ctx, u)
-// 	if err != nil {
-// 		return nil, NewError(fmt.Errorf("failed to load %s: %w", u, err), u)
-// 	}
-// 	switch src {
-// 	case KindDocument:
-// 	}
-// }
-
 type nodectx struct {
 	node
 	openapi    semver.Version
 	jsonschema uri.URI
-	root       Node
+	root       *nodectx
 }
 type refctx struct {
 	ref
-	root       Node
+	root       *nodectx
 	openapi    semver.Version
 	jsonschema uri.URI
 }

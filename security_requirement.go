@@ -37,6 +37,9 @@ func (sri *SecurityRequirementItem) isNil() bool { return sri == nil }
 func (sri *SecurityRequirementItem) Anchors() (*Anchors, error) { return nil, nil }
 
 func (sri *SecurityRequirementItem) setLocation(loc Location) error {
+	if sri == nil {
+		return nil
+	}
 	sri.Location = loc
 	return nil
 }
@@ -57,7 +60,7 @@ func (sri *SecurityRequirementItem) resolveNodeByPointer(ptr jsonpointer.Pointer
 		return sri, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(sri.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(sri.AbsoluteLocation(), tok)
 }
 
 func (sri SecurityRequirementItem) MarshalJSON() ([]byte, error) {

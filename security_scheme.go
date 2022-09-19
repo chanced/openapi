@@ -122,11 +122,11 @@ func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, e
 			return ss.Flows, nil
 		}
 		if ss.Flows == nil {
-			return nil, newErrNotFound(ss.AbsolutePath(), tok)
+			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
 		}
 		return ss.Flows.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(ss.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
 	}
 }
 

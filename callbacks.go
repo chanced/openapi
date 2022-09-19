@@ -87,7 +87,7 @@ func (c *Callbacks) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	nxt, tok, _ := ptr.Next()
 	item := c.Items.Get(Text(tok))
 	if item == nil {
-		return nil, newErrNotFound(c.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
 	}
 	return item.resolveNodeByPointer(nxt)
 }

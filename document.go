@@ -24,7 +24,7 @@ type Document struct {
 	// the API info.version string.
 	//
 	// 	*required*
-	OpenAPI semver.Version `json:"openapi"`
+	OpenAPI *semver.Version `json:"openapi"`
 
 	// Provides metadata about the API. The metadata MAY be used by
 	// tooling as required.
@@ -127,46 +127,46 @@ func (d *Document) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch tok {
 	case "tags":
 		if d.Tags == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Tags.resolveNodeByPointer(nxt)
 	case "servers":
 		if d.Servers == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Servers.resolveNodeByPointer(nxt)
 	case "paths":
 		if d.Paths == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Paths.resolveNodeByPointer(nxt)
 	case "webhooks":
 		if d.Webhooks == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Webhooks.resolveNodeByPointer(nxt)
 	case "components":
 		if d.Components == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Components.resolveNodeByPointer(nxt)
 	case "externalDocs":
 		if d.ExternalDocs == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.ExternalDocs.resolveNodeByPointer(nxt)
 	case "info":
 		if d.Info == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Info.resolveNodeByPointer(nxt)
 	case "security":
 		if d.Security == nil {
-			return nil, newErrNotFound(d.AbsolutePath(), tok)
+			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
 		}
 		return d.Security.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(d.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(d.AbsoluteLocation(), tok)
 	}
 }
 

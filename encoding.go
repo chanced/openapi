@@ -105,11 +105,11 @@ func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	switch nxt {
 	case "headers":
 		if e.Headers == nil {
-			return nil, newErrNotFound(e.Location.AbsolutePath(), tok)
+			return nil, newErrNotFound(e.Location.AbsoluteLocation(), tok)
 		}
 		return e.Headers.resolveNodeByPointer(nxt)
 	default:
-		return nil, newErrNotResolvable(e.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
 	}
 }
 

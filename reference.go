@@ -66,6 +66,7 @@ func (r *Reference) edges() []node {
 
 	return appendEdges(nil, r.Resolved().(node))
 }
+func (r *Reference) RefKind() Kind { return r.ReferencedKind }
 
 func (r *Reference) URI() *uri.URI {
 	if r == nil {
@@ -113,12 +114,14 @@ func (r *Reference) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) 
 	return r.resolveNodeByPointer(ptr)
 }
 
+func (*Reference) RefType() RefType { return RefTypeComponent }
+
 func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 	if ptr.IsRoot() {
 		return r, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(r.Location.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
 }
 
 func (r Reference) MarshalJSON() ([]byte, error) {

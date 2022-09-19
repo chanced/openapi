@@ -71,13 +71,13 @@ func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, erro
 	nxt, tok, _ := ptr.Next()
 	idx, err := tok.Int()
 	if err != nil {
-		return nil, newErrNotResolvable(ss.Location.AbsolutePath(), tok)
+		return nil, newErrNotResolvable(ss.Location.AbsoluteLocation(), tok)
 	}
 	if idx < 0 {
-		return nil, newErrNotFound(ss.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
 	}
 	if idx >= len(ss.Items) {
-		return nil, newErrNotFound(ss.Location.AbsolutePath(), tok)
+		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
 	}
 	return ss.Items[idx].resolveNodeByPointer(nxt)
 }

@@ -89,7 +89,7 @@ func (d *Discriminator) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, err
 		return d, nil
 	}
 	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(d.Location.AbsolutePath(), tok)
+	return nil, newErrNotResolvable(d.Location.AbsoluteLocation(), tok)
 }
 
 func (d *Discriminator) Edges() []Node {
