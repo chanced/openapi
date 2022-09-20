@@ -46,6 +46,7 @@ func (t *Tag) nodes() []node {
 
 func (*Tag) Refs() []Ref                { return nil }
 func (*Tag) Anchors() (*Anchors, error) { return nil, nil }
+func (t *Tag) isNil() bool              { return t == nil }
 
 // func (t *Tag) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {
@@ -53,8 +54,6 @@ func (*Tag) Anchors() (*Anchors, error) { return nil, nil }
 // 	}
 // 	return t.resolveNodeByPointer(ptr)
 // }
-
-// func (t *Tag) isNil() bool { return t == nil }
 
 // func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if ptr.IsRoot() {

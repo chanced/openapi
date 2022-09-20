@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
@@ -72,25 +71,25 @@ func (c *Callbacks) Refs() []Ref {
 	return c.Items.Refs()
 }
 
-// ResolveNodeByPointer performs a l
-func (c *Callbacks) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return c.resolveNodeByPointer(ptr)
-}
+// // ResolveNodeByPointer performs a l
+// func (c *Callbacks) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return c.resolveNodeByPointer(ptr)
+// }
 
-func (c *Callbacks) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return c, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	item := c.Items.Get(Text(tok))
-	if item == nil {
-		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
-	}
-	return item.resolveNodeByPointer(nxt)
-}
+// func (c *Callbacks) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return c, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	item := c.Items.Get(Text(tok))
+// 	if item == nil {
+// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return item.resolveNodeByPointer(nxt)
+// }
 
 func (c *Callbacks) location() Location {
 	return c.Location
