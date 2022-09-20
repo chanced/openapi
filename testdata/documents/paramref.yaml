@@ -1,0 +1,14 @@
+openapi: "3.1.0"
+info:
+    version: 1.0.0
+paths:
+    /refparam:
+        parameters:
+            - $ref: "#/components/parameters/Referenced"
+components:
+    parameters:
+        Referenced:
+            style: matrix
+            schema:
+                type: string
+                description: "/components/parameters/Referenced/schema"
