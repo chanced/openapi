@@ -1,11 +1,12 @@
 # openapi - an OpenAPI 3.x library for Go
 
+<p align="center">
+**:warning: This library is in an alpha state; expect breaking changes and bugs. :warning:**
+</p>
 openapi is a library for for OpenAPI 3.x, including
 [3.1](https://spec.openapis.org/oas/v3.1.0) and
 [3.0](https://spec.openapis.org/oas/v3.0.3). The primary purpose of the package
 is to offer building blocks for code and documentation generation.
-
-**:warning: This library is in an alpha state; expect breaking changes and bugs. :warning:**
 
 ## Features
 
