@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -27,14 +26,14 @@ type RequestBody struct {
 	Required bool `json:"required,omitempty"`
 }
 
-func (rb *RequestBody) Edges() []Node {
+func (rb *RequestBody) Nodes() []Node {
 	if rb == nil {
 		return nil
 	}
-	return downcastNodes(rb.edges())
+	return downcastNodes(rb.nodes())
 }
 
-func (rb *RequestBody) edges() []node {
+func (rb *RequestBody) nodes() []node {
 	if rb == nil {
 		return nil
 	}
@@ -57,28 +56,28 @@ func (rb *RequestBody) Anchors() (*Anchors, error) {
 	return rb.Content.Anchors()
 }
 
-func (rb *RequestBody) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return rb.resolveNodeByPointer(ptr)
-}
+// func (rb *RequestBody) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return rb.resolveNodeByPointer(ptr)
+// }
 
-func (rb *RequestBody) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return rb, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "content":
-		if rb.Content == nil {
-			return nil, newErrNotFound(rb.AbsoluteLocation(), tok)
-		}
-		return rb.Content.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(rb.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (rb *RequestBody) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return rb, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "content":
+// 		if rb.Content == nil {
+// 			return nil, newErrNotFound(rb.AbsoluteLocation(), tok)
+// 		}
+// 		return rb.Content.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(rb.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (*RequestBody) Kind() Kind      { return KindRequestBody }
 func (*RequestBody) mapKind() Kind   { return KindRequestBodyMap }

@@ -10,6 +10,7 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
+	"github.com/sanity-io/litter"
 )
 
 //go:embed testdata
@@ -57,6 +58,7 @@ func TestLoad(t *testing.T) {
 	if doc == nil {
 		t.Errorf("failed to load document")
 	}
+	litter.Dump(doc)
 }
 
 type NoopValidator struct{}

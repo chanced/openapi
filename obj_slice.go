@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -44,13 +43,29 @@ func (os *ObjSlice[T]) Refs() []Ref {
 	return refs
 }
 
-// ResolveNodeByPointer implements node
-func (os *ObjSlice[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return os.resolveNodeByPointer(ptr)
-}
+// // ResolveNodeByPointer implements node
+// func (os *ObjSlice[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return os.resolveNodeByPointer(ptr)
+// }
+
+// func (os *ObjSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return os, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+
+// 	idx, err := tok.Int()
+// 	if err != nil || idx < 0 {
+// 		return nil, newErrNotResolvable(os.absolute, tok)
+// 	}
+// 	if idx >= len(os.Items) {
+// 		return nil, newErrNotFound(os.AbsoluteLocation(), tok)
+// 	}
+// 	return os.Items[idx].resolveNodeByPointer(nxt)
+// }
 
 // UnmarshalJSON implements node
 func (os *ObjSlice[T]) UnmarshalJSON(data []byte) error {
@@ -81,7 +96,7 @@ func (os *ObjSlice[T]) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, os)
 }
 
-func (os *ObjSlice[T]) edges() []node {
+func (os *ObjSlice[T]) nodes() []node {
 	var edges []node
 	for _, x := range os.Items {
 		edges = appendEdges(edges, x)
@@ -98,22 +113,6 @@ func (os *ObjSlice[T]) setLocation(loc Location) error {
 }
 
 func (os *ObjSlice[T]) isNil() bool { return os == nil }
-
-func (os *ObjSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return os, nil
-	}
-	nxt, tok, _ := ptr.Next()
-
-	idx, err := tok.Int()
-	if err != nil || idx < 0 {
-		return nil, newErrNotResolvable(os.absolute, tok)
-	}
-	if idx >= len(os.Items) {
-		return nil, newErrNotFound(os.AbsoluteLocation(), tok)
-	}
-	return os.Items[idx].resolveNodeByPointer(nxt)
-}
 
 func (*ObjSlice[T]) sliceKind() Kind { return KindUndefined }
 func (*ObjSlice[T]) mapKind() Kind   { return KindUndefined }

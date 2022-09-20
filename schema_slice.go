@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -14,14 +13,14 @@ type SchemaSlice struct {
 	Items []*Schema
 }
 
-func (ss *SchemaSlice) Edges() []Node {
+func (ss *SchemaSlice) Nodes() []Node {
 	if ss == nil {
 		return nil
 	}
-	return downcastNodes(ss.edges())
+	return downcastNodes(ss.nodes())
 }
 
-func (ss *SchemaSlice) edges() []node {
+func (ss *SchemaSlice) nodes() []node {
 	edges := make([]node, len(ss.Items))
 	for i, s := range ss.Items {
 		edges[i] = s
@@ -56,31 +55,31 @@ func (ss *SchemaSlice) Refs() []Ref {
 
 func (*SchemaSlice) Kind() Kind { return KindSchemaSlice }
 
-func (ss *SchemaSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
+// func (ss *SchemaSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
 
-	return ss.resolveNodeByPointer(ptr)
-}
+// 	return ss.resolveNodeByPointer(ptr)
+// }
 
-func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return ss, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	idx, err := tok.Int()
-	if err != nil {
-		return nil, newErrNotResolvable(ss.Location.AbsoluteLocation(), tok)
-	}
-	if idx < 0 {
-		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
-	}
-	if idx >= len(ss.Items) {
-		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
-	}
-	return ss.Items[idx].resolveNodeByPointer(nxt)
-}
+// func (ss *SchemaSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return ss, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	idx, err := tok.Int()
+// 	if err != nil {
+// 		return nil, newErrNotResolvable(ss.Location.AbsoluteLocation(), tok)
+// 	}
+// 	if idx < 0 {
+// 		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
+// 	}
+// 	if idx >= len(ss.Items) {
+// 		return nil, newErrNotFound(ss.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return ss.Items[idx].resolveNodeByPointer(nxt)
+// }
 
 func (ss SchemaSlice) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ss.Items)
@@ -130,6 +129,16 @@ func (ss *SchemaSlice) setLocation(loc Location) error {
 	return nil
 }
 
+func (ss *SchemaSlice) Clone() *SchemaSlice {
+	if ss == nil {
+		return nil
+	}
+	v := make([]*Schema, len(ss.Items))
+	for i, s := range ss.Items {
+		v[i] = s.Clone()
+	}
+	return &SchemaSlice{Items: v}
+}
 func (ss *SchemaSlice) isNil() bool { return ss == nil }
 
 var _ node = (*SchemaSlice)(nil)

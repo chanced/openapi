@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
@@ -28,11 +27,11 @@ type SchemaRef struct {
 	SchemaRefKind SchemaRefType `json:"-"`
 }
 
-func (sr *SchemaRef) Edges() []Node {
+func (sr *SchemaRef) Nodes() []Node {
 	if sr == nil {
 		return nil
 	}
-	return downcastNodes(sr.edges())
+	return downcastNodes(sr.nodes())
 }
 
 func (sr *SchemaRef) RefType() RefType {
@@ -50,7 +49,7 @@ func (sr *SchemaRef) RefType() RefType {
 
 func (sr *SchemaRef) RefKind() Kind { return KindSchema }
 
-func (sr *SchemaRef) edges() []node { return []node{sr.Schema} }
+func (sr *SchemaRef) nodes() []node { return []node{sr.Schema} }
 
 func (*SchemaRef) Refs() []Ref { return nil }
 
@@ -85,7 +84,7 @@ func (sr *SchemaRef) resolve(n Node) error {
 	}
 
 	if s, ok := n.(*Schema); ok {
-		sr.Schema = s
+		sr.Schema = s.Clone()
 		return nil
 	}
 	return NewResolutionError(sr, KindSchema, n.Kind())
@@ -93,22 +92,22 @@ func (sr *SchemaRef) resolve(n Node) error {
 
 func (*SchemaRef) Anchors() (*Anchors, error) { return nil, nil }
 
-func (sr *SchemaRef) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return sr.resolveNodeByPointer(ptr)
-}
+// func (sr *SchemaRef) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return sr.resolveNodeByPointer(ptr)
+// }
 
-func (sr *SchemaRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	tok, _ := ptr.NextToken()
-	if !ptr.IsRoot() {
-		if sr.Ref != nil {
-			return nil, newErrNotResolvable(sr.Location.AbsoluteLocation(), tok)
-		}
-	}
-	return sr, nil
-}
+// func (sr *SchemaRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	tok, _ := ptr.NextToken()
+// 	if !ptr.IsRoot() {
+// 		if sr.Ref != nil {
+// 			return nil, newErrNotResolvable(sr.Location.AbsoluteLocation(), tok)
+// 		}
+// 	}
+// 	return sr, nil
+// }
 
 func (sr *SchemaRef) setLocation(l Location) error {
 	if sr == nil {
@@ -168,6 +167,25 @@ func (sr *SchemaRef) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (sr *SchemaRef) isNil() bool { return sr == nil }
+
+func (sr *SchemaRef) Clone() *SchemaRef {
+	if sr == nil {
+		return nil
+	}
+	var ref *uri.URI
+	if sr.Ref != nil {
+		ref = sr.Ref.Clone()
+	}
+	return &SchemaRef{
+		Ref: ref,
+		Location: Location{
+			absolute: sr.Location.absolute,
+			relative: sr.Location.relative,
+		},
+		Schema:        sr.Schema, // should this be cloned?
+		SchemaRefKind: sr.SchemaRefKind,
+	}
+}
 
 var (
 	_ node = (*SchemaRef)(nil)

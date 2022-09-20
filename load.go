@@ -229,7 +229,7 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	}
 	dc.root = dc
 
-	if err = l.traverse(dc, doc.edges(), *v, *sd); err != nil {
+	if err = l.traverse(dc, doc.nodes(), *v, *sd); err != nil {
 		return nil, err
 	}
 	// we only traverse the references after the top-level document is fully
@@ -254,7 +254,7 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 			}
 		}
 		for _, n := range nodes {
-			if err = l.traverse(n.root, n.edges(), n.openapi, n.jsonschema); err != nil {
+			if err = l.traverse(n.root, n.nodes(), n.openapi, n.jsonschema); err != nil {
 				return nil, err
 			}
 		}
@@ -398,7 +398,6 @@ func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error
 	u := r.AbsoluteLocation()
 	u.Fragment = r.URI().Fragment
 	u.RawFragment = r.URI().RawFragment
-	fmt.Println("u:", u)
 
 	// if this is a $recursiveRef or a $dynamicRef, we need to cycle
 	// through all the refs first so we kick the can down the road.
@@ -464,7 +463,7 @@ func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, j
 			}
 			return nil
 		}
-		if err := l.traverse(root, n.edges(), nc.openapi, nc.jsonschema); err != nil {
+		if err := l.traverse(root, n.nodes(), nc.openapi, nc.jsonschema); err != nil {
 			return err
 		}
 	}

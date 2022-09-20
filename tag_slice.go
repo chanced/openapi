@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -14,14 +13,14 @@ type TagSlice struct {
 	Items []*Tag
 }
 
-func (tl *TagSlice) Edges() []Node {
+func (tl *TagSlice) Nodes() []Node {
 	if tl == nil {
 		return nil
 	}
-	return downcastNodes(tl.edges())
+	return downcastNodes(tl.nodes())
 }
 
-func (tl *TagSlice) edges() []node {
+func (tl *TagSlice) nodes() []node {
 	edges := make([]node, len(tl.Items))
 	for i, item := range tl.Items {
 		edges[i] = item
@@ -42,30 +41,30 @@ func (ts *TagSlice) Refs() []Ref {
 	return refs
 }
 
-func (ts TagSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return ts.resolveNodeByPointer(ptr)
-}
+// func (ts TagSlice) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return ts.resolveNodeByPointer(ptr)
+// }
 
-func (ts *TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return ts, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	idx, err := tok.Int()
-	if err != nil {
-		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
-	}
-	if idx < 0 {
-		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
-	}
-	if idx >= len(ts.Items) {
-		return nil, newErrNotFound(ts.Location.AbsoluteLocation(), tok)
-	}
-	return ts.Items[idx].resolveNodeByPointer(nxt)
-}
+// func (ts *TagSlice) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return ts, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	idx, err := tok.Int()
+// 	if err != nil {
+// 		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
+// 	}
+// 	if idx < 0 {
+// 		return nil, newErrNotResolvable(ts.Location.AbsoluteLocation(), tok)
+// 	}
+// 	if idx >= len(ts.Items) {
+// 		return nil, newErrNotFound(ts.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return ts.Items[idx].resolveNodeByPointer(nxt)
+// }
 
 func (ts *TagSlice) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ts.Items)

@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
@@ -25,27 +24,27 @@ func (*Scope) mapKind() Kind              { return KindUndefined }
 func (*Scope) sliceKind() Kind            { return KindUndefined }
 func (s *Scope) Refs() []Ref              { return nil }
 
-func (s *Scope) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return s.resolveNodeByPointer(ptr)
-}
-
-func (s *Scope) Edges() []Node {
+//	func (s *Scope) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+//		if err := ptr.Validate(); err != nil {
+//			return nil, err
+//		}
+//		return s.resolveNodeByPointer(ptr)
+//	}
+//
+//	func (s *Scope) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+//		if ptr.IsRoot() {
+//			return s, nil
+//		}
+//		tok, _ := ptr.NextToken()
+//		return nil, newErrNotResolvable(s.AbsoluteLocation(), tok)
+//	}
+func (s *Scope) Nodes() []Node {
 	if s == nil {
 		return nil
 	}
-	return downcastNodes(s.edges())
+	return downcastNodes(s.nodes())
 }
-func (s *Scope) edges() []node { return nil }
-func (s *Scope) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return s, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(s.AbsoluteLocation(), tok)
-}
+func (s *Scope) nodes() []node { return nil }
 
 func (s Scope) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.Value)
@@ -141,38 +140,38 @@ func (*Scopes) sliceKind() Kind            { return KindUndefined }
 
 func (s *Scopes) isNil() bool { return s == nil }
 
-func (s *Scopes) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return s.resolveNodeByPointer(ptr)
-}
+// func (s *Scopes) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return s.resolveNodeByPointer(ptr)
+// }
 
-func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return s, nil
-	}
-	tok, _ := ptr.NextToken()
-	if tok == "" {
-		return s, nil
-	}
-	tk := Text(tok)
-	for _, v := range s.Items {
-		if v.Key == tk {
-			return v.ResolveNodeByPointer(ptr)
-		}
-	}
-	return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-}
+// func (s *Scopes) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return s, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	if tok == "" {
+// 		return s, nil
+// 	}
+// 	tk := Text(tok)
+// 	for _, v := range s.Items {
+// 		if v.Key == tk {
+// 			return v.ResolveNodeByPointer(ptr)
+// 		}
+// 	}
+// 	return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// }
 
-func (s *Scopes) Edges() []Node {
+func (s *Scopes) Nodes() []Node {
 	if s == nil {
 		return nil
 	}
-	return downcastNodes(s.edges())
+	return downcastNodes(s.nodes())
 }
 
-func (s *Scopes) edges() []node {
+func (s *Scopes) nodes() []node {
 	if s == nil {
 		return nil
 	}

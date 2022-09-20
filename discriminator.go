@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -25,6 +24,28 @@ type Discriminator struct {
 	// An object to hold mappings between payload values and schema names or
 	// references.
 	Mapping *Map[Text] `json:"mapping,omitempty"`
+}
+
+func (d *Discriminator) Clone() *Discriminator {
+	if d == nil {
+		return nil
+	}
+	var m *Map[Text]
+	if d.Mapping != nil {
+		m := Map[Text]{
+			Items: make([]KeyValue[Text], len(d.Mapping.Items)),
+		}
+		copy(m.Items, d.Mapping.Items)
+	}
+	return &Discriminator{
+		Extensions: d.Extensions,
+		Location: Location{
+			absolute: *d.Location.absolute.Clone(),
+			relative: d.Location.relative,
+		},
+		PropertyName: d.PropertyName.Clone(),
+		Mapping:      m,
+	}
 }
 
 func (d *Discriminator) setLocation(loc Location) error {
@@ -77,28 +98,28 @@ func (*Discriminator) Kind() Kind { return KindDiscriminator }
 
 func (*Discriminator) Refs() []Ref { return nil }
 
-func (d *Discriminator) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return d.resolveNodeByPointer(ptr)
-}
+// func (d *Discriminator) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return d.resolveNodeByPointer(ptr)
+// }
 
-func (d *Discriminator) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return d, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(d.Location.AbsoluteLocation(), tok)
-}
+// func (d *Discriminator) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return d, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(d.Location.AbsoluteLocation(), tok)
+// }
 
-func (d *Discriminator) Edges() []Node {
+func (d *Discriminator) Nodes() []Node {
 	if d == nil {
 		return nil
 	}
-	return downcastNodes(d.edges())
+	return downcastNodes(d.nodes())
 }
-func (d *Discriminator) edges() []node { return nil }
+func (d *Discriminator) nodes() []node { return nil }
 
 func (d *Discriminator) isNil() bool   { return d == nil }
 func (*Discriminator) mapKind() Kind   { return KindUndefined }

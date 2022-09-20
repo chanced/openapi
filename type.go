@@ -47,6 +47,15 @@ type Type = Text
 type Types []Type
 type types Types
 
+func (t Types) Clone() Types {
+	if t == nil {
+		return nil
+	}
+	c := make(Types, len(t))
+	copy(c, t)
+	return c
+}
+
 // ContainsString returns true if TypeString is present
 func (t Types) ContainsString() bool {
 	return t.Contains(TypeString)

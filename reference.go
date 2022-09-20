@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"github.com/tidwall/gjson"
@@ -52,14 +51,14 @@ type Reference struct {
 	resolved bool
 }
 
-func (r *Reference) Edges() []Node {
+func (r *Reference) Nodes() []Node {
 	if r == nil {
 		return nil
 	}
-	return downcastNodes(r.edges())
+	return downcastNodes(r.nodes())
 }
 
-func (r *Reference) edges() []node {
+func (r *Reference) nodes() []node {
 	if r == nil {
 		return nil
 	}
@@ -107,22 +106,22 @@ func (*Reference) Refs() []Ref { return nil }
 
 func (r *Reference) Anchors() (*Anchors, error) { return nil, nil }
 
-func (r *Reference) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return r.resolveNodeByPointer(ptr)
-}
-
 func (*Reference) RefType() RefType { return RefTypeComponent }
 
-func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return r, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
-}
+// func (r *Reference) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return r.resolveNodeByPointer(ptr)
+// }
+
+// func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return r, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+// }
 
 func (r Reference) MarshalJSON() ([]byte, error) {
 	type reference Reference

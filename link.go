@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
@@ -61,14 +60,14 @@ type Link struct {
 	RequestBody jsonx.RawMessage `json:"requestBody,omitempty"`
 }
 
-func (l *Link) Edges() []Node {
+func (l *Link) Nodes() []Node {
 	if l == nil {
 		return nil
 	}
-	return downcastNodes(l.edges())
+	return downcastNodes(l.nodes())
 }
 
-func (l *Link) edges() []node {
+func (l *Link) nodes() []node {
 	if l == nil {
 		return nil
 	}
@@ -88,20 +87,20 @@ func (l *Link) Refs() []Ref {
 
 func (l *Link) Anchors() (*Anchors, error) { return nil, nil }
 
-func (l *Link) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return l.resolveNodeByPointer(ptr)
-}
+// func (l *Link) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return l.resolveNodeByPointer(ptr)
+// }
 
-func (l *Link) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return l, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(l.Location.AbsoluteLocation(), tok)
-}
+// func (l *Link) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return l, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(l.Location.AbsoluteLocation(), tok)
+// }
 
 func (*Link) mapKind() Kind   { return KindLinkMap }
 func (*Link) sliceKind() Kind { return KindUndefined }

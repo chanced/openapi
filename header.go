@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
@@ -86,14 +85,14 @@ type Header struct {
 	Example jsonx.RawMessage `json:"example,omitempty"`
 }
 
-func (h *Header) Edges() []Node {
+func (h *Header) Nodes() []Node {
 	if h == nil {
 		return nil
 	}
-	return downcastNodes(h.edges())
+	return downcastNodes(h.nodes())
 }
 
-func (h *Header) edges() []node {
+func (h *Header) nodes() []node {
 	return appendEdges(nil, h.Schema, h.Examples)
 }
 
@@ -122,33 +121,33 @@ func (h *Header) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-func (h *Header) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return h.resolveNodeByPointer(ptr)
-}
+// func (h *Header) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return h.resolveNodeByPointer(ptr)
+// }
 
-func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return h, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch nxt {
-	case "schema":
-		if h.Schema == nil {
-			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
-		}
-		return h.Schema.resolveNodeByPointer(nxt)
-	case "examples":
-		if h.Examples == nil {
-			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
-		}
-		return h.Examples.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return h, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch nxt {
+// 	case "schema":
+// 		if h.Schema == nil {
+// 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return h.Schema.resolveNodeByPointer(nxt)
+// 	case "examples":
+// 		if h.Examples == nil {
+// 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return h.Examples.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (*Header) Kind() Kind      { return KindHeader }
 func (*Header) mapKind() Kind   { return KindHeaderMap }

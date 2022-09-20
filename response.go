@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -50,14 +49,14 @@ type Response struct {
 	Location `json:"-"`
 }
 
-func (r *Response) Edges() []Node {
+func (r *Response) Nodes() []Node {
 	if r == nil {
 		return nil
 	}
-	return downcastNodes(r.edges())
+	return downcastNodes(r.nodes())
 }
 
-func (r *Response) edges() []node {
+func (r *Response) nodes() []node {
 	if r == nil {
 		return nil
 	}
@@ -108,39 +107,39 @@ func (r *Response) Anchors() (*Anchors, error) {
 //
 // - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
 // and does not start with a slash
-func (r *Response) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	err := ptr.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return r.resolveNodeByPointer(ptr)
-}
+// func (r *Response) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	err := ptr.Validate()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return r.resolveNodeByPointer(ptr)
+// }
 
-func (r *Response) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return r, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "headers":
-		if r.Headers == nil {
-			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
-		}
-		return r.Headers.resolveNodeByPointer(nxt)
-	case "content":
-		if r.Content == nil {
-			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
-		}
-		return r.Content.resolveNodeByPointer(nxt)
-	case "links":
-		if r.Links == nil {
-			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
-		}
-		return r.Links.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (r *Response) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return r, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "headers":
+// 		if r.Headers == nil {
+// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+// 		}
+// 		return r.Headers.resolveNodeByPointer(nxt)
+// 	case "content":
+// 		if r.Content == nil {
+// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+// 		}
+// 		return r.Content.resolveNodeByPointer(nxt)
+// 	case "links":
+// 		if r.Links == nil {
+// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+// 		}
+// 		return r.Links.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 // MarshalJSON marshals r into JSON
 func (r Response) MarshalJSON() ([]byte, error) {

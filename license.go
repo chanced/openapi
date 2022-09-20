@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
@@ -33,19 +32,27 @@ func (*License) Kind() Kind      { return KindLicense }
 func (*License) sliceKind() Kind { return KindUndefined }
 func (*License) mapKind() Kind   { return KindUndefined }
 
-func (*License) edges() []node        { return nil }
+func (*License) nodes() []node        { return nil }
 func (l *License) isNil() bool        { return l == nil }
 func (l *License) location() Location { return l.Location }
 
 func (*License) Refs() []Ref { return nil }
 
-func (l *License) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return l.resolveNodeByPointer(ptr)
-}
-
+//	func (l *License) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+//		if err := ptr.Validate(); err != nil {
+//			return nil, err
+//		}
+//		return l.resolveNodeByPointer(ptr)
+//	}
+//
+//	func (l *License) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+//		if ptr.IsRoot() {
+//			return l, nil
+//		}
+//		tok, _ := ptr.NextToken()
+//		return nil, newErrNotResolvable(l.absolute, tok)
+//	}
+//
 // MarshalJSON marshals JSON
 func (l License) MarshalJSON() ([]byte, error) {
 	type license License
@@ -81,14 +88,6 @@ func (l *License) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 	return json.Unmarshal(j, l)
-}
-
-func (l *License) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return l, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(l.absolute, tok)
 }
 
 func (l *License) setLocation(loc Location) error {

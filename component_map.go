@@ -3,9 +3,7 @@ package openapi
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
@@ -30,7 +28,7 @@ type ComponentMap[T node] struct {
 	Items []*ComponentEntry[T]
 }
 
-func (cm *ComponentMap[T]) edges() []node {
+func (cm *ComponentMap[T]) nodes() []node {
 	if cm == nil {
 		return nil
 	}
@@ -84,37 +82,37 @@ func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return cm.resolveNodeByPointer(ptr)
-}
+// func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return cm.resolveNodeByPointer(ptr)
+// }
 
-func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return c, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	n := c.Get(Text(tok))
+// func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return c, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	n := c.Get(Text(tok))
 
-	if nxt.IsRoot() {
-		if n == nil {
-			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
-		}
-		if n.Reference != nil {
-			return n.Reference, nil
-		}
-		if !n.Object.isNil() {
-			return n.Object, nil
-		}
-		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
-	}
-	if n == nil {
-		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
-	}
-	return n.resolveNodeByPointer(nxt)
-}
+// 	if nxt.IsRoot() {
+// 		if n == nil {
+// 			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
+// 		}
+// 		if n.Reference != nil {
+// 			return n.Reference, nil
+// 		}
+// 		if !n.Object.isNil() {
+// 			return n.Object, nil
+// 		}
+// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+// 	}
+// 	if n == nil {
+// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return n.resolveNodeByPointer(nxt)
+// }
 
 func (cm *ComponentMap[T]) isNil() bool {
 	return cm == nil
@@ -198,9 +196,6 @@ func (cm *ComponentMap[T]) setLocation(loc Location) error {
 	if cm == nil {
 		return nil
 	}
-	var t T
-	fmt.Printf("\n\n!!!!!!!!!\n setting ComponentMap[%s] to %s\n\n", t.Kind(), loc)
-
 	cm.Location = loc
 	for _, kv := range cm.Items {
 		if err := kv.Component.setLocation(loc.Append(kv.Key.String())); err != nil {
@@ -208,9 +203,6 @@ func (cm *ComponentMap[T]) setLocation(loc Location) error {
 		}
 	}
 
-	for _, kv := range cm.Items {
-		fmt.Println(kv.Component.AbsoluteLocation())
-	}
 	return nil
 }
 

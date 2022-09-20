@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -12,7 +11,7 @@ import (
 type ServerVariable struct {
 	// An enumeration of string values to be used if the substitution options
 	// are from a limited set. The array MUST NOT be empty.
-	Enum []Text `json:"enum"`
+	Enum Texts `json:"enum"`
 	// The default value to use for substitution, which SHALL be sent if an
 	// alternate value is not supplied. Note this behavior is different than the
 	// Schema Object's treatment of default values, because in those cases
@@ -29,30 +28,30 @@ type ServerVariable struct {
 	Extensions `json:"-"`
 }
 
-func (sv *ServerVariable) Edges() []Node {
+func (sv *ServerVariable) Nodes() []Node {
 	if sv == nil {
 		return nil
 	}
-	return downcastNodes(sv.edges())
+	return downcastNodes(sv.nodes())
 }
-func (sv *ServerVariable) edges() []node { return nil }
+func (sv *ServerVariable) nodes() []node { return nil }
 
 func (*ServerVariable) Refs() []Ref { return nil }
 
-func (sv *ServerVariable) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return sv.resolveNodeByPointer(ptr)
-}
+// func (sv *ServerVariable) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return sv.resolveNodeByPointer(ptr)
+// }
 
-func (sv *ServerVariable) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return sv, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(sv.Location.AbsoluteLocation(), tok)
-}
+// func (sv *ServerVariable) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return sv, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(sv.Location.AbsoluteLocation(), tok)
+// }
 
 func (*ServerVariable) Kind() Kind      { return KindServerVariable }
 func (*ServerVariable) mapKind() Kind   { return KindServerVariableMap }

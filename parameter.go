@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
@@ -216,14 +215,14 @@ type Parameter struct {
 	Content *ContentMap `json:"content,omitempty"`
 }
 
-func (p *Parameter) Edges() []Node {
+func (p *Parameter) Nodes() []Node {
 	if p == nil {
 		return nil
 	}
-	return downcastNodes(p.edges())
+	return downcastNodes(p.nodes())
 }
 
-func (p *Parameter) edges() []node {
+func (p *Parameter) nodes() []node {
 	if p == nil {
 		return nil
 	}
@@ -265,38 +264,38 @@ func (p *Parameter) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-func (p *Parameter) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return p.resolveNodeByPointer(ptr)
-}
+// func (p *Parameter) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return p.resolveNodeByPointer(ptr)
+// }
 
-func (p *Parameter) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return p, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "schema":
-		if p.Schema == nil {
-			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
-		}
-		return p.Schema.resolveNodeByPointer(nxt)
-	case "content":
-		if p.Content == nil {
-			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
-		}
-		return p.Content.resolveNodeByPointer(nxt)
-	case "examples":
-		if p.Examples == nil {
-			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
-		}
-		return p.Examples.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
-	}
-}
+// func (p *Parameter) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return p, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "schema":
+// 		if p.Schema == nil {
+// 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+// 		}
+// 		return p.Schema.resolveNodeByPointer(nxt)
+// 	case "content":
+// 		if p.Content == nil {
+// 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+// 		}
+// 		return p.Content.resolveNodeByPointer(nxt)
+// 	case "examples":
+// 		if p.Examples == nil {
+// 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+// 		}
+// 		return p.Examples.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
+// 	}
+// }
 
 // MarshalJSON marshals h into JSON
 func (p Parameter) MarshalJSON() ([]byte, error) {

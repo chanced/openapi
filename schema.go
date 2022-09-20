@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/chanced/jsonpointer"
+	"github.com/chanced/caps/text"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/maps"
 	"github.com/chanced/uri"
@@ -122,7 +122,7 @@ type Schema struct {
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#constant-values
 	Const jsonx.RawMessage `json:"const,omitempty"`
 
-	Required []Text `json:"required,omitempty"`
+	Required Texts `json:"required,omitempty"`
 
 	Properties *SchemaMap `json:"properties,omitempty"`
 
@@ -130,7 +130,7 @@ type Schema struct {
 	// must be an array with at least one element, where each element is unique.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#enumerated-values
-	Enum []Text `json:"enum,omitempty"`
+	Enum Texts `json:"enum,omitempty"`
 
 	// The $comment keyword is strictly intended for adding comments to a
 	// schema. Its value must always be a string. Unlike the annotations title,
@@ -202,7 +202,7 @@ type Schema struct {
 	// dependentRequired keyword is an object. Each entry in the object maps
 	// from the name of a property, p, to an array of strings listing properties
 	// that are required if p is present.
-	DependentRequired map[Text][]Text `json:"dependentRequired,omitempty"`
+	DependentRequired *Map[Texts] `json:"dependentRequired,omitempty"`
 
 	// The dependentSchemas keyword conditionally applies a subschema when a
 	// given property is present. This schema is applied in the same way allOf
@@ -310,20 +310,20 @@ type Schema struct {
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
 	Definitions *SchemaMap `json:"$defs,omitempty"`
 
-	Keywords map[string]jsonx.RawMessage `json:"-"`
+	Keywords map[Text]jsonx.RawMessage `json:"-"`
 
 	Extensions `json:"-"`
 	Location   `json:"-"`
 }
 
-func (s *Schema) Edges() []Node {
+func (s *Schema) Nodes() []Node {
 	if s == nil {
 		return nil
 	}
-	return downcastNodes(s.edges())
+	return downcastNodes(s.nodes())
 }
 
-func (s *Schema) edges() []node {
+func (s *Schema) nodes() []node {
 	return appendEdges(nil, s.Ref,
 		s.DynamicRef,
 		s.RecursiveRef,
@@ -496,139 +496,139 @@ func (s *Schema) Anchors() (*Anchors, error) {
 // func (s *Schema) ResolveByAnchor(anchor Text) (*Schema, error) {
 // }
 
-func (s *Schema) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return s.resolveNodeByPointer(ptr)
-}
+// func (s *Schema) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return s.resolveNodeByPointer(ptr)
+// }
 
-func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return s, nil
-	}
-	nxt, tok, _ := ptr.Next()
+// func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return s, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
 
-	switch tok {
-	case "ref":
-		if s.Ref == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Ref.resolveNodeByPointer(nxt)
-	case "definitions":
-		if s.Definitions == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Definitions.resolveNodeByPointer(nxt)
-	case "dynamicRef":
-		if s.DynamicRef == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.DynamicRef.resolveNodeByPointer(nxt)
-	case "not":
-		if s.Not == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Not.resolveNodeByPointer(nxt)
-	case "allOf":
-		if s.AllOf == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.AllOf.resolveNodeByPointer(nxt)
-	case "anyOf":
-		if s.AnyOf == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.AnyOf.resolveNodeByPointer(nxt)
-	case "oneOf":
-		if s.OneOf == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.OneOf.resolveNodeByPointer(nxt)
-	case "if":
-		if s.If == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.If.resolveNodeByPointer(nxt)
-	case "then":
-		if s.Then == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Then.resolveNodeByPointer(nxt)
-	case "else":
-		if s.Else == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Else.resolveNodeByPointer(nxt)
-	case "properties":
-		if s.Properties == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Properties.resolveNodeByPointer(nxt)
-	case "propertyNames":
-		if s.PropertyNames == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.PropertyNames.resolveNodeByPointer(nxt)
-	case "patternProperties":
-		if s.PatternProperties == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.PatternProperties.resolveNodeByPointer(nxt)
-	case "additionalProperties":
-		if s.AdditionalProperties == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.AdditionalProperties.resolveNodeByPointer(nxt)
-	case "dependentSchemas":
-		if s.DependentSchemas == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.DependentSchemas.resolveNodeByPointer(nxt)
-	case "unevaluatedProperties":
-		if s.UnevaluatedProperties == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.UnevaluatedProperties.resolveNodeByPointer(nxt)
-	case "items":
-		if s.Items == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Items.resolveNodeByPointer(nxt)
-	case "unevaluatedItems":
-		if s.UnevaluatedItems == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
-	case "additionalItems":
-		if s.AdditionalItems == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.AdditionalItems.resolveNodeByPointer(nxt)
-	case "prefixItems":
-		if s.PrefixItems == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.PrefixItems.resolveNodeByPointer(nxt)
-	case "contains":
-		if s.Contains == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Contains.resolveNodeByPointer(nxt)
-	case "recursiveRef":
-		if s.RecursiveRef == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.RecursiveRef.resolveNodeByPointer(nxt)
-	case "xml":
-		if s.XML == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.XML.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
-	}
-}
+// 	switch tok {
+// 	case "ref":
+// 		if s.Ref == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Ref.resolveNodeByPointer(nxt)
+// 	case "definitions":
+// 		if s.Definitions == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Definitions.resolveNodeByPointer(nxt)
+// 	case "dynamicRef":
+// 		if s.DynamicRef == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.DynamicRef.resolveNodeByPointer(nxt)
+// 	case "not":
+// 		if s.Not == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Not.resolveNodeByPointer(nxt)
+// 	case "allOf":
+// 		if s.AllOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AllOf.resolveNodeByPointer(nxt)
+// 	case "anyOf":
+// 		if s.AnyOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AnyOf.resolveNodeByPointer(nxt)
+// 	case "oneOf":
+// 		if s.OneOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.OneOf.resolveNodeByPointer(nxt)
+// 	case "if":
+// 		if s.If == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.If.resolveNodeByPointer(nxt)
+// 	case "then":
+// 		if s.Then == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Then.resolveNodeByPointer(nxt)
+// 	case "else":
+// 		if s.Else == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Else.resolveNodeByPointer(nxt)
+// 	case "properties":
+// 		if s.Properties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Properties.resolveNodeByPointer(nxt)
+// 	case "propertyNames":
+// 		if s.PropertyNames == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PropertyNames.resolveNodeByPointer(nxt)
+// 	case "patternProperties":
+// 		if s.PatternProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PatternProperties.resolveNodeByPointer(nxt)
+// 	case "additionalProperties":
+// 		if s.AdditionalProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AdditionalProperties.resolveNodeByPointer(nxt)
+// 	case "dependentSchemas":
+// 		if s.DependentSchemas == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.DependentSchemas.resolveNodeByPointer(nxt)
+// 	case "unevaluatedProperties":
+// 		if s.UnevaluatedProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.UnevaluatedProperties.resolveNodeByPointer(nxt)
+// 	case "items":
+// 		if s.Items == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Items.resolveNodeByPointer(nxt)
+// 	case "unevaluatedItems":
+// 		if s.UnevaluatedItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
+// 	case "additionalItems":
+// 		if s.AdditionalItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AdditionalItems.resolveNodeByPointer(nxt)
+// 	case "prefixItems":
+// 		if s.PrefixItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PrefixItems.resolveNodeByPointer(nxt)
+// 	case "contains":
+// 		if s.Contains == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Contains.resolveNodeByPointer(nxt)
+// 	case "recursiveRef":
+// 		if s.RecursiveRef == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.RecursiveRef.resolveNodeByPointer(nxt)
+// 	case "xml":
+// 		if s.XML == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.XML.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 // MarshalJSON marshals JSON
 func (s Schema) MarshalJSON() ([]byte, error) {
@@ -696,26 +696,26 @@ func (s *Schema) unmarshalJSONBool(data []byte) error {
 func (s *Schema) unmarshalJSONObj(data []byte) error {
 	res := Schema{}
 
-	d := map[string]jsonx.RawMessage{}
+	d := map[Text]jsonx.RawMessage{}
 	err := json.Unmarshal(data, &d)
 	if err != nil {
 		return err
 	}
 	fields := res.fields()
 	for k, v := range d {
-		if f, ok := fields[k]; ok {
+		if f, ok := fields[k.String()]; ok {
 			err = json.Unmarshal(v, f)
 			if err != nil {
 				return err
 			}
-		} else if strings.HasPrefix(k, "x-") {
+		} else if strings.HasPrefix(k.String(), "x-") {
 			if res.Extensions == nil {
 				res.Extensions = Extensions{}
 			}
 			res.Extensions[k] = v
 		} else {
 			if res.Keywords == nil {
-				res.Keywords = make(map[string]jsonx.RawMessage)
+				res.Keywords = make(map[Text]jsonx.RawMessage)
 			}
 			res.Keywords[k] = v
 		}
@@ -741,7 +741,7 @@ func (s *Schema) unmarshalJSONObj(data []byte) error {
 //
 // If setting the value as []byte, it should be in the form of json.RawMessage
 // or jsonx.RawMessage as both types implement json.Marshaler
-func (s *Schema) SetKeyword(key string, value interface{}) error {
+func (s *Schema) SetKeyword(key Text, value interface{}) error {
 	b, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -750,16 +750,16 @@ func (s *Schema) SetKeyword(key string, value interface{}) error {
 }
 
 // SetEncodedKeyword sets the keyword key to value
-func (s *Schema) setEncodedKeyword(key string, value []byte) error {
-	if strings.HasPrefix(key, "x-") {
+func (s *Schema) setEncodedKeyword(key Text, value []byte) error {
+	if key.HasPrefix("x-") {
 		return errors.New("keyword keys may not start with \"x-\"")
 	}
-	s.Keywords[key] = value
+	s.Keywords[Text(key)] = value
 	return nil
 }
 
 // DecodeKeyword unmarshals the keyword's raw data into dst
-func (s *Schema) DecodeKeyword(key string, dst interface{}) error {
+func (s *Schema) DecodeKeyword(key Text, dst interface{}) error {
 	return json.Unmarshal(s.Keywords[key], dst)
 }
 
@@ -923,6 +923,218 @@ func (s *Schema) setLocation(loc Location) error {
 	}
 	return nil
 }
+
+// Clone returns a deep copy of Schema. This is to avoid overriding the initial
+// Schema when dealing with $dynamicRef and $recursiveRef.
+func (s *Schema) Clone() *Schema {
+	if s == nil {
+		return nil
+	}
+	var recAnc *bool
+	if s.RecursiveAnchor != nil {
+		*recAnc = *s.RecursiveAnchor
+	}
+	cnst := make(jsonx.RawMessage, len(s.Const))
+	if s.Const != nil {
+		copy(cnst, s.Const)
+	}
+	required := make(text.Texts, len(s.Required))
+	if s.Required != nil {
+		copy(required, s.Required)
+	}
+	example := make(jsonx.RawMessage, len(s.Example))
+	if s.Example != nil {
+		copy(example, s.Example)
+	}
+	examples := make([]jsonx.RawMessage, len(s.Examples))
+	if s.Examples != nil {
+		copy(examples, s.Examples)
+	}
+	enum := make(text.Texts, len(s.Enum))
+	if s.Enum != nil {
+		copy(enum, s.Enum)
+	}
+	var minprops *jsonx.Number
+	if s.MinProperties != nil {
+		v := *s.MinProperties
+		minprops = &v
+	}
+	var maxprops *jsonx.Number
+	if s.MaxProperties != nil {
+		v := *s.MaxProperties
+		maxprops = &v
+	}
+	var regexpProps *bool
+	if s.RegexProperties != nil {
+		v := *s.RegexProperties
+		regexpProps = &v
+	}
+	var depReq *Map[Texts]
+	if s.DependentRequired != nil {
+		i := make([]KeyValue[Texts], len(s.DependentRequired.Items))
+		copy(i, s.DependentRequired.Items)
+		depReq = &Map[Texts]{Items: i}
+	}
+	var uniqItems *bool
+	if s.UniqueItems != nil {
+		v := *s.UniqueItems
+		uniqItems = &v
+	}
+	var minContains *jsonx.Number
+	if s.MinContains != nil {
+		v := *s.MinContains
+		minContains = &v
+	}
+	var maxContains *jsonx.Number
+	if s.MaxContains != nil {
+		v := *s.MaxContains
+		maxContains = &v
+	}
+	var minLen *jsonx.Number
+	if s.MinLength != nil {
+		v := *s.MinLength
+		minLen = &v
+	}
+	var maxLen *jsonx.Number
+	if s.MaxLength != nil {
+		v := *s.MaxLength
+		maxLen = &v
+	}
+	var min *jsonx.Number
+	if s.Minimum != nil {
+		v := *s.Minimum
+		min = &v
+	}
+	var max *jsonx.Number
+	if s.Maximum != nil {
+		v := *s.Maximum
+		max = &v
+	}
+
+	var exclMin *jsonx.Number
+	if s.ExclusiveMinimum != nil {
+		v := *s.ExclusiveMinimum
+		exclMin = &v
+	}
+	var exclMax *jsonx.Number
+	if s.ExclusiveMaximum != nil {
+		v := *s.ExclusiveMaximum
+		exclMax = &v
+	}
+	var multipleOf *jsonx.Number
+	if s.MultipleOf != nil {
+		v := *s.MultipleOf
+		multipleOf = &v
+	}
+	var readonly *bool
+	if s.ReadOnly != nil {
+		v := *s.ReadOnly
+		readonly = &v
+	}
+	var writeOnly *bool
+	if s.WriteOnly != nil {
+		v := *s.WriteOnly
+		writeOnly = &v
+	}
+	var deprecated *bool
+	if s.Deprecated != nil {
+		v := *s.Deprecated
+		deprecated = &v
+	}
+	var k map[Text]jsonx.RawMessage
+	if s.Keywords != nil {
+		k = make(map[Text]jsonx.RawMessage, len(s.Keywords))
+		for key, value := range s.Keywords {
+			k[key] = value
+		}
+	}
+	var id *uri.URI
+	if s.ID != nil {
+		id = id.Clone()
+	}
+	var pattern *Regexp
+	if s.Pattern != nil {
+		pattern = &Regexp{s.Pattern.Copy()}
+	}
+	return &Schema{
+		RecursiveAnchor:       recAnc,
+		Const:                 cnst,
+		Required:              required,
+		Enum:                  enum,
+		Example:               example,
+		Examples:              examples,
+		MinProperties:         minprops,
+		MaxProperties:         maxprops,
+		RegexProperties:       regexpProps,
+		DependentRequired:     depReq,
+		UniqueItems:           uniqItems,
+		MinContains:           minContains,
+		MaxContains:           maxContains,
+		MinLength:             minLen,
+		MaxLength:             maxLen,
+		Minimum:               min,
+		Maximum:               max,
+		ExclusiveMinimum:      exclMin,
+		ExclusiveMaximum:      exclMax,
+		MultipleOf:            multipleOf,
+		ReadOnly:              readonly,
+		WriteOnly:             writeOnly,
+		Deprecated:            deprecated,
+		Keywords:              k,
+		Schema:                s.Schema,
+		ID:                    id,
+		Title:                 s.Title,
+		Description:           s.Description,
+		Default:               s.Default,
+		ExternalDocs:          s.ExternalDocs,
+		Format:                s.Format,
+		ContentMediaType:      s.ContentMediaType,
+		Discriminator:         s.Discriminator.Clone(),
+		XML:                   s.XML.Clone(),
+		Definitions:           s.Definitions.Clone(),
+		Anchor:                s.Anchor,
+		DynamicAnchor:         s.DynamicAnchor,
+		Ref:                   s.Ref.Clone(),
+		Type:                  s.Type.Clone(),
+		DynamicRef:            s.DynamicRef.Clone(),
+		Not:                   s.Not.Clone(),
+		AllOf:                 s.AllOf.Clone(),
+		AnyOf:                 s.AnyOf.Clone(),
+		RecursiveRef:          s.RecursiveRef.Clone(),
+		OneOf:                 s.OneOf.Clone(),
+		Properties:            s.Properties.Clone(),
+		Comments:              s.Comments,
+		PropertyNames:         s.PropertyNames.Clone(),
+		PatternProperties:     s.PatternProperties.Clone(),
+		If:                    s.If.Clone(),
+		Then:                  s.Then.Clone(),
+		Else:                  s.Else.Clone(),
+		AdditionalProperties:  s.AdditionalProperties.Clone(),
+		DependentSchemas:      s.DependentSchemas.Clone(),
+		UnevaluatedProperties: s.UnevaluatedProperties.Clone(),
+		Items:                 s.Items.Clone(),
+		UnevaluatedItems:      s.UnevaluatedItems.Clone(),
+		AdditionalItems:       s.AdditionalItems.Clone(),
+		PrefixItems:           s.PrefixItems.Clone(),
+		Contains:              s.Contains.Clone(),
+		Pattern:               pattern,
+		ContentEncoding:       s.ContentEncoding,
+		Extensions:            cloneExtensions(s.Extensions),
+		Location:              s.Location,
+	}
+}
+
+func cloneExtensions(e Extensions) Extensions {
+	if e == nil {
+		return nil
+	}
+	a := make(Extensions, len(e))
+	for k, v := range e {
+		a[k] = v
+	}
+	return a
+}
+
 func (s *Schema) isNil() bool { return s == nil }
 
 var _ node = (*Schema)(nil)

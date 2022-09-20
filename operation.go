@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -64,7 +63,7 @@ type Operation struct {
 
 	// A list of tags for API documentation control. Tags can be used for
 	// logical grouping of operations by resources or any other qualifier.
-	Tags []Text `json:"tags,omitempty"`
+	Tags Texts `json:"tags,omitempty"`
 
 	// A list of parameters that are applicable for this operation. If a
 	// parameter is already defined at the Path Item, the new definition will
@@ -110,14 +109,14 @@ type Operation struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
-func (o *Operation) Edges() []Node {
+func (o *Operation) Nodes() []Node {
 	if o == nil {
 		return nil
 	}
-	return downcastNodes(o.edges())
+	return downcastNodes(o.nodes())
 }
 
-func (o *Operation) edges() []node {
+func (o *Operation) nodes() []node {
 	if o == nil {
 		return nil
 	}
@@ -181,59 +180,59 @@ func (o *Operation) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-// ResolveNodeByPointer resolves a Node by a json pointer
-func (o *Operation) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return o.resolveNodeByPointer(ptr)
-}
+// // ResolveNodeByPointer resolves a Node by a json pointer
+// func (o *Operation) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return o.resolveNodeByPointer(ptr)
+// }
 
-func (o *Operation) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return o, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch nxt {
-	case "externalDocs":
-		if o.ExternalDocs == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.ExternalDocs.resolveNodeByPointer(nxt)
-	case "parameters":
-		if o.Parameters == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.Parameters.resolveNodeByPointer(nxt)
-	case "requestBody":
-		if o.RequestBody == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.RequestBody.resolveNodeByPointer(nxt)
-	case "responses":
-		if o.Responses == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.Responses.resolveNodeByPointer(nxt)
-	case "callbacks":
-		if o.Callbacks == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.Callbacks.resolveNodeByPointer(nxt)
-	case "security":
-		if o.Security == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.Security.resolveNodeByPointer(nxt)
-	case "servers":
-		if o.Servers == nil {
-			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
-		}
-		return o.Servers.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(o.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (o *Operation) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return o, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch nxt {
+// 	case "externalDocs":
+// 		if o.ExternalDocs == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.ExternalDocs.resolveNodeByPointer(nxt)
+// 	case "parameters":
+// 		if o.Parameters == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.Parameters.resolveNodeByPointer(nxt)
+// 	case "requestBody":
+// 		if o.RequestBody == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.RequestBody.resolveNodeByPointer(nxt)
+// 	case "responses":
+// 		if o.Responses == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.Responses.resolveNodeByPointer(nxt)
+// 	case "callbacks":
+// 		if o.Callbacks == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.Callbacks.resolveNodeByPointer(nxt)
+// 	case "security":
+// 		if o.Security == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.Security.resolveNodeByPointer(nxt)
+// 	case "servers":
+// 		if o.Servers == nil {
+// 			return nil, newErrNotFound(o.AbsoluteLocation(), tok)
+// 		}
+// 		return o.Servers.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(o.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 // MarshalJSON marshals JSON
 func (o Operation) MarshalJSON() ([]byte, error) {

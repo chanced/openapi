@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
@@ -33,14 +32,14 @@ type Paths struct {
 	Items *PathItemObjs `json:"-"`
 }
 
-func (p *Paths) Edges() []Node {
+func (p *Paths) Nodes() []Node {
 	if p == nil {
 		return nil
 	}
-	return downcastNodes(p.edges())
+	return downcastNodes(p.nodes())
 }
 
-func (p *Paths) edges() []node {
+func (p *Paths) nodes() []node {
 	if p == nil {
 		return nil
 	}
@@ -63,24 +62,24 @@ func (p *Paths) Anchors() (*Anchors, error) {
 	return p.Items.Anchors()
 }
 
-func (p *Paths) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return p.resolveNodeByPointer(ptr)
-}
+// func (p *Paths) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return p.resolveNodeByPointer(ptr)
+// }
 
-func (p *Paths) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return p, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	v := p.Items.Get(Text(tok))
-	if v == nil {
-		return nil, newErrNotFound(p.Location.AbsoluteLocation(), tok)
-	}
-	return v.resolveNodeByPointer(nxt)
-}
+// func (p *Paths) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return p, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	v := p.Items.Get(Text(tok))
+// 	if v == nil {
+// 		return nil, newErrNotFound(p.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return v.resolveNodeByPointer(nxt)
+// }
 
 func (p *Paths) isNil() bool { return p == nil }
 
@@ -116,7 +115,7 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 	var err error
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		if strings.HasPrefix(key.String(), "x-") {
-			p.SetRawExtension(key.String(), []byte(value.Raw))
+			p.SetRawExtension(Text(key.String()), []byte(value.Raw))
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)

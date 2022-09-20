@@ -19,22 +19,6 @@ type Node interface {
 
 	// Kind returns the Kind for the given Node
 	Kind() Kind
-	// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the
-	// pointer and then attempts to resolve the Node.
-	//
-	// # Errors
-	//
-	// - [ErrNotFound] indicates that the component was not found
-	//
-	// - [ErrNotResolvable] indicates that the pointer path can not resolve to a
-	// Node
-	//
-	// - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
-	// is malformed
-	//
-	// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
-	// and does not start with a slash
-	ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 
 	// Anchors returns a list of all Anchors in the Node and all decendants.
 	Anchors() (*Anchors, error)
@@ -56,6 +40,23 @@ type Node interface {
 
 	// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 	UnmarshalYAML(value *yaml.Node) error
+
+	// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the
+	// pointer and then attempts to resolve the Node.
+	//
+	// # Errors
+	//
+	// - [ErrNotFound] indicates that the component was not found
+	//
+	// - [ErrNotResolvable] indicates that the pointer path can not resolve to a
+	// Node
+	//
+	// - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
+	// is malformed
+	//
+	// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
+	// and does not start with a slash
+	// ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 }
 
 type node interface {
@@ -67,10 +68,10 @@ type node interface {
 	mapKind() Kind
 	sliceKind() Kind
 
-	resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
+	// resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error)
 	location() Location
 	isNil() bool
-	edges() []node
+	nodes() []node
 }
 
 type objSlicedNode interface {

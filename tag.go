@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -31,14 +30,14 @@ type Tag struct {
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty" bson:"externalDocs,omitempty"`
 }
 
-func (t *Tag) Edges() []Node {
+func (t *Tag) Nodes() []Node {
 	if t == nil {
 		return nil
 	}
-	return downcastNodes(t.edges())
+	return downcastNodes(t.nodes())
 }
 
-func (t *Tag) edges() []node {
+func (t *Tag) nodes() []node {
 	if t == nil {
 		return nil
 	}
@@ -48,33 +47,33 @@ func (t *Tag) edges() []node {
 func (*Tag) Refs() []Ref                { return nil }
 func (*Tag) Anchors() (*Anchors, error) { return nil, nil }
 
-func (t *Tag) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return t.resolveNodeByPointer(ptr)
-}
+// func (t *Tag) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return t.resolveNodeByPointer(ptr)
+// }
 
-func (t *Tag) isNil() bool { return t == nil }
+// func (t *Tag) isNil() bool { return t == nil }
 
-func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return t, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "externalDocs":
-		if nxt.IsRoot() {
-			return t.ExternalDocs, nil
-		}
-		if t.ExternalDocs == nil {
-			return nil, newErrNotFound(t.Location.AbsoluteLocation(), tok)
-		}
-		return t.ExternalDocs.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(t.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (t *Tag) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return t, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "externalDocs":
+// 		if nxt.IsRoot() {
+// 			return t.ExternalDocs, nil
+// 		}
+// 		if t.ExternalDocs == nil {
+// 			return nil, newErrNotFound(t.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return t.ExternalDocs.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(t.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (*Tag) Kind() Kind      { return KindTag }
 func (*Tag) mapKind() Kind   { return KindUndefined }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/Masterminds/semver"
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -51,28 +50,49 @@ func (*Info) Kind() Kind { return KindInfo }
 
 func (*Info) Refs() []Ref { return nil }
 
-func (i *Info) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	err := ptr.Validate()
-	if err != nil {
-		return nil, err
-	}
-	if ptr.IsRoot() {
-		return i, nil
-	}
-	tok, _ := ptr.NextToken()
-	switch tok {
-	case "contact":
-		if i.Contact == nil {
-			return nil, newErrNotFound(i.absolute, tok)
-		}
-		return i.Contact, nil
-	case "license":
-		return i.License, nil
-	}
-	return nil, newErrNotResolvable(i.AbsoluteLocation(), tok)
-}
+// func (i *Info) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	err := ptr.Validate()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if ptr.IsRoot() {
+// 		return i, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	switch tok {
+// 	case "contact":
+// 		if i.Contact == nil {
+// 			return nil, newErrNotFound(i.absolute, tok)
+// 		}
+// 		return i.Contact, nil
+// 	case "license":
+// 		return i.License, nil
+// 	}
+// 	return nil, newErrNotResolvable(i.AbsoluteLocation(), tok)
+// }
 
-func (i *Info) edges() []node {
+// func (i *Info) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return i, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	switch tok {
+// 	case "contact":
+// 		if i.Contact == nil {
+// 			return nil, newErrNotFound(i.AbsoluteLocation(), tok)
+// 		}
+// 		return i.Contact, nil
+// 	case "license":
+// 		if i.License == nil {
+// 			return nil, newErrNotFound(i.AbsoluteLocation(), tok)
+// 		}
+// 		return i.License, nil
+// 	default:
+// 		return nil, newErrNotResolvable(i.AbsoluteLocation(), tok)
+// 	}
+// }
+
+func (i *Info) nodes() []node {
 	edges := appendEdges(nil, i.Contact)
 	edges = appendEdges(edges, i.License)
 	return edges
@@ -91,27 +111,6 @@ func (i *Info) SemVer() (*semver.Version, error) {
 }
 
 func (*Info) mapKind() Kind { return KindUndefined }
-
-func (i *Info) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return i, nil
-	}
-	tok, _ := ptr.NextToken()
-	switch tok {
-	case "contact":
-		if i.Contact == nil {
-			return nil, newErrNotFound(i.AbsoluteLocation(), tok)
-		}
-		return i.Contact, nil
-	case "license":
-		if i.License == nil {
-			return nil, newErrNotFound(i.AbsoluteLocation(), tok)
-		}
-		return i.License, nil
-	default:
-		return nil, newErrNotResolvable(i.AbsoluteLocation(), tok)
-	}
-}
 
 func (i *Info) setLocation(loc Location) error {
 	if i == nil {

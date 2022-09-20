@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
@@ -45,14 +44,14 @@ type MediaType struct {
 	Encoding *EncodingMap `json:"encoding,omitempty"`
 }
 
-func (mt *MediaType) Edges() []Node {
+func (mt *MediaType) Nodes() []Node {
 	if mt == nil {
 		return nil
 	}
-	return downcastNodes(mt.edges())
+	return downcastNodes(mt.nodes())
 }
 
-func (mt *MediaType) edges() []node {
+func (mt *MediaType) nodes() []node {
 	if mt == nil {
 		return nil
 	}
@@ -87,39 +86,39 @@ func (mt *MediaType) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-func (mt *MediaType) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return mt.resolveNodeByPointer(ptr)
-}
+// func (mt *MediaType) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return mt.resolveNodeByPointer(ptr)
+// }
 
-func (mt *MediaType) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return mt, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "schema":
-		if mt.Schema == nil {
-			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
-		}
-		return mt.Schema.resolveNodeByPointer(nxt)
-	case "examples":
-		if mt.Examples == nil {
-			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
-		}
-		return mt.Examples.resolveNodeByPointer(nxt)
-	case "encoding":
-		if mt.Encoding == nil {
-			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
-		}
-		return mt.Encoding.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(mt.Location.AbsoluteLocation(), tok)
+// func (mt *MediaType) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return mt, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "schema":
+// 		if mt.Schema == nil {
+// 			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
+// 		}
+// 		return mt.Schema.resolveNodeByPointer(nxt)
+// 	case "examples":
+// 		if mt.Examples == nil {
+// 			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
+// 		}
+// 		return mt.Examples.resolveNodeByPointer(nxt)
+// 	case "encoding":
+// 		if mt.Encoding == nil {
+// 			return nil, newErrNotFound(mt.AbsoluteLocation(), tok)
+// 		}
+// 		return mt.Encoding.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(mt.Location.AbsoluteLocation(), tok)
 
-	}
-}
+// 	}
+// }
 
 // MarshalJSON marshals mt into JSON
 func (mt MediaType) MarshalJSON() ([]byte, error) {

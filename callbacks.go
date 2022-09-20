@@ -28,14 +28,14 @@ type Callbacks struct {
 	Items      *PathItemObjs `json:"-"`
 }
 
-func (c *Callbacks) Edges() []Node {
+func (c *Callbacks) Nodes() []Node {
 	if c == nil {
 		return nil
 	}
-	return downcastNodes(c.edges())
+	return downcastNodes(c.nodes())
 }
 
-func (c *Callbacks) edges() []node {
+func (c *Callbacks) nodes() []node {
 	if c == nil {
 		return nil
 	}
@@ -111,7 +111,7 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 	var err error
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		if strings.HasPrefix(key.String(), "x-") {
-			c.SetRawExtension(key.String(), []byte(value.Raw))
+			c.SetRawExtension(Text(key.String()), []byte(value.Raw))
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)

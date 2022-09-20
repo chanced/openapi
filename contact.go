@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
@@ -30,22 +29,22 @@ func (*Contact) Kind() Kind { return KindContact }
 
 func (*Contact) Refs() []Ref { return nil }
 
-func (c *Contact) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return c.resolveNodeByPointer(ptr)
-}
+// func (c *Contact) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return c.resolveNodeByPointer(ptr)
+// }
 
-func (c *Contact) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return c, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(c.AbsoluteLocation(), tok)
-}
+// func (c *Contact) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return c, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(c.AbsoluteLocation(), tok)
+// }
 
-func (*Contact) edges() []node        { return nil }
+func (*Contact) nodes() []node        { return nil }
 func (c *Contact) isNil() bool        { return c == nil }
 func (c *Contact) location() Location { return c.Location }
 

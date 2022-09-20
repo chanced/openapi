@@ -38,3 +38,15 @@ func TestSchema(t *testing.T) {
 	}
 	fmt.Println(string(br))
 }
+
+func TestClone(t *testing.T) {
+	s := openapi.Schema{
+		If: &openapi.Schema{
+			Format: "format",
+		},
+	}
+	s2 := s.Clone()
+	if s2.If.Format != "format" {
+		t.Errorf("expected %q, got %q", "format", s2.If.Format)
+	}
+}

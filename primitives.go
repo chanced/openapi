@@ -7,5 +7,6 @@ import (
 
 type (
 	Text   = text.Text
+	Texts  = text.Texts
 	Number = jsonx.Number
 )

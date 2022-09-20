@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
@@ -20,16 +19,16 @@ type SecurityRequirementSlice = ObjSlice[*SecurityRequirement]
 type SecurityRequirementItem struct {
 	Location
 	Key   Text
-	Value []Text
+	Value Texts
 }
 
-func (sri *SecurityRequirementItem) Edges() []Node {
+func (sri *SecurityRequirementItem) Nodes() []Node {
 	if sri == nil {
 		return nil
 	}
-	return downcastNodes(sri.edges())
+	return downcastNodes(sri.nodes())
 }
-func (sri *SecurityRequirementItem) edges() []node { return nil }
+func (sri *SecurityRequirementItem) nodes() []node { return nil }
 
 func (sri *SecurityRequirementItem) Refs() []Ref { return nil }
 func (sri *SecurityRequirementItem) isNil() bool { return sri == nil }
@@ -48,20 +47,21 @@ func (*SecurityRequirementItem) Kind() Kind         { return KindSecurityRequire
 func (*SecurityRequirementItem) mapKind() Kind      { return KindSecurityRequirement }
 func (*SecurityRequirementItem) sliceKind() Kind    { return KindUndefined }
 func (*SecurityRequirementItem) objSliceKind() Kind { return KindSecurityRequirementSlice }
-func (sri *SecurityRequirementItem) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return sri.resolveNodeByPointer(ptr)
-}
 
-func (sri *SecurityRequirementItem) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return sri, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(sri.AbsoluteLocation(), tok)
-}
+// func (sri *SecurityRequirementItem) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return sri.resolveNodeByPointer(ptr)
+// }
+
+// func (sri *SecurityRequirementItem) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return sri, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(sri.AbsoluteLocation(), tok)
+// }
 
 func (sri SecurityRequirementItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sri.Value)
@@ -75,7 +75,7 @@ func (sri *SecurityRequirementItem) UnmarshalJSON(data []byte) error {
 	t := jsonx.TypeOf(data)
 	switch t {
 	case jsonx.TypeString:
-		var v []Text
+		var v Texts
 		err := json.Unmarshal(data, &v)
 		if err != nil {
 			return err
@@ -83,7 +83,7 @@ func (sri *SecurityRequirementItem) UnmarshalJSON(data []byte) error {
 		sri.Value = v
 		return nil
 	default:
-		var v map[Text][]Text
+		var v map[Text]Texts
 		err := json.Unmarshal(data, &v)
 		if err != nil {
 			return err

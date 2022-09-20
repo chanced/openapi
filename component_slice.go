@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -15,7 +14,7 @@ type ComponentSlice[T node] struct {
 	Items    []Component[T] `json:"-"`
 }
 
-func (cs *ComponentSlice[T]) edges() []node {
+func (cs *ComponentSlice[T]) nodes() []node {
 	if cs == nil {
 		return nil
 	}
@@ -41,28 +40,28 @@ func (ComponentSlice[T]) Kind() Kind {
 	return t.Kind()
 }
 
-func (cs ComponentSlice[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
+// func (cs ComponentSlice[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
 
-	return cs.resolveNodeByPointer(ptr)
-}
+// 	return cs.resolveNodeByPointer(ptr)
+// }
 
-func (cs *ComponentSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return cs, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	idx, err := tok.Int()
-	if err != nil {
-		return nil, err
-	}
-	if idx < 0 || idx >= len(cs.Items) {
-		return nil, newErrNotFound(cs.Location.AbsoluteLocation(), tok)
-	}
-	return cs.Items[idx].resolveNodeByPointer(nxt)
-}
+// func (cs *ComponentSlice[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return cs, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	idx, err := tok.Int()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if idx < 0 || idx >= len(cs.Items) {
+// 		return nil, newErrNotFound(cs.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return cs.Items[idx].resolveNodeByPointer(nxt)
+// }
 
 func (cs ComponentSlice[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(cs.Items)

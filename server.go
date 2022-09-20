@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -33,14 +32,14 @@ type Server struct {
 	Variables *ServerVariableMap `json:"variables,omitempty"`
 }
 
-func (s *Server) Edges() []Node {
+func (s *Server) Nodes() []Node {
 	if s == nil {
 		return nil
 	}
-	return downcastNodes(s.edges())
+	return downcastNodes(s.nodes())
 }
 
-func (s *Server) edges() []node {
+func (s *Server) nodes() []node {
 	if s == nil {
 		return nil
 	}
@@ -58,28 +57,28 @@ func (s *Server) Refs() []Ref {
 	return refs
 }
 
-func (s *Server) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return s.resolveNodeByPointer(ptr)
-}
+// func (s *Server) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return s.resolveNodeByPointer(ptr)
+// }
 
-func (s *Server) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return s, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "variables":
-		if s.Variables == nil {
-			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-		}
-		return s.Variables.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (s *Server) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return s, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "variables":
+// 		if s.Variables == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Variables.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (*Server) Kind() Kind      { return KindServer }
 func (*Server) mapKind() Kind   { return KindUndefined }

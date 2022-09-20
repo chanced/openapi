@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
@@ -25,13 +24,13 @@ type ExternalDocs struct {
 	Description Text `json:"description,omitempty"`
 }
 
-func (ed *ExternalDocs) Edges() []Node {
+func (ed *ExternalDocs) Nodes() []Node {
 	if ed == nil {
 		return nil
 	}
-	return downcastNodes(ed.edges())
+	return downcastNodes(ed.nodes())
 }
-func (ed *ExternalDocs) edges() []node { return nil }
+func (ed *ExternalDocs) nodes() []node { return nil }
 
 func (*ExternalDocs) Refs() []Ref     { return nil }
 func (*ExternalDocs) Kind() Kind      { return KindExternalDocs }
@@ -40,36 +39,36 @@ func (*ExternalDocs) sliceKind() Kind { return KindUndefined }
 
 func (*ExternalDocs) Anchors() (*Anchors, error) { return nil, nil }
 
-// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
-// attempts to resolve the Node.
-//
-// # Errors
-//
-// - [ErrNotFound] indicates that the component was not found
-//
-// - [ErrNotResolvable] indicates that the pointer path can not resolve to a
-// Node
-//
-// - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
-// is malformed
-//
-// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
-// and does not start with a slash
-func (ed *ExternalDocs) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	err := ptr.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return ed.resolveNodeByPointer(ptr)
-}
+// // ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
+// // attempts to resolve the Node.
+// //
+// // # Errors
+// //
+// // - [ErrNotFound] indicates that the component was not found
+// //
+// // - [ErrNotResolvable] indicates that the pointer path can not resolve to a
+// // Node
+// //
+// // - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
+// // is malformed
+// //
+// // - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
+// // and does not start with a slash
+// func (ed *ExternalDocs) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	err := ptr.Validate()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return ed.resolveNodeByPointer(ptr)
+// }
 
-func (ed *ExternalDocs) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	tok, _ := ptr.NextToken()
-	if !ptr.IsRoot() {
-		return nil, newErrNotResolvable(ed.Location.AbsoluteLocation(), tok)
-	}
-	return ed, nil
-}
+// func (ed *ExternalDocs) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	tok, _ := ptr.NextToken()
+// 	if !ptr.IsRoot() {
+// 		return nil, newErrNotResolvable(ed.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return ed, nil
+// }
 
 // MarshalJSON marshals JSON
 func (ed ExternalDocs) MarshalJSON() ([]byte, error) {

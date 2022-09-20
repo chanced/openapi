@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
@@ -16,7 +15,7 @@ type Component[T node] struct {
 	Object    T
 }
 
-func (c *Component[T]) edges() []node {
+func (c *Component[T]) nodes() []node {
 	if c == nil {
 		return nil
 	}
@@ -112,30 +111,30 @@ func (c *Component[T]) Refs() []Ref {
 	return c.Object.Refs()
 }
 
-func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return c.resolveNodeByPointer(ptr)
-}
+// func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return c.resolveNodeByPointer(ptr)
+// }
 
-func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return c, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "$ref":
-		if nxt.IsRoot() {
-			return c.Reference, nil
-		}
-		return nil, newErrNotResolvable(c.Location.AbsoluteLocation(), tok)
-	default:
-		// TODO: this may need to change. Not sure when I need to perform these
-		// resolutions just yet. If before population, Object may be nil at this call.
-		return c.Object.resolveNodeByPointer(nxt)
-	}
-}
+// func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return c, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "$ref":
+// 		if nxt.IsRoot() {
+// 			return c.Reference, nil
+// 		}
+// 		return nil, newErrNotResolvable(c.Location.AbsoluteLocation(), tok)
+// 	default:
+// 		// TODO: this may need to change. Not sure when I need to perform these
+// 		// resolutions just yet. If before population, Object may be nil at this call.
+// 		return c.Object.resolveNodeByPointer(nxt)
+// 	}
+// }
 
 func (c *Component[T]) MarshalYAML() (interface{}, error) {
 	j, err := c.MarshalJSON()

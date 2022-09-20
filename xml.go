@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -31,30 +30,53 @@ type XML struct {
 	Prefix Text `json:"prefix,omitempty"`
 	// Declares whether the property definition translates to an attribute
 	// instead of an element. Default value is false.
-	Attribute bool `json:"attribute,omitempty"`
+	Attribute *bool `json:"attribute,omitempty"`
 	// MAY be used only for an array definition. Signifies whether the array is
 	// wrapped (for example, <books><book/><book/></books>) or unwrapped
 	// (<book/><book/>). Default value is false. The definition takes effect
 	// only when defined alongside type being array (outside the items).
-	Wrapped bool `json:"wrapped,omitempty"`
+	Wrapped *bool `json:"wrapped,omitempty"`
+}
+
+func (xml *XML) Clone() *XML {
+	if xml == nil {
+		return nil
+	}
+	var a *bool
+	if xml.Attribute != nil {
+		*a = *xml.Attribute
+	}
+	var w *bool
+	if xml.Wrapped != nil {
+		*w = *xml.Wrapped
+	}
+	return &XML{
+		Extensions: cloneExtensions(xml.Extensions),
+		Location:   xml.Location,
+		Name:       xml.Name.Clone(),
+		Namespace:  xml.Namespace.Clone(),
+		Prefix:     xml.Prefix.Clone(),
+		Attribute:  a,
+		Wrapped:    w,
+	}
 }
 
 func (*XML) Anchors() (*Anchors, error) { return nil, nil }
 
-func (x *XML) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return x.resolveNodeByPointer(ptr)
-}
+// func (x *XML) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return x.resolveNodeByPointer(ptr)
+// }
 
-func (x *XML) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return x, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(x.Location.AbsoluteLocation(), tok)
-}
+// func (x *XML) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return x, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(x.Location.AbsoluteLocation(), tok)
+// }
 
 func (*XML) Kind() Kind      { return KindXML }
 func (*XML) mapKind() Kind   { return KindUndefined }
@@ -104,12 +126,12 @@ func (xml *XML) setLocation(loc Location) error {
 
 func (xml *XML) isNil() bool { return xml == nil }
 func (xml *XML) Refs() []Ref { return nil }
-func (xml *XML) Edges() []Node {
+func (xml *XML) Nodes() []Node {
 	if xml == nil {
 		return nil
 	}
-	return downcastNodes(xml.edges())
+	return downcastNodes(xml.nodes())
 }
-func (xml *XML) edges() []node { return nil }
+func (xml *XML) nodes() []node { return nil }
 
 var _ node = (*XML)(nil)

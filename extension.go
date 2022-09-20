@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/chanced/jsonx"
 	"github.com/chanced/maps"
@@ -47,7 +46,7 @@ import (
 // This is different from hiding the path itself from the Paths Object, because
 // the user will be aware of its existence. This allows the documentation
 // provider to finely control what the viewer can see.
-type Extensions map[string]jsonx.RawMessage
+type Extensions map[Text]jsonx.RawMessage
 
 type extended interface {
 	exts() Extensions
@@ -67,8 +66,8 @@ func (e Extensions) DecodeExtensions(dst interface{}) error {
 }
 
 // DecodeExtension decodes extension at key into dst.
-func (e Extensions) DecodeExtension(key string, dst interface{}) error {
-	if !strings.HasPrefix(key, "x-") {
+func (e Extensions) DecodeExtension(key Text, dst interface{}) error {
+	if !key.HasPrefix("x-") {
 		key = "x-" + key
 	}
 	return json.Unmarshal(e[key], dst)
@@ -79,7 +78,7 @@ func (e Extensions) exts() Extensions { return e }
 func (e *Extensions) setExts(v Extensions) { *e = v }
 
 // SetExtension encodes val and sets the result to key
-func (e *Extensions) SetExtension(key string, val interface{}) error {
+func (e *Extensions) SetExtension(key Text, val interface{}) error {
 	data, err := json.Marshal(val)
 	if err != nil {
 		return err
@@ -89,25 +88,25 @@ func (e *Extensions) SetExtension(key string, val interface{}) error {
 }
 
 // SetRawExtension sets the raw JSON encoded val to key
-func (e *Extensions) SetRawExtension(key string, val []byte) {
-	if !strings.HasPrefix(key, "x-") {
+func (e *Extensions) SetRawExtension(key Text, val []byte) {
+	if !key.HasPrefix("x-") {
 		key = "x-" + key
 	}
 	(*e)[key] = val
 }
 
 // Extension returns an extension by name
-func (e Extensions) Extension(name string) (interface{}, bool) {
-	if !strings.HasPrefix(name, "x-") {
-		name = "x-" + name
+func (e Extensions) Extension(key Text) (interface{}, bool) {
+	if !key.HasPrefix("x-") {
+		key = "x-" + key
 	}
-	v, exists := e[name]
+	v, exists := e[key]
 	return v, exists
 }
 
 // IsExtensionKey returns true if the key starts with "x-"
-func IsExtensionKey(key string) bool {
-	return strings.HasPrefix(key, "x-")
+func IsExtensionKey(key Text) bool {
+	return key.HasPrefix("x-")
 }
 
 func unmarshalExtendedJSON(data []byte, dst extender) error {
@@ -116,8 +115,8 @@ func unmarshalExtendedJSON(data []byte, dst extender) error {
 		return err
 	}
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
-		if IsExtensionKey(key.String()) {
-			ev[key.String()] = jsonx.RawMessage(value.Raw)
+		if IsExtensionKey(Text(key.String())) {
+			ev[Text(key.String())] = jsonx.RawMessage(value.Raw)
 		}
 		return true
 	})

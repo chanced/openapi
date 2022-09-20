@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -61,14 +60,14 @@ type Encoding struct {
 	AllowReserved *bool `json:"allowReserved,omitempty"`
 }
 
-func (e *Encoding) Edges() []Node {
+func (e *Encoding) Nodes() []Node {
 	if e == nil {
 		return nil
 	}
-	return downcastNodes(e.edges())
+	return downcastNodes(e.nodes())
 }
 
-func (e *Encoding) edges() []node {
+func (e *Encoding) nodes() []node {
 	if e == nil {
 		return nil
 	}
@@ -89,29 +88,29 @@ func (e *Encoding) Anchors() (*Anchors, error) {
 	return e.Headers.Anchors()
 }
 
-func (e *Encoding) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	err := ptr.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return e.resolveNodeByPointer(ptr)
-}
+// func (e *Encoding) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	err := ptr.Validate()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return e.resolveNodeByPointer(ptr)
+// }
 
-func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return e, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch nxt {
-	case "headers":
-		if e.Headers == nil {
-			return nil, newErrNotFound(e.Location.AbsoluteLocation(), tok)
-		}
-		return e.Headers.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (e *Encoding) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return e, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch nxt {
+// 	case "headers":
+// 		if e.Headers == nil {
+// 			return nil, newErrNotFound(e.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return e.Headers.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (*Encoding) Kind() Kind      { return KindEncoding }
 func (*Encoding) mapKind() Kind   { return KindEncodingMap }

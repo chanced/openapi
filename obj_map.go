@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
@@ -45,7 +44,7 @@ func (om *ObjMap[T]) Refs() []Ref {
 	return refs
 }
 
-func (om *ObjMap[T]) edges() []node {
+func (om *ObjMap[T]) nodes() []node {
 	if om == nil {
 		return nil
 	}
@@ -56,24 +55,24 @@ func (om *ObjMap[T]) edges() []node {
 	return edges
 }
 
-func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return om.resolveNodeByPointer(ptr)
-}
+// func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return om.resolveNodeByPointer(ptr)
+// }
 
-func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return om, nil
-	}
-	tok, _ := ptr.NextToken()
-	v := om.Get(Text(tok))
-	if v.isNil() {
-		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
-	}
-	return nil, nil
-}
+// func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return om, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	v := om.Get(Text(tok))
+// 	if v.isNil() {
+// 		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return nil, nil
+// }
 
 func (om *ObjMap[T]) setLocation(loc Location) error {
 	if om == nil {

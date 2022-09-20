@@ -44,6 +44,7 @@
     "staticcheck": true,
   },
   "files.exclude": {
+    ".git/**": true,
     "**/.git": true,
     "**/.svn": true,
     "**/.hg": true,

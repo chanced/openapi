@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -74,14 +73,14 @@ type SecurityScheme struct {
 	OpenIDConnectURL Text `json:"openIdConnect,omitempty"`
 }
 
-func (ss *SecurityScheme) Edges() []Node {
+func (ss *SecurityScheme) Nodes() []Node {
 	if ss == nil {
 		return nil
 	}
-	return downcastNodes(ss.edges())
+	return downcastNodes(ss.nodes())
 }
 
-func (ss *SecurityScheme) edges() []node {
+func (ss *SecurityScheme) nodes() []node {
 	if ss == nil {
 		return nil
 	}
@@ -104,31 +103,31 @@ func (ss *SecurityScheme) Anchors() (*Anchors, error) {
 	return ss.Flows.Anchors()
 }
 
-func (ss *SecurityScheme) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return ss.resolveNodeByPointer(ptr)
-}
+// func (ss *SecurityScheme) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return ss.resolveNodeByPointer(ptr)
+// }
 
-func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return ss, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch nxt {
-	case "flows":
-		if nxt.IsRoot() {
-			return ss.Flows, nil
-		}
-		if ss.Flows == nil {
-			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
-		}
-		return ss.Flows.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
-	}
-}
+// func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return ss, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch nxt {
+// 	case "flows":
+// 		if nxt.IsRoot() {
+// 			return ss.Flows, nil
+// 		}
+// 		if ss.Flows == nil {
+// 			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
+// 		}
+// 		return ss.Flows.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (s *SecurityScheme) setLocation(loc Location) error {
 	if s == nil {

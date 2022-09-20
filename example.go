@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
@@ -43,32 +42,32 @@ type Example struct {
 	ExternalValue *uri.URI `json:"externalValue,omitempty"`
 }
 
-func (e *Example) Edges() []Node {
+func (e *Example) Nodes() []Node {
 	if e == nil {
 		return nil
 	}
-	return downcastNodes(e.edges())
+	return downcastNodes(e.nodes())
 }
-func (e *Example) edges() []node { return nil }
+func (e *Example) nodes() []node { return nil }
 
 func (*Example) Refs() []Ref { return nil }
 
 func (e *Example) Anchors() (*Anchors, error) { return nil, nil }
 
-func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return e.resolveNodeByPointer(ptr)
-}
+// func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return e.resolveNodeByPointer(ptr)
+// }
 
-func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return e, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
-}
+// func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return e, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+// }
 
 func (*Example) Kind() Kind      { return KindExample }
 func (*Example) mapKind() Kind   { return KindExampleMap }

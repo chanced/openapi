@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
@@ -17,22 +16,32 @@ type SchemaItem struct {
 	Schema *Schema
 }
 
-// SchemaMap is a psuedo, ordered map of Schemas
+func (si *SchemaItem) Clone() SchemaItem {
+	if si == nil {
+		return SchemaItem{}
+	}
+	return SchemaItem{
+		Key:    si.Key,
+		Schema: si.Schema.Clone(),
+	}
+}
+
+// SchemaMap is a psuedo, ordered map ofASew3 Schemas
 //
 // Under the hood, SchemaMap is a slice of SchemaEntry
 type SchemaMap struct {
 	Location
-	Items []*SchemaItem
+	Items []SchemaItem
 }
 
-func (sm *SchemaMap) Edges() []Node {
+func (sm *SchemaMap) Nodes() []Node {
 	if sm == nil {
 		return nil
 	}
-	return downcastNodes(sm.edges())
+	return downcastNodes(sm.nodes())
 }
 
-func (sm *SchemaMap) edges() []node {
+func (sm *SchemaMap) nodes() []node {
 	if sm == nil {
 		return nil
 	}
@@ -72,27 +81,27 @@ func (sm *SchemaMap) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-func (sm *SchemaMap) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return sm.resolveNodeByPointer(ptr)
-}
+// func (sm *SchemaMap) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return sm.resolveNodeByPointer(ptr)
+// }
 
-func (sm *SchemaMap) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return sm, nil
-	}
-	tok, _ := ptr.NextToken()
-	v := sm.Get(Text(tok))
-	if v == nil {
-		return nil, newErrNotFound(sm.Location.AbsoluteLocation(), tok)
-	}
-	return v.resolveNodeByPointer(ptr)
-}
+// func (sm *SchemaMap) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return sm, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	v := sm.Get(Text(tok))
+// 	if v == nil {
+// 		return nil, newErrNotFound(sm.AbsoluteLocation(), tok)
+// 	}
+// 	return v.resolveNodeByPointer(ptr)
+// }
 
 func (sm *SchemaMap) Set(key Text, s *Schema) {
-	se := &SchemaItem{
+	se := SchemaItem{
 		Key:    key,
 		Schema: s,
 	}
@@ -160,7 +169,7 @@ func (sm *SchemaMap) UnmarshalJSON(data []byte) error {
 	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
 		var s Schema
 		err = json.Unmarshal([]byte(value.Raw), &s)
-		sm.Items = append(sm.Items, &SchemaItem{Key: Text(key.String()), Schema: &s})
+		sm.Items = append(sm.Items, SchemaItem{Key: Text(key.String()), Schema: &s})
 		return err == nil
 	})
 	return err
@@ -182,6 +191,23 @@ func (sm *SchemaMap) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 	return json.Unmarshal(j, sm)
+}
+
+func (sm *SchemaMap) Clone() *SchemaMap {
+	if sm == nil {
+		return nil
+	}
+	m := make([]SchemaItem, len(sm.Items))
+	for i, v := range sm.Items {
+		m[i] = v.Clone()
+	}
+	return &SchemaMap{
+		Location: Location{
+			absolute: *sm.absolute.Clone(),
+			relative: sm.relative,
+		},
+		Items: m,
+	}
 }
 
 var _ node = (*SchemaMap)(nil)

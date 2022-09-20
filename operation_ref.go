@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"gopkg.in/yaml.v3"
@@ -18,18 +17,18 @@ type OperationRef struct {
 
 func (*OperationRef) RefType() RefType { return RefTypeOperationRef }
 func (*OperationRef) RefKind() Kind    { return KindOperation }
-func (or *OperationRef) Edges() []Node {
+func (or *OperationRef) Nodes() []Node {
 	if or == nil {
 		return nil
 	}
-	return downcastNodes(or.edges())
+	return downcastNodes(or.nodes())
 }
 
 func (or *OperationRef) Resolved() Node {
 	return or.Operation
 }
 
-func (or *OperationRef) edges() []node {
+func (or *OperationRef) nodes() []node {
 	if or == nil {
 		return nil
 	}
@@ -60,20 +59,20 @@ func (*OperationRef) Kind() Kind      { return KindOperationRef }
 func (*OperationRef) mapKind() Kind   { return KindUndefined }
 func (*OperationRef) sliceKind() Kind { return KindUndefined }
 
-func (or *OperationRef) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return or.resolveNodeByPointer(ptr)
-}
+// func (or *OperationRef) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return or.resolveNodeByPointer(ptr)
+// }
 
-func (or *OperationRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return or, nil
-	}
-	tok, _ := ptr.NextToken()
-	return nil, newErrNotResolvable(or.AbsoluteLocation(), tok)
-}
+// func (or *OperationRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return or, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(or.AbsoluteLocation(), tok)
+// }
 
 func (or OperationRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(or.Ref)

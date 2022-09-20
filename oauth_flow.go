@@ -3,7 +3,6 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/jsonpointer"
 	"github.com/chanced/transcode"
 	"gopkg.in/yaml.v3"
 )
@@ -51,41 +50,40 @@ func (f *OAuthFlow) Anchors() (*Anchors, error) {
 	return f.Scopes.Anchors()
 }
 
-func (f *OAuthFlow) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return f.resolveNodeByPointer(ptr)
-}
+// func (f *OAuthFlow) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return f.resolveNodeByPointer(ptr)
+// }
 
-func (r *OAuthFlow) Edges() []Node {
+//	func (f *OAuthFlow) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+//		if ptr.IsRoot() {
+//			return f, nil
+//		}
+//		nxt, tok, _ := ptr.Next()
+//		switch tok {
+//		case "scopes":
+//			if f.Scopes == nil {
+//				return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+//			}
+//			return f.Scopes.resolveNodeByPointer(nxt)
+//		default:
+//			return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
+//		}
+//	}
+func (r *OAuthFlow) Nodes() []Node {
 	if r == nil {
 		return nil
 	}
-	return downcastNodes(r.edges())
+	return downcastNodes(r.nodes())
 }
 
-func (r *OAuthFlow) edges() []node {
+func (r *OAuthFlow) nodes() []node {
 	if r == nil {
 		return nil
 	}
 	return appendEdges(nil, r.Scopes)
-}
-
-func (f *OAuthFlow) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return f, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "scopes":
-		if f.Scopes == nil {
-			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-		}
-		return f.Scopes.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
-	}
 }
 
 func (*OAuthFlow) Kind() Kind      { return KindOAuthFlow }
@@ -155,14 +153,14 @@ type OAuthFlows struct {
 	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty"`
 }
 
-func (f *OAuthFlows) Edges() []Node {
+func (f *OAuthFlows) Nodes() []Node {
 	if f == nil {
 		return nil
 	}
-	return downcastNodes(f.edges())
+	return downcastNodes(f.nodes())
 }
 
-func (f *OAuthFlows) edges() []node {
+func (f *OAuthFlows) nodes() []node {
 	if f == nil {
 		return nil
 	}
@@ -203,43 +201,43 @@ func (f *OAuthFlows) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-func (f *OAuthFlows) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if err := ptr.Validate(); err != nil {
-		return nil, err
-	}
-	return f.resolveNodeByPointer(ptr)
-}
+// func (f *OAuthFlows) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return f.resolveNodeByPointer(ptr)
+// }
 
-func (f *OAuthFlows) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-	if ptr.IsRoot() {
-		return f, nil
-	}
-	nxt, tok, _ := ptr.Next()
-	switch tok {
-	case "implicit":
-		if f.Implicit == nil {
-			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-		}
-		return f.Implicit.resolveNodeByPointer(nxt)
-	case "password":
-		if f.Password == nil {
-			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-		}
-		return f.Password.resolveNodeByPointer(nxt)
-	case "clientCredentials":
-		if f.ClientCredentials == nil {
-			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-		}
-		return f.ClientCredentials.resolveNodeByPointer(nxt)
-	case "authorizationCode":
-		if f.AuthorizationCode == nil {
-			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
-		}
-		return f.AuthorizationCode.resolveNodeByPointer(nxt)
-	default:
-		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
-	}
-}
+// func (f *OAuthFlows) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return f, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "implicit":
+// 		if f.Implicit == nil {
+// 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return f.Implicit.resolveNodeByPointer(nxt)
+// 	case "password":
+// 		if f.Password == nil {
+// 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return f.Password.resolveNodeByPointer(nxt)
+// 	case "clientCredentials":
+// 		if f.ClientCredentials == nil {
+// 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return f.ClientCredentials.resolveNodeByPointer(nxt)
+// 	case "authorizationCode":
+// 		if f.AuthorizationCode == nil {
+// 			return nil, newErrNotFound(f.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return f.AuthorizationCode.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(f.Location.AbsoluteLocation(), tok)
+// 	}
+// }
 
 func (*OAuthFlows) Kind() Kind      { return KindOAuthFlows }
 func (*OAuthFlows) mapKind() Kind   { return KindUndefined }
