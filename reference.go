@@ -86,8 +86,15 @@ func (r *Reference) resolve(v Node) error {
 	if r.dst == nil {
 		return fmt.Errorf("openapi: Reference dst is nil")
 	}
+	if v.Kind() != r.ReferencedKind {
+		return NewResolutionError(r, r.ReferencedKind, v.Kind())
+	}
 
-	reflect.ValueOf(r.dst).Elem().Set(reflect.ValueOf(v))
+	rd := reflect.ValueOf(r.dst)
+	rv := reflect.ValueOf(v)
+	if rv.Type().AssignableTo(rd.Type().Elem()) {
+		rv.Elem().Set(reflect.ValueOf(v).Elem())
+	}
 	return nil
 }
 

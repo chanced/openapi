@@ -134,6 +134,7 @@ type loader struct {
 	doc           *Document
 	nodes         map[string]nodectx
 	refs          []refctx
+	resolvedRefs  []refctx
 	recursiveRefs []refctx
 	dynamicRefs   []refctx
 }
@@ -246,9 +247,14 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		for len(l.refs) > 0 {
 			r, l.refs = l.refs[0], l.refs[1:]
 			n, err := l.resolveRef(ctx, r)
+			rr := r
 			if n != nil {
 				nodes = append(nodes, *n)
+				rr.resolved = n
 			}
+
+			l.resolvedRefs = append(l.resolvedRefs, rr)
+
 			if err != nil {
 				return nil, err
 			}
@@ -450,10 +456,15 @@ func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, j
 		if err != nil {
 			return err
 		}
+		if n == nil || n.isNil() {
+			fmt.Println("nil node")
+			panic("nil node")
+		}
 		if n.AbsoluteLocation().String() == "#" {
 			fmt.Println("\nnode with empty absolute location:")
 			litter.Dump(n)
 		}
+
 		l.nodes[n.AbsoluteLocation().String()] = nc
 
 		if IsRef(n) {
@@ -463,6 +474,7 @@ func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, j
 			}
 			return nil
 		}
+		fmt.Println("traversing node:", n.AbsoluteLocation().String())
 		if err := l.traverse(root, n.nodes(), nc.openapi, nc.jsonschema); err != nil {
 			return err
 		}
@@ -512,6 +524,7 @@ type nodectx struct {
 }
 type refctx struct {
 	ref
+	resolved   *nodectx
 	root       *nodectx
 	openapi    semver.Version
 	jsonschema uri.URI

@@ -136,23 +136,6 @@ func (c *Component[T]) Refs() []Ref {
 // 	}
 // }
 
-func (c *Component[T]) MarshalYAML() (interface{}, error) {
-	j, err := c.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	return transcode.YAMLFromJSON(j)
-}
-
-// UnmarshalYAML implements yaml.Unmarshaler
-func (c *Component[T]) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcode.YAMLFromJSON([]byte(value.Value))
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(j, c)
-}
-
 func (*Component[T]) mapKind() Kind {
 	var t T
 	return t.mapKind()
@@ -196,6 +179,10 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	var obj T
+
+	k := obj.Kind()
+	_ = k
+
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return err
 	}
@@ -203,6 +190,23 @@ func (c *Component[T]) UnmarshalJSON(data []byte) error {
 		Object: obj,
 	}
 	return nil
+}
+
+func (c *Component[T]) MarshalYAML() (interface{}, error) {
+	j, err := c.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcode.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler
+func (c *Component[T]) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, c)
 }
 
 func (c *Component[T]) setLocation(loc Location) error {

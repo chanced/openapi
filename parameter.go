@@ -342,7 +342,7 @@ func (p *Parameter) setLocation(loc Location) error {
 		return nil
 	}
 	p.Location = loc
-	if err := p.Schema.setLocation(loc); err != nil {
+	if err := p.Schema.setLocation(loc.Append("schema")); err != nil {
 		return err
 	}
 	if err := p.Content.setLocation(loc.Append("content")); err != nil {

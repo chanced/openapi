@@ -110,10 +110,6 @@ func NewValidator(compiler Compiler, resources ...fs.FS) (*StdValidator, error) 
 	if compiler == nil {
 		return nil, errors.New("openapi: compiler is required")
 	}
-	err := AddCompilerResources(compiler, resources...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add resources to compiler: %w", err)
-	}
 	compiled, err := CompileSchemas(compiler)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile schemas: %w", err)
@@ -177,7 +173,7 @@ type CompiledSchemas struct {
 	JSONSchema map[uri.URI]CompiledSchema
 }
 
-// AddCompilerResources adds OpenAPI and JSON Schema resources to a Compiler.
+// SetupCompiler adds OpenAPI and JSON Schema resources to a Compiler.
 //
 // Each fs.FS in resources will be walked and all files ending in .json will be
 // be added to the compiler.
@@ -187,12 +183,16 @@ type CompiledSchemas struct {
 //   - OpenAPI 3.0: "https://spec.openapis.org/oas/3.0/schema/2021-09-28"
 //   - JSON Schema 2020-12: "https://json-schema.org/draft/2020-12/schema"
 //   - JSON Schema 2019-09: "https://json-schema.org/draft/2019-09/schema"
-func AddCompilerResources(compiler Compiler, resources ...fs.FS) error {
+func SetupCompiler(compiler Compiler, resources ...fs.FS) (Compiler, error) {
 	if compiler == nil {
-		return errors.New("openapi: compiler is required")
+		return nil, errors.New("openapi: compiler is required")
 	}
 	resources = append([]fs.FS{embeddedSchemas}, resources...)
-	return addCompilerResources(compiler, resources)
+	err := addCompilerResources(compiler, resources)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add resources to compiler: %w", err)
+	}
+	return compiler, nil
 }
 
 // addCompilerResources adds the following schemas to a compiler:

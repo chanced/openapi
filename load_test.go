@@ -38,6 +38,29 @@ func TestTryGetOpenAPIVersion(t *testing.T) {
 	}
 }
 
+func TestLoadRefComponent(t *testing.T) {
+	f, err := testdata.Open("testdata/documents/paramref.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	doc, err := openapi.Load(ctx, "testdata/documents/paramref.yaml", NoopValidator{}, func(ctx context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error) {
+		b, err := io.ReadAll(f)
+		// fmt.Println(string(b))
+		if err != nil {
+			return 0, nil, err
+		}
+		return openapi.KindDocument, b, nil
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	if doc == nil {
+		t.Errorf("failed to load document")
+	}
+	// litter.Dump(doc)
+}
+
 func TestLoad(t *testing.T) {
 	f, err := testdata.Open("testdata/documents/petstore.yaml")
 	if err != nil {

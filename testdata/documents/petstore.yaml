@@ -36,6 +36,7 @@ paths:
                                 $ref: "#/components/schemas/StringMap"
     /pets:
         parameters:
+            - $ref: "#/components/parameters/Referenced"
             - name: globalPetsParam
               required: false
               style: form
@@ -159,6 +160,22 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Error"
 components:
+    parameters:
+        Referenced:
+            name: referenced
+            required: false
+            style: form
+            in: query
+            schema:
+                type: string
+    headers:
+        ReferencedHeader:
+            description: "referenced header"
+            required: true
+            allowEmptyValue: false
+            style: simple
+            schema:
+                type: string
     schemas:
         FilterItem:
             description: /components/schemas/FilterItem

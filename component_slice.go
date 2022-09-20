@@ -11,16 +11,16 @@ import (
 // ComponentSlice is a slice of Components of type T
 type ComponentSlice[T node] struct {
 	Location `json:"-"`
-	Items    []Component[T] `json:"-"`
+	Items    []*Component[T] `json:"-"`
 }
 
 func (cs *ComponentSlice[T]) nodes() []node {
 	if cs == nil {
 		return nil
 	}
-	edges := make([]node, len(cs.Items))
-	for i, item := range cs.Items {
-		edges[i] = item.Object
+	edges := make([]node, 0, len(cs.Items))
+	for _, item := range cs.Items {
+		edges = appendEdges(edges, item)
 	}
 	return edges
 }
@@ -68,7 +68,7 @@ func (cs ComponentSlice[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (cs *ComponentSlice[T]) UnmarshalJSON(data []byte) error {
-	var items []Component[T]
+	var items []*Component[T]
 	if err := json.Unmarshal(data, &items); err != nil {
 		return err
 	}
