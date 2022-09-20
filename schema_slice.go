@@ -121,7 +121,7 @@ func (ss *SchemaSlice) setLocation(loc Location) error {
 	}
 	ss.Location = loc
 	for i, s := range ss.Items {
-		err := s.setLocation(loc.Append(strconv.Itoa(i)))
+		err := s.setLocation(loc.AppendLocation(strconv.Itoa(i)))
 		if err != nil {
 			return err
 		}

@@ -123,7 +123,7 @@ func (rb *RequestBody) setLocation(loc Location) error {
 		return nil
 	}
 	rb.Location = loc
-	if err := rb.Content.setLocation(loc.Append("content")); err != nil {
+	if err := rb.Content.setLocation(loc.AppendLocation("content")); err != nil {
 		return err
 	}
 	return nil

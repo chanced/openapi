@@ -83,7 +83,7 @@ func (t *Tag) setLocation(loc Location) error {
 		return nil
 	}
 	t.Location = loc
-	return t.ExternalDocs.setLocation(loc.Append("externalDocs"))
+	return t.ExternalDocs.setLocation(loc.AppendLocation("externalDocs"))
 }
 
 // MarshalJSON marshals t into JSON

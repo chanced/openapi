@@ -161,13 +161,13 @@ func (mt *MediaType) setLocation(loc Location) error {
 		return nil
 	}
 	mt.Location = loc
-	if err := mt.Schema.setLocation(loc.Append("schema")); err != nil {
+	if err := mt.Schema.setLocation(loc.AppendLocation("schema")); err != nil {
 		return err
 	}
-	if err := mt.Examples.setLocation(loc.Append("examples")); err != nil {
+	if err := mt.Examples.setLocation(loc.AppendLocation("examples")); err != nil {
 		return err
 	}
-	if err := mt.Encoding.setLocation(loc.Append("encoding")); err != nil {
+	if err := mt.Encoding.setLocation(loc.AppendLocation("encoding")); err != nil {
 		return err
 	}
 

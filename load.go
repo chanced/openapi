@@ -218,19 +218,15 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	if err = doc.setLocation(loc); err != nil {
 		return nil, NewError(err, u)
 	}
-	l.nodes[u.String()] = nodectx{
-		node:       &doc,
-		openapi:    *doc.OpenAPI,
-		jsonschema: *sd,
-	}
-	dc := &nodectx{
-		node:       &doc,
-		openapi:    *doc.OpenAPI,
-		jsonschema: *sd,
-	}
-	dc.root = dc
 
-	if err = l.traverse(dc, doc.nodes(), *v, *sd); err != nil {
+	dc := nodectx{
+		node:       &doc,
+		openapi:    *doc.OpenAPI,
+		jsonschema: *sd,
+	}
+	dc.root = &dc
+	l.nodes[u.String()] = dc
+	if err = l.traverse(&dc, doc.nodes(), *v, *sd); err != nil {
 		return nil, err
 	}
 	// we only traverse the references after the top-level document is fully
@@ -452,7 +448,7 @@ func (l *loader) getDocumentSchemaDialect(doc *Document) (*uri.URI, error) {
 
 func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, jsonschema uri.URI) error {
 	for _, n := range nodes {
-		nc, err := newNodeCtx(n, &openapi, &jsonschema)
+		nc, err := newNodeCtx(n, root, &openapi, &jsonschema)
 		if err != nil {
 			return err
 		}
@@ -474,7 +470,6 @@ func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, j
 			}
 			return nil
 		}
-		fmt.Println("traversing node:", n.AbsoluteLocation().String())
 		if err := l.traverse(root, n.nodes(), nc.openapi, nc.jsonschema); err != nil {
 			return err
 		}
@@ -530,10 +525,10 @@ type refctx struct {
 	jsonschema uri.URI
 }
 
-func newNodeCtx(n node, openapi *semver.Version, jsonschema *uri.URI) (nodectx, error) {
+func newNodeCtx(n node, root *nodectx, openapi *semver.Version, jsonschema *uri.URI) (nodectx, error) {
 	switch t := n.(type) {
 	case *Document:
-		panic("not implemented")
+
 	case *Schema:
 		if t.Schema != nil {
 			jsonschema = t.Schema
@@ -549,6 +544,7 @@ func newNodeCtx(n node, openapi *semver.Version, jsonschema *uri.URI) (nodectx, 
 		node:       n,
 		jsonschema: *jsonschema,
 		openapi:    *openapi,
+		root:       root,
 	}, nil
 }
 

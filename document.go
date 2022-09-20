@@ -193,28 +193,28 @@ func (d *Document) setLocation(loc Location) error {
 	}
 	d.Location = loc
 
-	if err := d.Info.setLocation(loc.Append("info")); err != nil {
+	if err := d.Info.setLocation(loc.AppendLocation("info")); err != nil {
 		return err
 	}
-	if err := d.Tags.setLocation(loc.Append("tags")); err != nil {
+	if err := d.Tags.setLocation(loc.AppendLocation("tags")); err != nil {
 		return err
 	}
-	if err := d.Servers.setLocation(loc.Append("servers")); err != nil {
+	if err := d.Servers.setLocation(loc.AppendLocation("servers")); err != nil {
 		return err
 	}
-	if err := d.Paths.setLocation(loc.Append("paths")); err != nil {
+	if err := d.Paths.setLocation(loc.AppendLocation("paths")); err != nil {
 		return err
 	}
-	if err := d.Webhooks.setLocation(loc.Append("webhooks")); err != nil {
+	if err := d.Webhooks.setLocation(loc.AppendLocation("webhooks")); err != nil {
 		return err
 	}
-	if err := d.Components.setLocation(loc.Append("components")); err != nil {
+	if err := d.Components.setLocation(loc.AppendLocation("components")); err != nil {
 		return err
 	}
-	if err := d.Security.setLocation(loc.Append("security")); err != nil {
+	if err := d.Security.setLocation(loc.AppendLocation("security")); err != nil {
 		return err
 	}
-	if err := d.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
+	if err := d.ExternalDocs.setLocation(loc.AppendLocation("externalDocs")); err != nil {
 		return err
 	}
 	return nil

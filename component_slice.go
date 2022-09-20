@@ -91,7 +91,7 @@ func (cs *ComponentSlice[T]) setLocation(loc Location) error {
 	}
 	cs.Location = loc
 	for i, c := range cs.Items {
-		if err := c.setLocation(loc.Append(strconv.Itoa(i))); err != nil {
+		if err := c.setLocation(loc.AppendLocation(strconv.Itoa(i))); err != nil {
 			return err
 		}
 	}

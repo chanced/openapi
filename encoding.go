@@ -121,7 +121,7 @@ func (e *Encoding) setLocation(loc Location) error {
 		return nil
 	}
 	e.Location = loc
-	return e.Headers.setLocation(loc.Append("headers"))
+	return e.Headers.setLocation(loc.AppendLocation("headers"))
 }
 
 // MarshalJSON marshals e into JSON

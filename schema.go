@@ -396,7 +396,7 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	anchors := &Anchors{}
 	if s.Anchor != "" {
 		anchors.Standard[s.Anchor] = Anchor{
-			Location: s.Location.Append("$anchor"),
+			Location: s.Location.AppendLocation("$anchor"),
 			In:       s,
 			Name:     s.Anchor,
 			Type:     AnchorTypeRegular,
@@ -404,7 +404,7 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	}
 	if s.DynamicAnchor != "" {
 		anchors.Dynamic[s.DynamicAnchor] = Anchor{
-			Location: s.Location.Append("$dynamicAnchor"),
+			Location: s.Location.AppendLocation("$dynamicAnchor"),
 			In:       s,
 			Name:     s.DynamicAnchor,
 			Type:     AnchorTypeDynamic,
@@ -412,7 +412,7 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	}
 	if s.RecursiveAnchor != nil {
 		anchors.Recursive = &Anchor{
-			Location: s.Location.Append("$recursiveAnchor"),
+			Location: s.Location.AppendLocation("$recursiveAnchor"),
 			In:       s,
 			Name:     "",
 			Type:     AnchorTypeRecursive,
@@ -848,77 +848,77 @@ func (s *Schema) setLocation(loc Location) error {
 	}
 	s.Location = loc
 
-	if err := s.Ref.setLocation(loc.Append("$ref")); err != nil {
+	if err := s.Ref.setLocation(loc.AppendLocation("$ref")); err != nil {
 		return err
 	}
-	if err := s.Definitions.setLocation(loc.Append("$defs")); err != nil {
+	if err := s.Definitions.setLocation(loc.AppendLocation("$defs")); err != nil {
 		return err
 	}
-	if err := s.DynamicRef.setLocation(loc.Append("$dynamicRef")); err != nil {
+	if err := s.DynamicRef.setLocation(loc.AppendLocation("$dynamicRef")); err != nil {
 		return err
 	}
-	if err := s.Not.setLocation(loc.Append("not")); err != nil {
+	if err := s.Not.setLocation(loc.AppendLocation("not")); err != nil {
 		return err
 	}
-	if err := s.AllOf.setLocation(loc.Append("allOf")); err != nil {
+	if err := s.AllOf.setLocation(loc.AppendLocation("allOf")); err != nil {
 		return err
 	}
-	if err := s.AnyOf.setLocation(loc.Append("anyOf")); err != nil {
+	if err := s.AnyOf.setLocation(loc.AppendLocation("anyOf")); err != nil {
 		return err
 	}
-	if err := s.OneOf.setLocation(loc.Append("oneOf")); err != nil {
+	if err := s.OneOf.setLocation(loc.AppendLocation("oneOf")); err != nil {
 		return err
 	}
-	if err := s.If.setLocation(loc.Append("if")); err != nil {
+	if err := s.If.setLocation(loc.AppendLocation("if")); err != nil {
 		return err
 	}
-	if err := s.Then.setLocation(loc.Append("then")); err != nil {
+	if err := s.Then.setLocation(loc.AppendLocation("then")); err != nil {
 		return err
 	}
-	if err := s.Else.setLocation(loc.Append("else")); err != nil {
+	if err := s.Else.setLocation(loc.AppendLocation("else")); err != nil {
 		return err
 	}
-	if err := s.Properties.setLocation(loc.Append("properties")); err != nil {
+	if err := s.Properties.setLocation(loc.AppendLocation("properties")); err != nil {
 		return err
 	}
-	if err := s.PropertyNames.setLocation(loc.Append("propertyNames")); err != nil {
+	if err := s.PropertyNames.setLocation(loc.AppendLocation("propertyNames")); err != nil {
 		return err
 	}
-	if err := s.PatternProperties.setLocation(loc.Append("patternProperties")); err != nil {
+	if err := s.PatternProperties.setLocation(loc.AppendLocation("patternProperties")); err != nil {
 		return err
 	}
-	if err := s.AdditionalProperties.setLocation(loc.Append("additionalProperties")); err != nil {
+	if err := s.AdditionalProperties.setLocation(loc.AppendLocation("additionalProperties")); err != nil {
 		return err
 	}
-	if err := s.DependentSchemas.setLocation(loc.Append("dependentSchemas")); err != nil {
+	if err := s.DependentSchemas.setLocation(loc.AppendLocation("dependentSchemas")); err != nil {
 		return err
 	}
 
-	if err := s.UnevaluatedProperties.setLocation(loc.Append("unevaluatedProperties")); err != nil {
+	if err := s.UnevaluatedProperties.setLocation(loc.AppendLocation("unevaluatedProperties")); err != nil {
 		return err
 	}
-	if err := s.Items.setLocation(loc.Append("items")); err != nil {
+	if err := s.Items.setLocation(loc.AppendLocation("items")); err != nil {
 		return err
 	}
-	if err := s.UnevaluatedItems.setLocation(loc.Append("unevaluatedItems")); err != nil {
+	if err := s.UnevaluatedItems.setLocation(loc.AppendLocation("unevaluatedItems")); err != nil {
 		return err
 	}
-	if err := s.AdditionalItems.setLocation(loc.Append("additionalItems")); err != nil {
+	if err := s.AdditionalItems.setLocation(loc.AppendLocation("additionalItems")); err != nil {
 		return err
 	}
-	if err := s.PrefixItems.setLocation(loc.Append("prefixItems")); err != nil {
+	if err := s.PrefixItems.setLocation(loc.AppendLocation("prefixItems")); err != nil {
 		return err
 	}
-	if err := s.Contains.setLocation(loc.Append("contains")); err != nil {
+	if err := s.Contains.setLocation(loc.AppendLocation("contains")); err != nil {
 		return err
 	}
-	if err := s.RecursiveRef.setLocation(loc.Append("$recursiveRef")); err != nil {
+	if err := s.RecursiveRef.setLocation(loc.AppendLocation("$recursiveRef")); err != nil {
 		return err
 	}
-	if err := s.Discriminator.setLocation(loc.Append("discriminator")); err != nil {
+	if err := s.Discriminator.setLocation(loc.AppendLocation("discriminator")); err != nil {
 		return err
 	}
-	if err := s.XML.setLocation(loc.Append("xml")); err != nil {
+	if err := s.XML.setLocation(loc.AppendLocation("xml")); err != nil {
 		return err
 	}
 	return nil

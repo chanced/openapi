@@ -32,6 +32,27 @@ type Paths struct {
 	Items *PathItemObjs `json:"-"`
 }
 
+func (p *Paths) Get(key Text) *PathItem {
+	if p.Items == nil {
+		return nil
+	}
+	return p.Items.Get(key)
+}
+
+func (p *Paths) Set(key Text, value *PathItem) {
+	if p.Items == nil {
+		p.Items = &PathItemObjs{}
+	}
+	p.Items.Set(key, value)
+}
+
+func (p *Paths) Del(key Text) {
+	if p == nil {
+		return
+	}
+	p.Items.Del(key)
+}
+
 func (p *Paths) Nodes() []Node {
 	if p == nil {
 		return nil

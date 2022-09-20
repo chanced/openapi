@@ -210,11 +210,11 @@ func (h *Header) setLocation(loc Location) error {
 		return nil
 	}
 	h.Location = loc
-	if err := h.Examples.setLocation(loc.Append("examples")); err != nil {
+	if err := h.Examples.setLocation(loc.AppendLocation("examples")); err != nil {
 		return err
 	}
 
-	if err := h.Schema.setLocation(loc.Append("schema")); err != nil {
+	if err := h.Schema.setLocation(loc.AppendLocation("schema")); err != nil {
 		return err
 	}
 	return nil

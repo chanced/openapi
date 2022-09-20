@@ -95,7 +95,7 @@ func (o *OAuthFlow) setLocation(loc Location) error {
 		return nil
 	}
 	o.Location = loc
-	o.Scopes.setLocation(loc.Append("scopes"))
+	o.Scopes.setLocation(loc.AppendLocation("scopes"))
 	return nil
 }
 
@@ -248,16 +248,16 @@ func (o *OAuthFlows) setLocation(loc Location) error {
 		return nil
 	}
 	o.Location = loc
-	if err := o.Implicit.setLocation(loc.Append("implicit")); err != nil {
+	if err := o.Implicit.setLocation(loc.AppendLocation("implicit")); err != nil {
 		return err
 	}
-	if err := o.Password.setLocation(loc.Append("password")); err != nil {
+	if err := o.Password.setLocation(loc.AppendLocation("password")); err != nil {
 		return err
 	}
-	if err := o.ClientCredentials.setLocation(loc.Append("clientCredentials")); err != nil {
+	if err := o.ClientCredentials.setLocation(loc.AppendLocation("clientCredentials")); err != nil {
 		return err
 	}
-	if err := o.AuthorizationCode.setLocation(loc.Append("authorizationCode")); err != nil {
+	if err := o.AuthorizationCode.setLocation(loc.AppendLocation("authorizationCode")); err != nil {
 		return err
 	}
 	return nil

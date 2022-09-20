@@ -342,13 +342,13 @@ func (p *Parameter) setLocation(loc Location) error {
 		return nil
 	}
 	p.Location = loc
-	if err := p.Schema.setLocation(loc.Append("schema")); err != nil {
+	if err := p.Schema.setLocation(loc.AppendLocation("schema")); err != nil {
 		return err
 	}
-	if err := p.Content.setLocation(loc.Append("content")); err != nil {
+	if err := p.Content.setLocation(loc.AppendLocation("content")); err != nil {
 		return err
 	}
-	if err := p.Examples.setLocation(loc.Append("examples")); err != nil {
+	if err := p.Examples.setLocation(loc.AppendLocation("examples")); err != nil {
 		return err
 	}
 

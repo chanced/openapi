@@ -188,7 +188,7 @@ func (s *Scopes) setLocation(loc Location) error {
 	}
 	s.Location = loc
 	for _, item := range s.Items {
-		item.Location = loc.Append(item.Key.String())
+		item.Location = loc.AppendLocation(item.Key.String())
 	}
 	return nil
 }

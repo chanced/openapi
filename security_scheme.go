@@ -134,7 +134,7 @@ func (s *SecurityScheme) setLocation(loc Location) error {
 		return nil
 	}
 	s.Location = loc
-	return s.Flows.setLocation(loc.Append("flows"))
+	return s.Flows.setLocation(loc.AppendLocation("flows"))
 }
 
 // UnmarshalJSON unmarshals JSON

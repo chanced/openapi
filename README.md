@@ -11,15 +11,17 @@ is to offer building blocks for code and documentation generation.
 
 -   Reference resolution, including support for recursive `$ref`s, `$dynamicRef`,
     `$recursiveRef`.
+-   All keys retain their order from the markup. This makes for a bit more
+    of a complicated API but prevents the need for further resorting to keep
+    code generation consistent
+-   Supports both JSON and YAML
 -   Validation ([see the validation seciton](#validation))
--   All strings are instances of
-    [github.com/chanced/caps/text](https://github.com/chanced/caps)
-    which come with case conversion and `strings` functions as methods.
--   Extensions, unknown JSON Schema keywords, examples, and a few other things
+-   All non-primitive nodes have an absolute & relative location
+-   Strings are [text.Text](https://github.com/chanced/caps) which has case
+    conversions and `strings` functions as methods.
+-   Extensions, unknown JSON Schema keywords, examples, and a few other fields
     are instances of [jsonx.RawMessage](https://github.com/chanced/jsonx) which
     comes with a few helper methods.
--   All keys retain their order. This makes for a bit more of a complicated API
-    but prevents the need for further resorting to keep code generation consistent
 
 ## Usage
 
@@ -40,8 +42,10 @@ var spec embed.FS
 
 func main() {
     ctx := context.Background()
-    c, _ := openapi.SetupCompiler(jsonschema.NewCompiler())
-    v := openapi.NewValidator(c)
+
+    c, _ := openapi.SetupCompiler(jsonschema.NewCompiler()) // adding schema files
+    v, _ := openapi.NewValidator(c)
+
     fn := func(_ context.Context, uri uri.URI, kind Kind) (Kind, []byte, error){
         // quick and simple example
         // be sure to handle errors

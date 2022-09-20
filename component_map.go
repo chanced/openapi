@@ -3,6 +3,7 @@ package openapi
 import (
 	"bytes"
 	"encoding/json"
+	"reflect"
 
 	"github.com/chanced/jsonx"
 	"github.com/chanced/transcode"
@@ -66,6 +67,13 @@ func (*ComponentMap[T]) mapKind() Kind   { return KindUndefined }
 func (*ComponentMap[T]) sliceKind() Kind { return KindUndefined }
 
 func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
+	if !jsonx.IsObject(data) {
+		return &json.UnmarshalTypeError{
+			Value:  jsonx.TypeOf(data).String(),
+			Type:   reflect.TypeOf(cm),
+			Struct: "ComponentMap",
+		}
+	}
 	var err error
 	*cm = ComponentMap[T]{
 		Items: make([]*ComponentEntry[T], 0),
@@ -139,6 +147,9 @@ func (cm ComponentMap[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (cm *ComponentMap[T]) Get(key Text) *Component[T] {
+	if cm == nil || cm.Items == nil {
+		return nil
+	}
 	for _, v := range cm.Items {
 		if v.Key == key {
 			return v.Component
@@ -198,7 +209,7 @@ func (cm *ComponentMap[T]) setLocation(loc Location) error {
 	}
 	cm.Location = loc
 	for _, kv := range cm.Items {
-		if err := kv.Component.setLocation(loc.Append(kv.Key.String())); err != nil {
+		if err := kv.Component.setLocation(loc.AppendLocation(kv.Key.String())); err != nil {
 			return err
 		}
 	}

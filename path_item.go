@@ -151,34 +151,34 @@ func (p *PathItem) setLocation(loc Location) error {
 	}
 	p.Location = loc
 	var err error
-	if err = p.Delete.setLocation(loc.Append("delete")); err != nil {
+	if err = p.Delete.setLocation(loc.AppendLocation("delete")); err != nil {
 		return err
 	}
-	if err = p.Get.setLocation(loc.Append("get")); err != nil {
+	if err = p.Get.setLocation(loc.AppendLocation("get")); err != nil {
 		return err
 	}
-	if err = p.Head.setLocation(loc.Append("head")); err != nil {
+	if err = p.Head.setLocation(loc.AppendLocation("head")); err != nil {
 		return err
 	}
-	if err = p.Options.setLocation(loc.Append("options")); err != nil {
+	if err = p.Options.setLocation(loc.AppendLocation("options")); err != nil {
 		return err
 	}
-	if err = p.Patch.setLocation(loc.Append("patch")); err != nil {
+	if err = p.Patch.setLocation(loc.AppendLocation("patch")); err != nil {
 		return err
 	}
-	if err = p.Post.setLocation(loc.Append("post")); err != nil {
+	if err = p.Post.setLocation(loc.AppendLocation("post")); err != nil {
 		return err
 	}
-	if err = p.Put.setLocation(loc.Append("put")); err != nil {
+	if err = p.Put.setLocation(loc.AppendLocation("put")); err != nil {
 		return err
 	}
-	if err = p.Trace.setLocation(loc.Append("trace")); err != nil {
+	if err = p.Trace.setLocation(loc.AppendLocation("trace")); err != nil {
 		return err
 	}
-	if err = p.Parameters.setLocation(loc.Append("parameters")); err != nil {
+	if err = p.Parameters.setLocation(loc.AppendLocation("parameters")); err != nil {
 		return err
 	}
-	if err = p.Servers.setLocation(loc.Append("servers")); err != nil {
+	if err = p.Servers.setLocation(loc.AppendLocation("servers")); err != nil {
 		return err
 	}
 

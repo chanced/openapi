@@ -217,34 +217,34 @@ func (c *Components) setLocation(loc Location) error {
 	}
 	c.Location = loc
 	var err error
-	if err = c.Schemas.setLocation(loc.Append("schemas")); err != nil {
+	if err = c.Schemas.setLocation(loc.AppendLocation("schemas")); err != nil {
 		return err
 	}
-	if err = c.Responses.setLocation(loc.Append("responses")); err != nil {
+	if err = c.Responses.setLocation(loc.AppendLocation("responses")); err != nil {
 		return err
 	}
-	if err = c.Parameters.setLocation(loc.Append("parameters")); err != nil {
+	if err = c.Parameters.setLocation(loc.AppendLocation("parameters")); err != nil {
 		return err
 	}
-	if err = c.Examples.setLocation(loc.Append("examples")); err != nil {
+	if err = c.Examples.setLocation(loc.AppendLocation("examples")); err != nil {
 		return err
 	}
-	if err = c.RequestBodies.setLocation(loc.Append("requestBodies")); err != nil {
+	if err = c.RequestBodies.setLocation(loc.AppendLocation("requestBodies")); err != nil {
 		return err
 	}
-	if err = c.Headers.setLocation(loc.Append("headers")); err != nil {
+	if err = c.Headers.setLocation(loc.AppendLocation("headers")); err != nil {
 		return err
 	}
-	if err = c.SecuritySchemes.setLocation(loc.Append("securitySchemes")); err != nil {
+	if err = c.SecuritySchemes.setLocation(loc.AppendLocation("securitySchemes")); err != nil {
 		return err
 	}
-	if err = c.Links.setLocation(loc.Append("links")); err != nil {
+	if err = c.Links.setLocation(loc.AppendLocation("links")); err != nil {
 		return err
 	}
-	if err = c.Callbacks.setLocation(loc.Append("callbacks")); err != nil {
+	if err = c.Callbacks.setLocation(loc.AppendLocation("callbacks")); err != nil {
 		return err
 	}
-	if err = c.PathItems.setLocation(loc.Append("pathItems")); err != nil {
+	if err = c.PathItems.setLocation(loc.AppendLocation("pathItems")); err != nil {
 		return err
 	}
 

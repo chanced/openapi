@@ -121,7 +121,7 @@ func (sm *SchemaMap) setLocation(loc Location) error {
 	sm.Location = loc
 
 	for _, e := range sm.Items {
-		err := e.Schema.setLocation(loc.Append(e.Key.String()))
+		err := e.Schema.setLocation(loc.AppendLocation(e.Key.String()))
 		if err != nil {
 			return err
 		}

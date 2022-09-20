@@ -155,7 +155,7 @@ func (l *Link) setLocation(loc Location) error {
 	}
 	l.Location = loc
 	if l.OperationRef != nil {
-		l.OperationRef.Location = loc.Append("operationRef")
+		l.OperationRef.Location = loc.AppendLocation("operationRef")
 	}
 	return nil
 }

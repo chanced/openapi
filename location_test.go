@@ -14,13 +14,13 @@ func TestLocationAppend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	loc = loc.Append("foo")
+	loc = loc.AppendLocation("foo")
 	expected := "https://example.org/schema/demo#/foo"
 	if loc.String() != expected {
 		t.Errorf("expected %q, got %s", expected, loc.String())
 	}
 
-	loc = loc.Append("bar")
+	loc = loc.AppendLocation("bar")
 	expected = "https://example.org/schema/demo#/foo/bar"
 	if loc.String() != expected {
 		t.Errorf("expected %q, got %s", expected, loc.String())
@@ -33,7 +33,7 @@ func TestLocationAppend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	loc = loc.Append("foo")
+	loc = loc.AppendLocation("foo")
 	expected = "example.json#/foo"
 	if loc.String() != expected {
 		t.Errorf("expected %q, got %s", expected, loc.String())

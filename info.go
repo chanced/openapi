@@ -117,10 +117,10 @@ func (i *Info) setLocation(loc Location) error {
 		return nil
 	}
 	i.Location = loc
-	if err := i.Contact.setLocation(loc.Append("contact")); err != nil {
+	if err := i.Contact.setLocation(loc.AppendLocation("contact")); err != nil {
 		return err
 	}
-	if err := i.License.setLocation(loc.Append("license")); err != nil {
+	if err := i.License.setLocation(loc.AppendLocation("license")); err != nil {
 		return err
 	}
 	return nil

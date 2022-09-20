@@ -38,7 +38,7 @@ func (l Location) RelativeLocation() jsonpointer.Pointer {
 	return l.relative
 }
 
-func (l Location) Append(p string) Location {
+func (l Location) AppendLocation(p string) Location {
 	l.relative = l.relative.AppendString(p)
 	l.absolute.Fragment = l.relative.String()
 	l.absolute.RawFragment = l.relative.String()

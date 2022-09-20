@@ -91,7 +91,7 @@ func (s *Server) setLocation(loc Location) error {
 		return nil
 	}
 	s.Location = loc
-	return s.Variables.setLocation(loc.Append("variables"))
+	return s.Variables.setLocation(loc.AppendLocation("variables"))
 }
 
 // MarshalJSON marshals JSON

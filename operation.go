@@ -283,25 +283,25 @@ func (o *Operation) setLocation(loc Location) error {
 	}
 	o.Location = loc
 	var err error
-	if err = o.ExternalDocs.setLocation(loc.Append("externalDocs")); err != nil {
+	if err = o.ExternalDocs.setLocation(loc.AppendLocation("externalDocs")); err != nil {
 		return err
 	}
-	if err = o.Parameters.setLocation(loc.Append("parameters")); err != nil {
+	if err = o.Parameters.setLocation(loc.AppendLocation("parameters")); err != nil {
 		return err
 	}
-	if err = o.RequestBody.setLocation(loc.Append("requestBody")); err != nil {
+	if err = o.RequestBody.setLocation(loc.AppendLocation("requestBody")); err != nil {
 		return err
 	}
-	if err = o.Responses.setLocation(loc.Append("responses")); err != nil {
+	if err = o.Responses.setLocation(loc.AppendLocation("responses")); err != nil {
 		return err
 	}
-	if err = o.Callbacks.setLocation(loc.Append("callbacks")); err != nil {
+	if err = o.Callbacks.setLocation(loc.AppendLocation("callbacks")); err != nil {
 		return err
 	}
-	if err = o.Security.setLocation(loc.Append("security")); err != nil {
+	if err = o.Security.setLocation(loc.AppendLocation("security")); err != nil {
 		return err
 	}
-	if err = o.Servers.setLocation(loc.Append("servers")); err != nil {
+	if err = o.Servers.setLocation(loc.AppendLocation("servers")); err != nil {
 		return err
 	}
 	return nil

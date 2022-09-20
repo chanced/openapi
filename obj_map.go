@@ -55,32 +55,13 @@ func (om *ObjMap[T]) nodes() []node {
 	return edges
 }
 
-// func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return om.resolveNodeByPointer(ptr)
-// }
-
-// func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return om, nil
-// 	}
-// 	tok, _ := ptr.NextToken()
-// 	v := om.Get(Text(tok))
-// 	if v.isNil() {
-// 		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
-// 	}
-// 	return nil, nil
-// }
-
 func (om *ObjMap[T]) setLocation(loc Location) error {
 	if om == nil {
 		return nil
 	}
 	om.Location = loc
 	for _, kv := range om.Items {
-		if err := kv.Value.setLocation(loc.Append(string(kv.Key))); err != nil {
+		if err := kv.Value.setLocation(loc.AppendLocation(string(kv.Key))); err != nil {
 			return err
 		}
 	}
@@ -107,7 +88,7 @@ func (om *ObjMap[T]) Set(key Text, obj T) {
 	for i, kv := range om.Items {
 		if kv.Key == key {
 			om.Items[i] = ObjMapEntry[T]{
-				Location: om.Location.Append(key.String()),
+				Location: om.AppendLocation(key.String()),
 				Key:      key,
 				Value:    obj,
 			}
@@ -115,10 +96,13 @@ func (om *ObjMap[T]) Set(key Text, obj T) {
 		}
 	}
 	om.Items = append(om.Items, ObjMapEntry[T]{
-		Location: om.Location.Append(key.String()),
+		Location: om.AppendLocation(key.String()),
 		Key:      key,
 		Value:    obj,
 	})
+}
+
+func (om *ObjMap[T]) Del(key Text) {
 }
 
 func (om *ObjMap[T]) UnmarshalJSON(data []byte) error {
@@ -205,3 +189,22 @@ func (om *ObjMap[T]) Anchors() (*Anchors, error) {
 func (om *ObjMap[T]) isNil() bool { return om == nil }
 
 var _ (node) = (*ObjMap[*Server])(nil)
+
+// func (om *ObjMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return om.resolveNodeByPointer(ptr)
+// }
+
+// func (om *ObjMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return om, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	v := om.Get(Text(tok))
+// 	if v.isNil() {
+// 		return nil, newErrNotFound(om.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return nil, nil
+// }

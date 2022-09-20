@@ -185,13 +185,13 @@ func (r *Response) setLocation(loc Location) error {
 		return nil
 	}
 	r.Location = loc
-	if err := r.Headers.setLocation(loc.Append("headers")); err != nil {
+	if err := r.Headers.setLocation(loc.AppendLocation("headers")); err != nil {
 		return err
 	}
-	if err := r.Content.setLocation(loc.Append("content")); err != nil {
+	if err := r.Content.setLocation(loc.AppendLocation("content")); err != nil {
 		return err
 	}
-	if err := r.Links.setLocation(loc.Append("links")); err != nil {
+	if err := r.Links.setLocation(loc.AppendLocation("links")); err != nil {
 		return err
 	}
 	return nil
