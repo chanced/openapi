@@ -128,5 +128,6 @@ func (rb *RequestBody) setLocation(loc Location) error {
 	}
 	return nil
 }
+func (*RequestBody) refable() {}
 
 var _ node = (*RequestBody)(nil)

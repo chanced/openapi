@@ -95,13 +95,12 @@ type CompiledSchema interface {
 
 ## Known trouble spots
 
--   **Testing.** I simply do not have the time to properly test this at the moment.
-    There be dragons :dragon_face: and bugs :lady_beetle:. If you find them, please [open an issue](https://github.com/chanced/openapi/issues/new).
+-   **Testing.** The code coverage is abysmal at the moment. As I find time, I'll add coverage.
 -   **Validation.** [See the Validation section](#validation).
+-   **Errors.** Errors and error messages need a lot of work.
 -   [jsonpointer](https://github.com/chanced/jsonpointer)'s Resolve, Assign, and
-    Delete do not currently work. I need to update
-    [jsonpointer](https://github.com/chanced/jsonpointer) before the interfaces
-    can be implemented for types within this library.
+    Delete do not currently work. I need to update the jsonpointer library
+    before its interfaces can be implemented for types within this library.
 -   Values of `$anchor` and `$dynamicAnchor` must be unique to a file.
     Conditional `$dynamicAnchor` `$recursiveAnchor` are going to be challenging.
     See below.

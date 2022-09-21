@@ -24,7 +24,7 @@ var ErrNotReference = errors.New("openapi: data is not a Reference")
 //
 // See the [rules for resolving Relative
 // References](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#relativeReferencesURI).
-type Reference struct {
+type Reference[T refable] struct {
 	// The reference identifier. This MUST be in the form of a URI.
 	//
 	// 	*required*
@@ -46,40 +46,42 @@ type Reference struct {
 
 	ReferencedKind Kind `json:"-"`
 
+	Resolved T
+
 	dst interface{}
 
 	resolved bool
 }
 
-func (r *Reference) Nodes() []Node {
+func (r *Reference[T]) Nodes() []Node {
 	if r == nil {
 		return nil
 	}
 	return downcastNodes(r.nodes())
 }
 
-func (r *Reference) nodes() []node {
+func (r *Reference[T]) nodes() []node {
 	if r == nil {
 		return nil
 	}
 
-	return appendEdges(nil, r.Resolved().(node))
+	return appendEdges(nil, r.ResolvedNode().(node))
 }
-func (r *Reference) RefKind() Kind { return r.ReferencedKind }
+func (r *Reference[T]) RefKind() Kind { return r.ReferencedKind }
 
-func (r *Reference) URI() *uri.URI {
+func (r *Reference[T]) URI() *uri.URI {
 	if r == nil {
 		return nil
 	}
 	return r.Ref
 }
 
-func (r *Reference) IsResolved() bool { return r.resolved }
+func (r *Reference[T]) IsResolved() bool { return r.resolved }
 
 // resolve resolves the reference
 //
 // TODO: make this a bit less panicky
-func (r *Reference) resolve(v Node) error {
+func (r *Reference[T]) resolve(v Node) error {
 	if r == nil {
 		return fmt.Errorf("openapi: Reference is nil")
 	}
@@ -97,11 +99,14 @@ func (r *Reference) resolve(v Node) error {
 	} else {
 		return fmt.Errorf("%s is not assignable to %s", rv.Type().String(), rd.Type().String())
 	}
+
+	r.Resolved = v.(T)
+
 	return nil
 }
 
 // Referenced returns the resolved referenced Node
-func (r *Reference) Resolved() Node {
+func (r *Reference[T]) ResolvedNode() Node {
 	n, ok := (r.dst).(*Node)
 	if !ok {
 		panic("openapi: Reference dst is not a Node. This is a bug. Please report it: https://github.com/chanced/openapi/issues/new")
@@ -111,20 +116,20 @@ func (r *Reference) Resolved() Node {
 
 // Refs returns nil as instances of Reference do not contain the referenced
 // object
-func (*Reference) Refs() []Ref { return nil }
+func (*Reference[T]) Refs() []Ref { return nil }
 
-func (r *Reference) Anchors() (*Anchors, error) { return nil, nil }
+func (r *Reference[T]) Anchors() (*Anchors, error) { return nil, nil }
 
-func (*Reference) RefType() RefType { return RefTypeComponent }
+func (*Reference[T]) RefType() RefType { return RefTypeComponent }
 
-// func (r *Reference) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// func (r *Reference[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {
 // 		return nil, err
 // 	}
 // 	return r.resolveNodeByPointer(ptr)
 // }
 
-// func (r *Reference) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// func (r *Reference[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if ptr.IsRoot() {
 // 		return r, nil
 // 	}
@@ -132,23 +137,23 @@ func (*Reference) RefType() RefType { return RefTypeComponent }
 // 	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
 // }
 
-func (r Reference) MarshalJSON() ([]byte, error) {
-	type reference Reference
-	return json.Marshal(reference(r))
+func (r Reference[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(reference[T](r))
 }
 
-func (r *Reference) UnmarshalJSON(data []byte) error {
-	type reference Reference
-	var v reference
+type reference[T refable] Reference[T]
+
+func (r *Reference[T]) UnmarshalJSON(data []byte) error {
+	var v reference[T]
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	*r = Reference(v)
+	*r = Reference[T](v)
 	return nil
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
-func (r Reference) MarshalYAML() (interface{}, error) {
+func (r Reference[T]) MarshalYAML() (interface{}, error) {
 	j, err := r.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -157,7 +162,7 @@ func (r Reference) MarshalYAML() (interface{}, error) {
 }
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
-func (r *Reference) UnmarshalYAML(value *yaml.Node) error {
+func (r *Reference[T]) UnmarshalYAML(value *yaml.Node) error {
 	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
 		return err
@@ -165,11 +170,11 @@ func (r *Reference) UnmarshalYAML(value *yaml.Node) error {
 	return json.Unmarshal(j, r)
 }
 
-func (r *Reference) String() string {
+func (r *Reference[T]) String() string {
 	return r.Ref.String()
 }
 
-func (r *Reference) setLocation(loc Location) error {
+func (r *Reference[T]) setLocation(loc Location) error {
 	if r == nil {
 		return nil
 	}
@@ -177,11 +182,11 @@ func (r *Reference) setLocation(loc Location) error {
 	return nil
 }
 
-func (r *Reference) Kind() Kind    { return KindReference }
-func (*Reference) mapKind() Kind   { return KindUndefined }
-func (*Reference) sliceKind() Kind { return KindUndefined }
+func (r *Reference[T]) Kind() Kind    { return KindReference }
+func (*Reference[T]) mapKind() Kind   { return KindUndefined }
+func (*Reference[T]) sliceKind() Kind { return KindUndefined }
 
-func (r *Reference) isNil() bool { return r == nil }
+func (r *Reference[T]) isNil() bool { return r == nil }
 
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")
@@ -189,8 +194,7 @@ func isRefJSON(data []byte) bool {
 }
 
 var (
-	_ node = (*Reference)(nil)
-
-	_ Ref = (*Reference)(nil)
-	_ ref = (*Reference)(nil)
+	_ node = (*Reference[*Response])(nil)
+	_ Ref  = (*Reference[*Response])(nil)
+	_ ref  = (*Reference[*Response])(nil)
 )

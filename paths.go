@@ -15,7 +15,7 @@ type PathItemEntry struct {
 	PathItem *PathItem
 }
 
-type PathItemObjs = ObjMap[*PathItem]
+type PathItems = ObjMap[*PathItem]
 
 // PathItemMap is a map of Paths that can either be a Path or a Reference
 type PathItemMap = ComponentMap[*PathItem]
@@ -28,7 +28,7 @@ type Paths struct {
 	Extensions `json:"-"`
 
 	// Items are the Path
-	PathItemObjs `json:"-"`
+	PathItems `json:"-"`
 }
 
 func (p *Paths) Nodes() []Node {
@@ -38,14 +38,28 @@ func (p *Paths) Nodes() []Node {
 	return downcastNodes(p.nodes())
 }
 
+func (p *Paths) Anchors() (*Anchors, error) {
+	if p == nil {
+		return nil, nil
+	}
+	return p.PathItems.Anchors()
+}
+
 func (p *Paths) nodes() []node {
 	if p == nil {
 		return nil
 	}
-	return appendEdges(nil, p.PathItemObjs.nodes()...)
+	return appendEdges(nil, p.PathItems.nodes()...)
 }
 
 func (*Paths) ref() Ref { return nil }
+func (p *Paths) setLocation(loc Location) error {
+	if p == nil {
+		return nil
+	}
+	p.PathItems.setLocation(loc)
+	return nil
+}
 
 // func (p *Paths) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {
@@ -74,7 +88,7 @@ func (*Paths) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals JSON
 func (p Paths) MarshalJSON() ([]byte, error) {
-	j, err := p.PathItemObjs.MarshalJSON()
+	j, err := p.PathItems.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}

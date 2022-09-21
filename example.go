@@ -54,21 +54,6 @@ func (*Example) Refs() []Ref { return nil }
 
 func (e *Example) Anchors() (*Anchors, error) { return nil, nil }
 
-// func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return e.resolveNodeByPointer(ptr)
-// }
-
-// func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return e, nil
-// 	}
-// 	tok, _ := ptr.NextToken()
-// 	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
-// }
-
 func (*Example) Kind() Kind      { return KindExample }
 func (*Example) mapKind() Kind   { return KindExampleMap }
 func (*Example) sliceKind() Kind { return KindUndefined }
@@ -118,8 +103,25 @@ func (e *Example) setLocation(loc Location) error {
 }
 func (e *Example) isNil() bool { return e == nil }
 
+func (*Example) refable() {}
+
 var (
 	_ node = (*Example)(nil)
 
 	_ node = (*ExampleMap)(nil)
 )
+
+// func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return e.resolveNodeByPointer(ptr)
+// }
+
+// func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return e, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+// }

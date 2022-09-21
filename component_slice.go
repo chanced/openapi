@@ -9,7 +9,7 @@ import (
 )
 
 // ComponentSlice is a slice of Components of type T
-type ComponentSlice[T node] struct {
+type ComponentSlice[T refable] struct {
 	Location `json:"-"`
 	Items    []*Component[T] `json:"-"`
 }
@@ -131,7 +131,7 @@ func (cs *ComponentSlice[T]) UnmarshalYAML(value *yaml.Node) error {
 
 func (cs *ComponentSlice[T]) isNil() bool { return cs == nil }
 
-var _ node = (*ComponentSlice[*Server])(nil)
+var _ node = (*ComponentSlice[*Response])(nil)
 
 // func (cs *ComponentSlice[T]) Walk(v Visitor) error {
 // 	var t T

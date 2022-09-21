@@ -21,8 +21,8 @@ const (
 
 type SchemaRef struct {
 	Location
-	Ref    *uri.URI `json:"-"`
-	Schema *Schema  `json:"-"`
+	Ref      *uri.URI `json:"-"`
+	Resolved *Schema  `json:"-"`
 
 	SchemaRefKind SchemaRefType `json:"-"`
 }
@@ -49,12 +49,12 @@ func (sr *SchemaRef) RefType() RefType {
 
 func (sr *SchemaRef) RefKind() Kind { return KindSchema }
 
-func (sr *SchemaRef) nodes() []node { return []node{sr.Schema} }
+func (sr *SchemaRef) nodes() []node { return []node{sr.Resolved} }
 
 func (*SchemaRef) Refs() []Ref { return nil }
 
 func (sr *SchemaRef) IsResolved() bool {
-	return sr.Schema != nil
+	return sr.Resolved != nil
 }
 
 func (sr *SchemaRef) URI() *uri.URI { return sr.Ref }
@@ -63,11 +63,11 @@ func (*SchemaRef) Kind() Kind      { return KindSchemaRef }
 func (*SchemaRef) mapKind() Kind   { return KindUndefined }
 func (*SchemaRef) sliceKind() Kind { return KindUndefined }
 
-func (sr *SchemaRef) Resolved() Node {
+func (sr *SchemaRef) ResolvedNode() Node {
 	if sr == nil {
 		return nil
 	}
-	return sr.Schema
+	return sr.Resolved
 }
 
 // func (sr *SchemaRef) Clone() *SchemaRef {
@@ -84,30 +84,13 @@ func (sr *SchemaRef) resolve(n Node) error {
 	}
 
 	if s, ok := n.(*Schema); ok {
-		sr.Schema = s.Clone()
+		sr.Resolved = s.Clone()
 		return nil
 	}
 	return NewResolutionError(sr, KindSchema, n.Kind())
 }
 
 func (*SchemaRef) Anchors() (*Anchors, error) { return nil, nil }
-
-// func (sr *SchemaRef) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return sr.resolveNodeByPointer(ptr)
-// }
-
-// func (sr *SchemaRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	tok, _ := ptr.NextToken()
-// 	if !ptr.IsRoot() {
-// 		if sr.Ref != nil {
-// 			return nil, newErrNotResolvable(sr.Location.AbsoluteLocation(), tok)
-// 		}
-// 	}
-// 	return sr, nil
-// }
 
 func (sr *SchemaRef) setLocation(l Location) error {
 	if sr == nil {
@@ -140,7 +123,7 @@ func (sr *SchemaRef) UnmarshalJSON(data []byte) error {
 
 	var s Schema
 	err := json.Unmarshal(data, &s)
-	sr.Schema = &s
+	sr.Resolved = &s
 	return err
 }
 
@@ -182,7 +165,7 @@ func (sr *SchemaRef) Clone() *SchemaRef {
 			absolute: sr.Location.absolute,
 			relative: sr.Location.relative,
 		},
-		Schema:        sr.Schema, // should this be cloned?
+		Resolved:      sr.Resolved, // should this be cloned?
 		SchemaRefKind: sr.SchemaRefKind,
 	}
 }
@@ -192,3 +175,20 @@ var (
 
 	_ Ref = (*SchemaRef)(nil)
 )
+
+// func (sr *SchemaRef) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return sr.resolveNodeByPointer(ptr)
+// }
+
+// func (sr *SchemaRef) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	tok, _ := ptr.NextToken()
+// 	if !ptr.IsRoot() {
+// 		if sr.Ref != nil {
+// 			return nil, newErrNotResolvable(sr.Location.AbsoluteLocation(), tok)
+// 		}
+// 	}
+// 	return sr, nil
+// }

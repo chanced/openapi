@@ -14,6 +14,9 @@ type ObjSlice[T node] struct {
 
 // Anchors implements node
 func (os *ObjSlice[T]) Anchors() (*Anchors, error) {
+	if os == nil {
+		return nil, nil
+	}
 	var a *Anchors
 	var err error
 	for _, x := range os.Items {

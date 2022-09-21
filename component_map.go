@@ -13,7 +13,7 @@ import (
 
 // ComponentEntry is an entry in a ComponentMap consisting of a Key/Value pair for
 // an object consiting of Component[T]s
-type ComponentEntry[V node] struct {
+type ComponentEntry[V refable] struct {
 	Key       Text
 	Component *Component[V]
 }
@@ -24,7 +24,7 @@ type ComponentEntry[V node] struct {
 // fields.
 //
 // Under the hood, ComponentMap is of a slice of ComponentField[T]
-type ComponentMap[T node] struct {
+type ComponentMap[T refable] struct {
 	Location
 	Items []*ComponentEntry[T]
 }
@@ -200,7 +200,7 @@ func (cm *ComponentMap[T]) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-var _ node = (*ComponentMap[*Server])(nil)
+var _ node = (*ComponentMap[*Response])(nil)
 
 // func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {

@@ -162,12 +162,6 @@ func (l *Link) setLocation(loc Location) error {
 
 func (l *Link) isNil() bool { return l == nil }
 
-// LinkParameters is a map representing parameters to pass to an operation as
-// specified with operationId or identified via operationRef. The key is the
-// parameter name to be used, whereas the value can be a constant or an
-// expression to be evaluated and passed to the linked operation. The parameter
-// name can be qualified using the parameter location [{in}.]{name} for
-// operations that use the same parameter name in different locations (e.g.
-// path.id).
+func (l *Link) refable() {}
 
 var _ node = (*Link)(nil)

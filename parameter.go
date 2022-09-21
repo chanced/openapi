@@ -356,4 +356,6 @@ func (p *Parameter) setLocation(loc Location) error {
 }
 func (p *Parameter) isNil() bool { return p == nil }
 
+func (*Parameter) refable() {}
+
 var _ node = (*Parameter)(nil)

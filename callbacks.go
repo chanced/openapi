@@ -22,8 +22,8 @@ type CallbacksMap = ComponentMap[*Callbacks]
 // To describe incoming requests from the API provider independent from another
 // API call, use the webhooks field.
 type Callbacks struct {
-	Extensions   `json:"-"`
-	PathItemObjs `json:"-"`
+	Extensions `json:"-"`
+	PathItems  `json:"-"`
 }
 
 func (c *Callbacks) Nodes() []Node {
@@ -38,7 +38,7 @@ func (c *Callbacks) nodes() []node {
 		return nil
 	}
 	edges := make([]node, 0, 1)
-	edges = appendEdges(edges, c.PathItemObjs.nodes()...)
+	edges = appendEdges(edges, c.PathItems.nodes()...)
 	return edges
 }
 
@@ -60,14 +60,14 @@ func (c *Callbacks) Anchors() (*Anchors, error) {
 	if c == nil {
 		return nil, nil
 	}
-	return c.PathItemObjs.Anchors()
+	return c.PathItems.Anchors()
 }
 
 func (c *Callbacks) Refs() []Ref {
 	if c == nil {
 		return nil
 	}
-	return c.PathItemObjs.Refs()
+	return c.PathItems.Refs()
 }
 
 // // ResolveNodeByPointer performs a l
@@ -125,7 +125,7 @@ func (c *Callbacks) setLocation(loc Location) error {
 		return nil
 	}
 	c.Location = loc
-	return c.PathItemObjs.setLocation(loc)
+	return c.PathItems.setLocation(loc)
 }
 
 func (c Callbacks) MarshalYAML() (interface{}, error) {
@@ -157,7 +157,8 @@ func (c *Callbacks) UnmarshalYAML(value *yaml.Node) error {
 // 		return nil
 // 	}
 
-// 	return c.Items.Walk(v)
-// }
+//		return c.Items.Walk(v)
+//	}
+func (c *Callbacks) refable() {}
 
 var _ node = (*Callbacks)(nil)

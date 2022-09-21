@@ -120,35 +120,6 @@ func (h *Header) Anchors() (*Anchors, error) {
 	}
 	return anchors, nil
 }
-
-// func (h *Header) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return h.resolveNodeByPointer(ptr)
-// }
-
-// func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return h, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-// 	switch nxt {
-// 	case "schema":
-// 		if h.Schema == nil {
-// 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
-// 		}
-// 		return h.Schema.resolveNodeByPointer(nxt)
-// 	case "examples":
-// 		if h.Examples == nil {
-// 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
-// 		}
-// 		return h.Examples.resolveNodeByPointer(nxt)
-// 	default:
-// 		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
-// 	}
-// }
-
 func (*Header) Kind() Kind      { return KindHeader }
 func (*Header) mapKind() Kind   { return KindHeaderMap }
 func (*Header) sliceKind() Kind { return KindHeaderSlice }
@@ -220,5 +191,36 @@ func (h *Header) setLocation(loc Location) error {
 	return nil
 }
 func (h *Header) isNil() bool { return h == nil }
+func (*Header) refable()      {}
 
 var _ node = (*Header)(nil)
+
+//
+//
+// func (h *Header) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return h.resolveNodeByPointer(ptr)
+// }
+
+// func (h *Header) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return h, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch nxt {
+// 	case "schema":
+// 		if h.Schema == nil {
+// 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return h.Schema.resolveNodeByPointer(nxt)
+// 	case "examples":
+// 		if h.Examples == nil {
+// 			return nil, newErrNotFound(h.Location.AbsoluteLocation(), tok)
+// 		}
+// 		return h.Examples.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(h.Location.AbsoluteLocation(), tok)
+// 	}
+// }

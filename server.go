@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	ServerSlice       = ComponentSlice[*Server]
+	ServerSlice       = ObjSlice[*Server]
 	ServerVariableMap = ObjMap[*ServerVariable]
 )
 

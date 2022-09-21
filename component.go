@@ -9,9 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Component[T node] struct {
+type Component[T refable] struct {
 	Location
-	Reference *Reference
+	Reference *Reference[T]
 	Object    T
 }
 
@@ -139,7 +139,7 @@ func (c *Component[T]) ObjectKind() Kind {
 
 func (c *Component[T]) UnmarshalJSON(data []byte) error {
 	if isRefJSON(data) {
-		var ref Reference
+		var ref Reference[T]
 		if err := json.Unmarshal(data, &ref); err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func (c *Component[T]) Anchors() (*Anchors, error) {
 
 func (c *Component[T]) isNil() bool { return c == nil }
 
-var _ node = (*Component[*Server])(nil)
+var _ node = (*Component[*Response])(nil)
 
 // func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {

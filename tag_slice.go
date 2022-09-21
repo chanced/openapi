@@ -118,6 +118,6 @@ func (ts *TagSlice) setLocation(loc Location) error {
 	return nil
 }
 
-func (TagSlice) Anchors() (*Anchors, error) { return nil, nil }
+func (*TagSlice) Anchors() (*Anchors, error) { return nil, nil }
 
 var _ node = (*TagSlice)(nil)

@@ -225,6 +225,10 @@ func (*PathItem) Kind() Kind { return KindPathItem }
 
 func (pi *PathItem) isNil() bool { return pi == nil }
 
+func (*PathItem) refable() {}
+
+var _ node = (*PathItem)(nil)
+
 // func (pi *PathItem) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {
 // 		return nil, err
@@ -377,5 +381,3 @@ func (pi *PathItem) isNil() bool { return pi == nil }
 
 //		return nil
 //	}
-
-var _ node = (*PathItem)(nil)

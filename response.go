@@ -92,55 +92,6 @@ func (r *Response) Anchors() (*Anchors, error) {
 	return anchors, nil
 }
 
-// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
-// attempts to resolve the Node.
-//
-// # Errors
-//
-// - [ErrNotFound] indicates that the component was not found
-//
-// - [ErrNotResolvable] indicates that the pointer path can not resolve to a
-// Node
-//
-// - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
-// is malformed
-//
-// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
-// and does not start with a slash
-// func (r *Response) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	err := ptr.Validate()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return r.resolveNodeByPointer(ptr)
-// }
-
-// func (r *Response) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return r, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-// 	switch tok {
-// 	case "headers":
-// 		if r.Headers == nil {
-// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
-// 		}
-// 		return r.Headers.resolveNodeByPointer(nxt)
-// 	case "content":
-// 		if r.Content == nil {
-// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
-// 		}
-// 		return r.Content.resolveNodeByPointer(nxt)
-// 	case "links":
-// 		if r.Links == nil {
-// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
-// 		}
-// 		return r.Links.resolveNodeByPointer(nxt)
-// 	default:
-// 		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
-// 	}
-// }
-
 // MarshalJSON marshals r into JSON
 func (r Response) MarshalJSON() ([]byte, error) {
 	type response Response
@@ -197,4 +148,55 @@ func (r *Response) setLocation(loc Location) error {
 	return nil
 }
 
+func (*Response) refable() {}
+
 var _ node = (*Response)(nil)
+
+// ResolveNodeByPointer resolves a Node by a jsonpointer. It validates the pointer and then
+// attempts to resolve the Node.
+//
+// # Errors
+//
+// - [ErrNotFound] indicates that the component was not found
+//
+// - [ErrNotResolvable] indicates that the pointer path can not resolve to a
+// Node
+//
+// - [jsonpointer.ErrMalformedEncoding] indicates that the pointer encoding
+// is malformed
+//
+// - [jsonpointer.ErrMalformedStart] indicates that the pointer is not empty
+// and does not start with a slash
+// func (r *Response) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	err := ptr.Validate()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return r.resolveNodeByPointer(ptr)
+// }
+
+// func (r *Response) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return r, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "headers":
+// 		if r.Headers == nil {
+// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+// 		}
+// 		return r.Headers.resolveNodeByPointer(nxt)
+// 	case "content":
+// 		if r.Content == nil {
+// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+// 		}
+// 		return r.Content.resolveNodeByPointer(nxt)
+// 	case "links":
+// 		if r.Links == nil {
+// 			return nil, newErrNotFound(r.AbsoluteLocation(), tok)
+// 		}
+// 		return r.Links.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+// 	}
+// }

@@ -393,7 +393,10 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	if s == nil {
 		return nil, nil
 	}
-	anchors := &Anchors{}
+	anchors := &Anchors{
+		Standard: make(map[text.Text]Anchor),
+		Dynamic:  make(map[text.Text]Anchor),
+	}
 	if s.Anchor != "" {
 		anchors.Standard[s.Anchor] = Anchor{
 			Location: s.Location.AppendLocation("$anchor"),
@@ -727,10 +730,10 @@ func (s *Schema) unmarshalJSONObj(data []byte) error {
 		res.Ref.SchemaRefKind = SchemaRefTypeRef
 	}
 	if res.DynamicRef != nil {
-		s.DynamicRef.SchemaRefKind = SchemaRefTypeDynamic
+		res.DynamicRef.SchemaRefKind = SchemaRefTypeDynamic
 	}
 	if res.RecursiveRef != nil {
-		s.RecursiveRef.SchemaRefKind = SchemaRefTypeRecursive
+		res.RecursiveRef.SchemaRefKind = SchemaRefTypeRecursive
 	}
 	*s = res
 
@@ -1050,7 +1053,7 @@ func (s *Schema) Clone() *Schema {
 	}
 	var id *uri.URI
 	if s.ID != nil {
-		id = id.Clone()
+		id = s.ID.Clone()
 	}
 	var pattern *Regexp
 	if s.Pattern != nil {

@@ -34,7 +34,7 @@ type Ref interface {
 	Node
 	URI() *uri.URI
 	IsResolved() bool
-	Resolved() Node
+	ResolvedNode() Node
 	// ReferencedKind returns the Kind for the referenced node
 	RefKind() Kind
 	// RefType returns the RefType for the reference
@@ -67,8 +67,8 @@ var (
 	_ Ref = (*SchemaRef)(nil)
 	_ ref = (*SchemaRef)(nil)
 
-	_ Ref = (*Reference)(nil)
-	_ ref = (*Reference)(nil)
+	_ Ref = (*Reference[*Response])(nil)
+	_ ref = (*Reference[*Response])(nil)
 
 	_ Ref = (*OperationRef)(nil)
 	_ ref = (*OperationRef)(nil)

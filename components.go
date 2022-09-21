@@ -9,7 +9,7 @@ import (
 
 // ComponentMap is a pseudo map consisting of Components with type T.
 
-func newComponent[T node](ref *Reference, obj T) Component[T] {
+func newComponent[T refable](ref *Reference[T], obj T) Component[T] {
 	return Component[T]{
 		Reference: ref,
 		Object:    obj,

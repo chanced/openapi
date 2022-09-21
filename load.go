@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/chanced/transcode"
@@ -153,7 +154,7 @@ func (l *loader) load(ctx context.Context, location uri.URI, ek Kind, openapi *s
 		return l.loadSchema(ctx, data, location, *openapi)
 	case KindCallbacks, KindExample, KindHeader, KindPathItem, KindOperation,
 		KindRequestBody, KindResponse, KindLink, KindSecurityScheme:
-		return l.loadNode(ctx, data, *openapi, *dialect)
+		return l.loadNode(ctx, k, data, *openapi, *dialect)
 	default:
 		return nil, NewError(fmt.Errorf("loading %s as an external resource is not currently supported", k), location)
 	}
@@ -224,6 +225,12 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		jsonschema: *sd,
 	}
 	dc.root = &dc
+	anchors, err := doc.Anchors()
+	if err != nil {
+		return nil, NewError(fmt.Errorf("failed to get anchors: %w", err), u)
+	}
+	dc.anchors = anchors
+
 	l.nodes[u.String()] = dc
 	if err = l.traverse(&dc, doc.nodes(), *v, *sd); err != nil {
 		return nil, err
@@ -242,6 +249,9 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		for len(l.refs) > 0 {
 			r, l.refs = l.refs[0], l.refs[1:]
 			n, err := l.resolveRef(ctx, r)
+			if err != nil {
+				return nil, err
+			}
 			rr := r
 			if n != nil {
 				nodes = append(nodes, *n)
@@ -249,10 +259,6 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 			}
 
 			l.resolvedRefs = append(l.resolvedRefs, rr)
-
-			if err != nil {
-				return nil, err
-			}
 		}
 		for _, n := range nodes {
 			if err = l.traverse(n.root, n.nodes(), n.openapi, n.jsonschema); err != nil {
@@ -261,12 +267,12 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 		}
 		nodes = nil
 	}
-	for len(l.recursiveRefs) > 0 {
-		panic("not done")
-	}
-	for len(l.dynamicRefs) > 0 {
-		panic("not done")
-	}
+	// for len(l.recursiveRefs) > 0 {
+	// 	panic("not done")
+	// }
+	// for len(l.dynamicRefs) > 0 {
+	// 	panic("not done")
+	// }
 	if err = l.validator.ValidateDocument(&doc); err != nil {
 		return nil, err
 	}
@@ -277,7 +283,7 @@ func (l *loader) resolveRef(ctx context.Context, r refctx) (*nodectx, error) {
 	u := r.URI()
 
 	if u == nil {
-		return nil, NewValidationError(fmt.Errorf("error: ref URI cannot be empty"), r.Kind(), r.AbsoluteLocation())
+		return nil, NewValidationError(fmt.Errorf("openapi: ref URI cannot be empty"), r.Kind(), r.AbsoluteLocation())
 	}
 
 	if u.Host == "" && u.Path == "" {
@@ -289,30 +295,32 @@ func (l *loader) resolveRef(ctx context.Context, r refctx) (*nodectx, error) {
 
 func (l *loader) resolveRemoteRef(ctx context.Context, r refctx) (*nodectx, error) {
 	u := r.URI()
-
 	// let's see if we've already loaded this node
 	ur := *u
+	au := r.AbsoluteLocation()
+	if u.Host == "" {
+		rur := au.ResolveReference(u)
+		ur = *rur
+	}
 	ur.Fragment = ""
 	ur.RawFragment = ""
+
 	if _, ok := l.nodes[ur.String()]; ok {
 		switch r.RefType() {
 		case RefTypeSchemaDynamicRef:
 			l.dynamicRefs = append(l.dynamicRefs, r)
-			return nil, nil
 		case RefTypeSchemaRecursiveRef:
 			l.recursiveRefs = append(l.recursiveRefs, r)
-			return nil, nil
 		}
 		// then we should have the node in stock
 		if n, ok := l.nodes[u.String()]; ok {
 			return &n, r.resolve(n.node)
 		} else {
 			// otherwise something went awry
-			return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+			return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 		}
 	}
-	// otherwise we need to load the root resource
-	// first we need to load the resource
+	// we need to load the root resource first we need to load the resource
 
 	// we need to check to see if there is a reference pointing to the root first
 	// so we know what the expected type is
@@ -337,29 +345,37 @@ func (l *loader) resolveRemoteRef(ctx context.Context, r refctx) (*nodectx, erro
 	_, ok := l.nodes[ur.String()]
 	if !ok {
 		// otherwise we return an error
-		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 	switch r.RefType() {
-	// since we found it, we need to bail if this is a dynamicRef or a recursiveRef
 	case RefTypeSchemaDynamicRef:
 		l.dynamicRefs = append(l.dynamicRefs, r)
-		return nil, nil
 	case RefTypeSchemaRecursiveRef:
 		l.recursiveRefs = append(l.recursiveRefs, r)
-		return nil, nil
 	}
 
-	// we should have the node in stock
-	if n, ok := l.nodes[u.String()]; ok {
+	// resetting ur
+	ur = *u
+	if u.Host == "" {
+		rur := au.ResolveReference(u)
+		ur = *rur
+		ur.Fragment = u.Fragment
+	}
+	// we check to see if the node is in stock
+	us := ur.String()
+	if n, ok := l.nodes[us]; ok {
 		return &n, r.resolve(n.node)
+	}
+	if u.Fragment == "" {
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 
 	// otherwise we may be dealing with an anchor
-	a := Text(u.Fragment).TrimPrefix("#")
+	a := Text(u.Fragment)
 
 	rn, ok := l.nodes[ur.String()]
 	if !ok {
-		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 
 	if a == "" {
@@ -372,22 +388,22 @@ func (l *loader) resolveRemoteRef(ctx context.Context, r refctx) (*nodectx, erro
 
 	if a.HasPrefix("/") {
 		// we aren't dealing with an anchor
-		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 
 	as, err := rn.Anchors()
 	if err != nil {
-		return nil, NewError(fmt.Errorf("error: failed to resolve anchors: %w", err), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: failed to resolve anchors: %w", err), r.AbsoluteLocation())
 	}
 
 	an, ok := as.Standard[a]
 	if !ok {
-		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 
 	x, ok := l.nodes[an.AbsoluteLocation().String()]
 	if !ok {
-		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 	if err := r.resolve(x.node); err != nil {
 		return nil, err
@@ -405,10 +421,8 @@ func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error
 	switch r.RefType() {
 	case RefTypeSchemaDynamicRef:
 		l.dynamicRefs = append(l.dynamicRefs, r)
-		return nil, nil
 	case RefTypeSchemaRecursiveRef:
 		l.recursiveRefs = append(l.recursiveRefs, r)
-		return nil, nil
 	}
 	// check to see if this node has already been loaded
 	if n, ok := l.nodes[u.String()]; ok {
@@ -417,9 +431,60 @@ func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error
 			return nil, err
 		}
 		return &n, nil
-	} else {
+	} else if strings.HasPrefix(u.Fragment, "/") || r.ref.RefKind() != KindSchema {
 		// otherwise something went awry
-		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
+		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
+	}
+
+	// we are dealing with an anchor
+
+	switch r.RefType() {
+	case RefTypeSchemaDynamicRef:
+		a, ok := r.root.anchors.Dynamic[Text(r.URI().Fragment)]
+		if !ok {
+			return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
+		}
+		err := r.resolve(a.In)
+		if err != nil {
+			return nil, fmt.Errorf("openapi: failed to resolve node for anchor \"#%s\": %w", r.URI().Fragment, err)
+		}
+		return &nodectx{
+			node:       a.In,
+			openapi:    r.openapi,
+			jsonschema: r.jsonschema,
+			root:       r.root,
+			anchors:    r.root.anchors,
+		}, nil
+	case RefTypeSchemaRecursiveRef:
+		a := r.root.anchors.Recursive
+		if a == nil {
+			return nil, NewError(fmt.Errorf("openapi: node does not have a $recursiveAnchor but $recursiveRef was found: %s", u), r.root.AbsoluteLocation())
+		}
+		return &nodectx{
+			node:       a.In,
+			openapi:    r.openapi,
+			jsonschema: r.jsonschema,
+			root:       r.root,
+			anchors:    r.root.anchors,
+		}, nil
+	case RefTypeSchema:
+		a, ok := r.root.anchors.Standard[Text(r.URI().Fragment)]
+		if !ok {
+			return nil, NewError(fmt.Errorf("openapi:  not found: %s", u), r.AbsoluteLocation())
+		}
+		err := r.resolve(a.In)
+		if err != nil {
+			return nil, fmt.Errorf("openapi: failed to resolve node for anchor \"#%s\": %w", r.URI().Fragment, err)
+		}
+		return &nodectx{
+			node:       a.In,
+			openapi:    r.openapi,
+			jsonschema: r.jsonschema,
+			root:       r.root,
+			anchors:    r.root.anchors,
+		}, nil
+	default:
+		return nil, NewError(fmt.Errorf("openapi: anchors are not supported for %s references: #%s", r.RefKind(), u.Fragment), r.AbsoluteLocation())
 	}
 }
 
@@ -467,11 +532,34 @@ func (l *loader) loadSchema(ctx context.Context, data []byte, u uri.URI, v semve
 	if err := s.UnmarshalJSON(data); err != nil {
 		return nil, NewError(fmt.Errorf("failed to unmarshal JSON Schema: %w", err), u)
 	}
+	loc, err := NewLocation(u)
+	if err != nil {
+		return nil, err
+	}
+	s.setLocation(loc)
+	nc := nodectx{node: &s, openapi: v, jsonschema: u}
+	nc.root = &nc
+	a, err := s.Anchors()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load anchors: %w", err)
+	}
+	nc.anchors = a
+
+	if s.ID != nil && s.ID.String() != u.String() {
+		loc, err := NewLocation(*s.ID)
+		if err != nil {
+			return nil, NewError(fmt.Errorf("failed to parse schema ID: %w", err), u)
+		}
+		s.setLocation(loc)
+		l.nodes[loc.String()] = nc
+	} else {
+		l.nodes[u.String()] = nc
+	}
 	return &s, nil
 }
 
-func (l *loader) loadNode(ctx context.Context, data []byte, v semver.Version, s uri.URI) (nodectx, error) {
-	panic("not implemented")
+func (l *loader) loadNode(ctx context.Context, k Kind, data []byte, v semver.Version, s uri.URI) (nodectx, error) {
+	panic("not impl")
 }
 
 func (l *loader) getJSONSchemaDialect(data []byte, v *semver.Version) (*uri.URI, error) {
@@ -501,6 +589,7 @@ type nodectx struct {
 	openapi    semver.Version
 	jsonschema uri.URI
 	root       *nodectx
+	anchors    *Anchors
 }
 type refctx struct {
 	ref

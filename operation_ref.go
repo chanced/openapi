@@ -11,8 +11,8 @@ import (
 
 type OperationRef struct {
 	Location
-	Ref       *uri.URI
-	Operation *Operation
+	Ref      *uri.URI
+	Resolved *Operation
 }
 
 func (*OperationRef) RefType() RefType { return RefTypeOperationRef }
@@ -24,8 +24,8 @@ func (or *OperationRef) Nodes() []Node {
 	return downcastNodes(or.nodes())
 }
 
-func (or *OperationRef) Resolved() Node {
-	return or.Operation
+func (or *OperationRef) ResolvedNode() Node {
+	return or.Resolved
 }
 
 func (or *OperationRef) nodes() []node {
@@ -33,11 +33,11 @@ func (or *OperationRef) nodes() []node {
 		return nil
 	}
 	var edges []node
-	return appendEdges(edges, or.Operation)
+	return appendEdges(edges, or.Resolved)
 }
 
 func (or *OperationRef) refs() []node {
-	return []node{or.Operation}
+	return []node{or.Resolved}
 }
 
 func (or *OperationRef) Refs() []Ref {
@@ -45,7 +45,7 @@ func (or *OperationRef) Refs() []Ref {
 }
 
 func (or *OperationRef) IsResolved() bool {
-	return or.Operation != nil
+	return or.Resolved != nil
 }
 
 // URI returns the reference URI
@@ -124,13 +124,13 @@ func (o *OperationRef) resolve(n Node) error {
 
 	switch n.Kind() {
 	case KindOperation:
-		o.Operation = n.(*Operation)
+		o.Resolved = n.(*Operation)
 	default:
 		return fmt.Errorf("openapi: cannot resolve %s to %s", n.Kind(), o.Kind())
 	}
 
 	if op, ok := n.(*Operation); ok {
-		o.Operation = op
+		o.Resolved = op
 		return nil
 	}
 

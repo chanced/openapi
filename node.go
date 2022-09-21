@@ -6,6 +6,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type refable interface {
+	node
+	refable()
+}
+
 type Node interface {
 	// AbsoluteLocation returns the absolute path of the node in URI form.
 	// This includes the URI path of the resource and the JSON pointer

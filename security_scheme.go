@@ -103,32 +103,6 @@ func (ss *SecurityScheme) Anchors() (*Anchors, error) {
 	return ss.Flows.Anchors()
 }
 
-// func (ss *SecurityScheme) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return ss.resolveNodeByPointer(ptr)
-// }
-
-// func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return ss, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-// 	switch nxt {
-// 	case "flows":
-// 		if nxt.IsRoot() {
-// 			return ss.Flows, nil
-// 		}
-// 		if ss.Flows == nil {
-// 			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
-// 		}
-// 		return ss.Flows.resolveNodeByPointer(nxt)
-// 	default:
-// 		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
-// 	}
-// }
-
 func (s *SecurityScheme) setLocation(loc Location) error {
 	if s == nil {
 		return nil
@@ -176,4 +150,32 @@ func (*SecurityScheme) Kind() Kind      { return KindSecurityScheme }
 func (*SecurityScheme) mapKind() Kind   { return KindSecuritySchemeMap }
 func (*SecurityScheme) sliceKind() Kind { return KindUndefined }
 
+func (*SecurityScheme) refable() {}
+
 var _ node = (*SecurityScheme)(nil)
+
+// func (ss *SecurityScheme) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return ss.resolveNodeByPointer(ptr)
+// }
+
+// func (ss *SecurityScheme) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return ss, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch nxt {
+// 	case "flows":
+// 		if nxt.IsRoot() {
+// 			return ss.Flows, nil
+// 		}
+// 		if ss.Flows == nil {
+// 			return nil, newErrNotFound(ss.AbsoluteLocation(), tok)
+// 		}
+// 		return ss.Flows.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(ss.AbsoluteLocation(), tok)
+// 	}
+// }

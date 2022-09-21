@@ -161,4 +161,6 @@ func (e *Encoding) UnmarshalYAML(value *yaml.Node) error {
 
 func (e *Encoding) isNil() bool { return e == nil }
 
+func (*Encoding) refable() {}
+
 var _ node = (*Encoding)(nil)
