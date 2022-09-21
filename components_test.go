@@ -3,7 +3,6 @@ package openapi_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"testing"
 
@@ -35,5 +34,5 @@ func TestComponentsMarshaling(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(string(cb))
+	_ = cb
 }

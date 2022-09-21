@@ -2,7 +2,6 @@ package openapi_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/chanced/openapi"
@@ -36,7 +35,8 @@ func TestSchema(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(string(br))
+	_ = br
+	// fmt.Println(string(br))
 }
 
 func TestClone(t *testing.T) {

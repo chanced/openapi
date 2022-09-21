@@ -90,38 +90,6 @@ func (cm *ComponentMap[T]) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return cm.resolveNodeByPointer(ptr)
-// }
-
-// func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return c, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-// 	n := c.Get(Text(tok))
-
-// 	if nxt.IsRoot() {
-// 		if n == nil {
-// 			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
-// 		}
-// 		if n.Reference != nil {
-// 			return n.Reference, nil
-// 		}
-// 		if !n.Object.isNil() {
-// 			return n.Object, nil
-// 		}
-// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
-// 	}
-// 	if n == nil {
-// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
-// 	}
-// 	return n.resolveNodeByPointer(nxt)
-// }
-
 func (cm *ComponentMap[T]) isNil() bool {
 	return cm == nil
 }
@@ -233,3 +201,35 @@ func (cm *ComponentMap[T]) Anchors() (*Anchors, error) {
 }
 
 var _ node = (*ComponentMap[*Server])(nil)
+
+// func (cm ComponentMap[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return cm.resolveNodeByPointer(ptr)
+// }
+
+// func (c *ComponentMap[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return c, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	n := c.Get(Text(tok))
+
+// 	if nxt.IsRoot() {
+// 		if n == nil {
+// 			return nil, newErrNotFound(c.AbsoluteLocation(), tok)
+// 		}
+// 		if n.Reference != nil {
+// 			return n.Reference, nil
+// 		}
+// 		if !n.Object.isNil() {
+// 			return n.Object, nil
+// 		}
+// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+// 	}
+// 	if n == nil {
+// 		return nil, newErrNotFound(c.Location.AbsoluteLocation(), tok)
+// 	}
+// 	return n.resolveNodeByPointer(nxt)
+// }

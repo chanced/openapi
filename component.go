@@ -111,31 +111,6 @@ func (c *Component[T]) Refs() []Ref {
 	return c.Object.Refs()
 }
 
-// func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return c.resolveNodeByPointer(ptr)
-// }
-
-// func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return c, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-// 	switch tok {
-// 	case "$ref":
-// 		if nxt.IsRoot() {
-// 			return c.Reference, nil
-// 		}
-// 		return nil, newErrNotResolvable(c.Location.AbsoluteLocation(), tok)
-// 	default:
-// 		// TODO: this may need to change. Not sure when I need to perform these
-// 		// resolutions just yet. If before population, Object may be nil at this call.
-// 		return c.Object.resolveNodeByPointer(nxt)
-// 	}
-// }
-
 func (*Component[T]) mapKind() Kind {
 	var t T
 	return t.mapKind()
@@ -232,3 +207,28 @@ func (c *Component[T]) Anchors() (*Anchors, error) {
 func (c *Component[T]) isNil() bool { return c == nil }
 
 var _ node = (*Component[*Server])(nil)
+
+// func (c *Component[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return c.resolveNodeByPointer(ptr)
+// }
+
+// func (c *Component[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return c, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "$ref":
+// 		if nxt.IsRoot() {
+// 			return c.Reference, nil
+// 		}
+// 		return nil, newErrNotResolvable(c.Location.AbsoluteLocation(), tok)
+// 	default:
+// 		// TODO: this may need to change. Not sure when I need to perform these
+// 		// resolutions just yet. If before population, Object may be nil at this call.
+// 		return c.Object.resolveNodeByPointer(nxt)
+// 	}
+// }

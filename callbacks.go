@@ -22,9 +22,8 @@ type CallbacksMap = ComponentMap[*Callbacks]
 // To describe incoming requests from the API provider independent from another
 // API call, use the webhooks field.
 type Callbacks struct {
-	Extensions `json:"-"`
-	Location   `json:"-"`
-	Items      *PathItemObjs `json:"-"`
+	Extensions   `json:"-"`
+	PathItemObjs `json:"-"`
 }
 
 func (c *Callbacks) Nodes() []Node {
@@ -39,7 +38,7 @@ func (c *Callbacks) nodes() []node {
 		return nil
 	}
 	edges := make([]node, 0, 1)
-	edges = appendEdges(edges, c.Items)
+	edges = appendEdges(edges, c.PathItemObjs.nodes()...)
 	return edges
 }
 
@@ -61,14 +60,14 @@ func (c *Callbacks) Anchors() (*Anchors, error) {
 	if c == nil {
 		return nil, nil
 	}
-	return c.Items.Anchors()
+	return c.PathItemObjs.Anchors()
 }
 
 func (c *Callbacks) Refs() []Ref {
 	if c == nil {
 		return nil
 	}
-	return c.Items.Refs()
+	return c.PathItemObjs.Refs()
 }
 
 // // ResolveNodeByPointer performs a l
@@ -114,7 +113,7 @@ func (c *Callbacks) UnmarshalJSON(data []byte) error {
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)
-			c.Items.Set(Text(key.String()), &v)
+			c.Set(Text(key.String()), &v)
 		}
 		return err == nil
 	})
@@ -126,7 +125,7 @@ func (c *Callbacks) setLocation(loc Location) error {
 		return nil
 	}
 	c.Location = loc
-	return c.Items.setLocation(loc)
+	return c.PathItemObjs.setLocation(loc)
 }
 
 func (c Callbacks) MarshalYAML() (interface{}, error) {

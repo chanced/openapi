@@ -2,7 +2,6 @@ package openapi_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"testing"
 
@@ -29,5 +28,6 @@ func TestSchemaMapMarshaling(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(string(b))
+	_ = b
+	// fmt.Println(string(b))
 }

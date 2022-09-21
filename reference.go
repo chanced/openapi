@@ -93,7 +93,9 @@ func (r *Reference) resolve(v Node) error {
 	rd := reflect.ValueOf(r.dst)
 	rv := reflect.ValueOf(v)
 	if rv.Type().AssignableTo(rd.Type().Elem()) {
-		rv.Elem().Set(reflect.ValueOf(v).Elem())
+		rd.Elem().Set(rv)
+	} else {
+		return fmt.Errorf("%s is not assignable to %s", rv.Type().String(), rd.Type().String())
 	}
 	return nil
 }

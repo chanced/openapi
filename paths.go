@@ -25,32 +25,10 @@ type PathItemMap = ComponentMap[*PathItem]
 // to construct the full URL. The Paths MAY be empty, due to Access Control List
 // (ACL) constraints.
 type Paths struct {
-	Location   `json:"-"`
 	Extensions `json:"-"`
 
 	// Items are the Path
-	Items *PathItemObjs `json:"-"`
-}
-
-func (p *Paths) Get(key Text) *PathItem {
-	if p.Items == nil {
-		return nil
-	}
-	return p.Items.Get(key)
-}
-
-func (p *Paths) Set(key Text, value *PathItem) {
-	if p.Items == nil {
-		p.Items = &PathItemObjs{}
-	}
-	p.Items.Set(key, value)
-}
-
-func (p *Paths) Del(key Text) {
-	if p == nil {
-		return
-	}
-	p.Items.Del(key)
+	PathItemObjs `json:"-"`
 }
 
 func (p *Paths) Nodes() []Node {
@@ -64,24 +42,10 @@ func (p *Paths) nodes() []node {
 	if p == nil {
 		return nil
 	}
-	return appendEdges(nil, p.Items)
+	return appendEdges(nil, p.PathItemObjs.nodes()...)
 }
 
 func (*Paths) ref() Ref { return nil }
-
-func (p *Paths) Refs() []Ref {
-	if p == nil {
-		return nil
-	}
-	return p.Items.Refs()
-}
-
-func (p *Paths) Anchors() (*Anchors, error) {
-	if p == nil {
-		return nil, nil
-	}
-	return p.Items.Anchors()
-}
 
 // func (p *Paths) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
 // 	if err := ptr.Validate(); err != nil {
@@ -108,17 +72,9 @@ func (*Paths) Kind() Kind      { return KindPaths }
 func (*Paths) mapKind() Kind   { return KindUndefined }
 func (*Paths) sliceKind() Kind { return KindUndefined }
 
-func (p *Paths) setLocation(loc Location) error {
-	if p == nil {
-		return nil
-	}
-	p.Location = loc
-	return p.Items.setLocation(loc)
-}
-
 // MarshalJSON marshals JSON
 func (p Paths) MarshalJSON() ([]byte, error) {
-	j, err := p.Items.MarshalJSON()
+	j, err := p.PathItemObjs.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +96,7 @@ func (p *Paths) UnmarshalJSON(data []byte) error {
 		} else {
 			var v PathItem
 			err = json.Unmarshal([]byte(value.Raw), &v)
-			if p.Items == nil {
-				p.Items = &ObjMap[*PathItem]{}
-			}
-			p.Items.Set(Text(key.String()), &v)
+			p.Set(Text(key.String()), &v)
 		}
 		return err == nil
 	})

@@ -10,7 +10,6 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
-	"github.com/sanity-io/litter"
 )
 
 //go:embed testdata
@@ -29,6 +28,7 @@ func TestTryGetOpenAPIVersion(t *testing.T) {
 	if len(d) == 0 {
 		t.Fatal("file was empty")
 	}
+
 	vstr, ok := openapi.TryGetOpenAPIVersion(d)
 	if !ok {
 		t.Error("failed to get openapi")
@@ -57,9 +57,21 @@ func TestLoadRefComponent(t *testing.T) {
 	if doc == nil {
 		t.Errorf("failed to load document")
 	}
-	litter.Dump(doc)
+	// litter.Dump(doc)
 	if doc.Components.Responses.Get("Referenced").Object.Description != "/components/responses/Referenced" {
 		t.Errorf("expected %q got %q", "/components/responses/Referenced", doc.Components.Responses.Get("Referenced").Object.Description)
+	}
+	refpath := doc.Paths.Get("/ref")
+	if refpath.Post.Responses.Get("200").Object.Description != "/components/responses/Referenced" {
+		t.Errorf("expected %q got %q", "/components/responses/Referenced", doc.Paths.Get("/refs").Post.Responses.Get("200").Object.Description)
+	}
+	rb := doc.Components.RequestBodies.Get("Referenced")
+	if rb.Object.Description != "/components/requestBodies/Referenced" {
+		t.Errorf("expected requestBody to have description of %q, got %q", "/components/requestBodies/Referenced", rb.Object.Description)
+	}
+	rbr := refpath.Post.RequestBody.Object
+	if rbr.Description != rb.Object.Description {
+		t.Errorf("expected requestBody to have description of %q, got %q", rb.Object.Description, rbr.Description)
 	}
 }
 
@@ -83,7 +95,7 @@ func TestLoad(t *testing.T) {
 	if doc == nil {
 		t.Errorf("failed to load document")
 	}
-	litter.Dump(doc)
+	// litter.Dump(doc)
 }
 
 type NoopValidator struct{}

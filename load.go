@@ -7,7 +7,6 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
-	"github.com/sanity-io/litter"
 	"github.com/tidwall/gjson"
 )
 
@@ -419,12 +418,6 @@ func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error
 		}
 		return &n, nil
 	} else {
-
-		for k, v := range l.nodes {
-			if k == u.String() {
-				fmt.Println("found it:", k, v)
-			}
-		}
 		// otherwise something went awry
 		return nil, NewError(fmt.Errorf("error: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
@@ -451,14 +444,6 @@ func (l *loader) traverse(root *nodectx, nodes []node, openapi semver.Version, j
 		nc, err := newNodeCtx(n, root, &openapi, &jsonschema)
 		if err != nil {
 			return err
-		}
-		if n == nil || n.isNil() {
-			fmt.Println("nil node")
-			panic("nil node")
-		}
-		if n.AbsoluteLocation().String() == "#" {
-			fmt.Println("\nnode with empty absolute location:")
-			litter.Dump(n)
 		}
 
 		l.nodes[n.AbsoluteLocation().String()] = nc
