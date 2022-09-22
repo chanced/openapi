@@ -40,10 +40,6 @@ var (
 	JSONSchemaDialect202012 = *uri.MustParse(JSON_SCHEMA_2020_12)
 	// JSONSchemaDialect201909 is the URI for JSON Schema 2019-09
 	JSONSchemaDialect201909 = *uri.MustParse(JSON_SCHEMA_2019_09)
-	// // JSONSchemaDialect07 is the URI for JSON Schema 07
-	// JSONSchemaDialect07 = *uri.MustParse("http://json-schema.org/draft-07/schema#")
-	// // JSONSchemaDialect04 is the URI for JSON Schema 04
-	// JSONSchemaDialect04 = *uri.MustParse("http://json-schema.org/draft-04/schema#")
 	// VersionConstraints3_0 is a semantic versioning constraint for 3.0:
 	//	>= 3.0.0, < 3.1.0
 	VersionConstraints3_0 = mustParseConstraints(">= 3.0.0, < 3.1.0")
@@ -60,6 +56,11 @@ var (
 	Version3_1 = *semver.MustParse("3.1")
 	// Version3_0 is a semantic version for 3.0.x
 	Version3_0 = *semver.MustParse("3.0")
+
+	// // JSONSchemaDialect07 is the URI for JSON Schema 07
+	// JSONSchemaDialect07 = *uri.MustParse("http://json-schema.org/draft-07/schema#")
+	// // JSONSchemaDialect04 is the URI for JSON Schema 04
+	// JSONSchemaDialect04 = *uri.MustParse("http://json-schema.org/draft-04/schema#")
 )
 
 var _ Validator = (*StdValidator)(nil)

@@ -58,9 +58,8 @@ func mergeLoadOpts(opts []LoadOpts) LoadOpts {
 //
 // Loading the raw data for OpenAPI Documents and externally referenced
 // referenced JSON Schema components is done through the anonymous function fn.
-// It is passed the URI of the resource and if known, the expected
-// Kind. fn should return the Kind for the resource and the raw data if
-// successful.
+// It is passed the URI of the resource and if known, the expected Kind. fn
+// should return the Kind for the resource and the raw data if successful.
 //
 // Resources that can be referenced are:
 //   - OpenAPI Document (KindDocument)
@@ -77,10 +76,10 @@ func mergeLoadOpts(opts []LoadOpts) LoadOpts {
 //   - Response (KindResponse)
 //   - SecurityScheme (KindSecurityScheme)
 //
-// fn will invoke fn with a URI containing a fragment; it will only ever
-// be called to resolve to the root document data. This is why Kind must be
-// returned from fn, as there may not be enough context to infer the shape of
-// the data.
+// Load will invoke fn with a URI containing a fragment; it will be called to
+// resolve to the absolute path (i.e. non-fragmented) root document (e.g.
+// Document, Schema, etc.) data of the primary Document and foreign $refs,
+// $dynamicRefs, and $recursiveRefs.
 //
 // Knowing the shape of root document prevents scenarios where we resolve
 // "example.json#/foo/bar" and then later encounter a $ref to
