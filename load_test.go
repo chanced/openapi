@@ -11,7 +11,6 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
-	"github.com/sanity-io/litter"
 )
 
 //go:embed testdata
@@ -115,7 +114,6 @@ func TestDynamicRefs(t *testing.T) {
 	if los.Ref.Resolved.Ref.Resolved == nil {
 		t.Error("expected /list-of-t to be resolved")
 	}
-	litter.Dump(los.Ref.Resolved)
 }
 
 type NoopValidator struct{}
