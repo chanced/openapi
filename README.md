@@ -24,10 +24,12 @@ documentation generation.
 
 ## Issues
 
--   **Testing.** The code coverage is abysmal at the moment. As I find time, I'll add coverage.
+-   **Testing.** Code coverage is definitely lacking (44%). As I find time, I'll
+    add coverage.
 -   **`$dynamicRef` / `$dynamicAnchor`** is not really supported. While the
     references are loaded, the dynamic overriding is not. I simply have no idea
     how to solve it. If you have ideas, I'd really like to hear them.
+-   **Documentation / Comments**
 -   **Validation.** [See the Validation section](#validation).
 -   **Errors.** Errors and error messages need a lot of work.
 -   [jsonpointer](https://github.com/chanced/jsonpointer)'s Resolve, Assign, and
