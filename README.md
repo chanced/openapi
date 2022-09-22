@@ -27,8 +27,7 @@ documentation generation.
 -   **Testing.** Code coverage is definitely lacking (44%). As I find time, I'll
     add coverage.
 -   **`$dynamicRef` / `$dynamicAnchor`** is not really supported. While the
-    references are loaded, the dynamic overriding is not. I simply have no idea
-    how to solve it. If you have ideas, I'd really like to hear them.
+    references are loaded, the dynamic overriding is not.
 -   **Documentation / Comments**
 -   **Validation.** [See the Validation section](#validation).
 -   **Errors.** Errors and error messages need a lot of work.
