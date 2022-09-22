@@ -89,18 +89,17 @@ can be updated with proper coverage of that case.
 
 ## Dependencies
 
--   github.com/Masterminds/semver v1.5.0
--   github.com/chanced/caps v0.7.11
--   github.com/chanced/jsonpointer v0.0.5
--   github.com/chanced/jsonx v0.0.7
--   github.com/chanced/maps v0.0.3
--   github.com/chanced/transcode v0.2.1
--   github.com/chanced/uri v0.2.1
--   github.com/google/go-cmp v0.5.9
--   github.com/sanity-io/litter v1.5.1
--   github.com/santhosh-tekuri/jsonschema/v5 v5.0.1
--   github.com/tidwall/gjson v1.14.3
--   gopkg.in/yaml.v3 v3.0.1
+-   [github.com/santhosh-tekuri/jsonschema/v5](https://github.com/santhosh-tekuri/jsonschema/v5) - Used in the `StdValidator` to validate OpenAPI documents & components
+-   [github.com/chanced/caps](https://github.com/chanced/caps) - Used for all string fields to provide case conversion and functions from `strings` as methods
+-   [github.com/chanced/jsonpointer](https://github.com/chanced/jsonpointer) - Used for relative locations of all non-scalar nodes
+-   [github.com/tidwall/gjson](https://github.com/tidwall/gjson) - Used in json parsing
+-   [github.com/chanced/jsonx](https://github.com/chanced/jsonx) - used for raw json types and as a toolkit for json type detection & parsing
+-   [github.com/chanced/maps](https://github.com/chanced/maps) - small utility library for sorting map keys
+-   [github.com/chanced/transcode](https://github.com/chanced/transcode) - used to transform YAML into JSON and vice versa
+-   [github.com/chanced/uri](https://github.com/chanced/uri) - Used to represent URIs
+-   [github.com/google/go-cmp](https://github.com/google/go-cmp) - Testing purposes
+-   [github.com/Masterminds/semver](https://github.com/Masterminds/semver) - Used for version detection of OpenAPI documents
+-   [gopkg.in/yaml.v3](https://gopkg.in/yaml.v3) - needed to satisfy `yaml.Marshaler` and `yaml.Unmarshaler`
 
 ## Contributions
 
