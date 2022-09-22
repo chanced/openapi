@@ -28,7 +28,7 @@ type Reference[T refable] struct {
 	// The reference identifier. This MUST be in the form of a URI.
 	//
 	// 	*required*
-	Ref *uri.URI `yaml:"$ref" json:"$ref"`
+	Ref *uri.URI `json:"$ref"`
 
 	// A short summary which by default SHOULD override that of the referenced
 	// component. If the referenced object-type does not allow a summary field,
@@ -46,7 +46,7 @@ type Reference[T refable] struct {
 
 	ReferencedKind Kind `json:"-"`
 
-	Resolved T
+	Resolved T `json:"-"`
 
 	dst interface{}
 
@@ -107,11 +107,7 @@ func (r *Reference[T]) resolve(v Node) error {
 
 // Referenced returns the resolved referenced Node
 func (r *Reference[T]) ResolvedNode() Node {
-	n, ok := (r.dst).(*Node)
-	if !ok {
-		panic("openapi: Reference dst is not a Node. This is a bug. Please report it: https://github.com/chanced/openapi/issues/new")
-	}
-	return *n
+	return r.Resolved
 }
 
 // Refs returns nil as instances of Reference do not contain the referenced

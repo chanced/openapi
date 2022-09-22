@@ -28,6 +28,9 @@ func (cs *ComponentSlice[T]) nodes() []node {
 func (*ComponentSlice[T]) ref() Ref { return nil }
 
 func (cs *ComponentSlice[T]) Refs() []Ref {
+	if cs == nil {
+		return nil
+	}
 	var refs []Ref
 	for _, item := range cs.Items {
 		refs = append(refs, item.Refs()...)

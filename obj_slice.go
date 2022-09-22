@@ -39,6 +39,9 @@ func (os *ObjSlice[T]) MarshalJSON() ([]byte, error) {
 
 // Refs implements node
 func (os *ObjSlice[T]) Refs() []Ref {
+	if os == nil {
+		return nil
+	}
 	var refs []Ref
 	for _, x := range os.Items {
 		refs = append(refs, x.Refs()...)

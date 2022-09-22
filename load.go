@@ -246,8 +246,7 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	for len(l.refs) > 0 {
 		for len(l.refs) > 0 {
 			// r, l.refs = l.refs[len(l.refs)-1], l.refs[:len(l.refs)-1]
-			// r, l.refs = l.refs[0], l.refs[1:]
-			fmt.Println("resolving", r.ref.AbsoluteLocation().String())
+			r, l.refs = l.refs[0], l.refs[1:]
 			n, err := l.resolveRef(ctx, r)
 			if err != nil {
 				return nil, err
@@ -497,9 +496,9 @@ func (l *loader) getDocumentSchemaDialect(doc *Document) (*uri.URI, error) {
 	if VersionConstraints3_1.Check(doc.OpenAPI) {
 		return &JSONSchemaDialect202012, nil
 	}
-	if VersionConstraints3_0.Check(doc.OpenAPI) {
-		return &JSONSchemaDialect201909, nil
-	}
+	// if VersionConstraints3_0.Check(doc.OpenAPI) {
+	// 	return &JSONSchemaDialect201909, nil
+	// }
 	return nil, fmt.Errorf("failed to determine OpenAPI schema dialect")
 }
 
@@ -600,8 +599,8 @@ func (l *loader) getJSONSchemaDialect(data []byte, v *semver.Version) (*uri.URI,
 		sd = l.opts.DefaultSchemaDialect
 	case checkVersion(VersionConstraints3_1, v):
 		sd = &JSONSchemaDialect202012
-	case checkVersion(VersionConstraints3_0, v):
-		sd = &JSONSchemaDialect201909
+	// case checkVersion(VersionConstraints3_0, v):
+	// 	sd = &JSONSchemaDialect201909
 	default:
 		return nil, nil
 	}

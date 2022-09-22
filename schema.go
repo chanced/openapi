@@ -314,8 +314,6 @@ type Schema struct {
 	Definitions *SchemaMap `json:"$defs,omitempty"`
 
 	Keywords map[Text]jsonx.RawMessage `json:"-"`
-
-	Cloned bool
 }
 
 func (s *Schema) Nodes() []Node {
@@ -995,7 +993,6 @@ func (s *Schema) Clone() *Schema {
 		ContentEncoding:       s.ContentEncoding,
 		Extensions:            cloneExtensions(s.Extensions),
 		Location:              s.Location,
-		Cloned:                true,
 	}
 	return cloned
 }

@@ -1,16 +1,14 @@
 # openapi - an OpenAPI 3.x library for Go
 
-openapi is a library for for OpenAPI 3.x, including
-[3.1](https://spec.openapis.org/oas/v3.1.0) and
-[3.0](https://spec.openapis.org/oas/v3.0.3). The primary purpose of the package
+openapi is a library for for [OpenAPI
+3.1](https://spec.openapis.org/oas/v3.1.0). The primary purpose of the package
 is to offer building blocks for code and documentation generation.
 
 :warning: This library is in an alpha state; expect breaking changes and bugs.
 
 ## Features
 
--   Reference resolution, including support for recursive `$ref`s, `$dynamicRef`,
-    `$recursiveRef`.
+-   `$ref` resolution
 -   All keys retain their order from the markup. This makes for a bit more
     of a complicated API but prevents the need for further resorting to keep
     code generation consistent
@@ -22,6 +20,26 @@ is to offer building blocks for code and documentation generation.
 -   Extensions, unknown JSON Schema keywords, examples, and a few other fields
     are instances of [jsonx.RawMessage](https://github.com/chanced/jsonx) which
     comes with a few helper methods.
+
+## Issues
+
+-   **Testing.** The code coverage is abysmal at the moment. As I find time, I'll add coverage.
+-   **`$dynamicRef` / `$dynamicAnchor`** is not really supported. While the
+    references are loaded, the dynamic overriding is not. I simply have no idea
+    how to solve it. If you have ideas, I'd really like to hear them.
+-   **Validation.** [See the Validation section](#validation).
+-   **Errors.** Errors and error messages need a lot of work.
+-   [jsonpointer](https://github.com/chanced/jsonpointer)'s Resolve, Assign, and
+    Delete do not currently work. I need to update the jsonpointer library
+    before its interfaces can be implemented for types within this library.
+-   Values of `$anchor` and `$dynamicAnchor` must be unique to a file.
+    Conditional `$dynamicAnchor` `$recursiveAnchor` are going to be challenging.
+    See below.
+-   `$dynamicRef` and `$recursiveRef` are incredibly tricky with respect to
+    static analysis, which is what this library was built for. You should avoid
+    conditional branches with `$dynamicAnchor`s within the same file. If you
+    need a conditional dynamics, move the branch into its own file and have the
+    conditional statement reference the branch.
 
 ## Usage
 
@@ -46,14 +64,14 @@ func main() {
     c, _ := openapi.SetupCompiler(jsonschema.NewCompiler()) // adding schema files
     v, _ := openapi.NewValidator(c)
 
-    fn := func(_ context.Context, uri uri.URI, kind Kind) (Kind, []byte, error){
+    fn := func(_ context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error){
         // quick and simple example
         // be sure to handle errors
         f, _ := schema.Open(fp)
         // you can return either JSON or YAML
         d, _ := io.ReadAll(f)
         // use the uri or the data to determine the Kind
-        return KindDocument, d, nil
+        return openapi.KindDocument, d, nil
     }
     // you can Load either JSON or YAML
     doc, _ := openapi.Load(ctx, "spec/openapi.yaml", v, fn)
@@ -92,23 +110,6 @@ type CompiledSchema interface {
 	Validate(data interface{}) error
 }
 ```
-
-## Known trouble spots
-
--   **Testing.** The code coverage is abysmal at the moment. As I find time, I'll add coverage.
--   **Validation.** [See the Validation section](#validation).
--   **Errors.** Errors and error messages need a lot of work.
--   [jsonpointer](https://github.com/chanced/jsonpointer)'s Resolve, Assign, and
-    Delete do not currently work. I need to update the jsonpointer library
-    before its interfaces can be implemented for types within this library.
--   Values of `$anchor` and `$dynamicAnchor` must be unique to a file.
-    Conditional `$dynamicAnchor` `$recursiveAnchor` are going to be challenging.
-    See below.
--   `$dynamicRef` and `$recursiveRef` are incredibly tricky with respect to
-    static analysis, which is what this library was built for. You should avoid
-    conditional branches with `$dynamicAnchor`s within the same file. If you
-    need a conditional dynamics, move the branch into its own file and have the
-    conditional statement reference the branch.
 
 ## Contributions
 

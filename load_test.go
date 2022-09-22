@@ -12,7 +12,6 @@ import (
 	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
 	"github.com/sanity-io/litter"
-	_ "github.com/sanity-io/litter"
 )
 
 //go:embed testdata

@@ -3,6 +3,7 @@ package openapi
 import (
 	"bytes"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/chanced/uri"
+	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/tidwall/gjson"
 )
 
@@ -38,10 +40,10 @@ var (
 	JSONSchemaDialect202012 = *uri.MustParse(JSON_SCHEMA_2020_12)
 	// JSONSchemaDialect201909 is the URI for JSON Schema 2019-09
 	JSONSchemaDialect201909 = *uri.MustParse(JSON_SCHEMA_2019_09)
-	// JSONSchemaDialect07 is the URI for JSON Schema 07
-	JSONSchemaDialect07 = *uri.MustParse("http://json-schema.org/draft-07/schema#")
-	// JSONSchemaDialect04 is the URI for JSON Schema 04
-	JSONSchemaDialect04 = *uri.MustParse("http://json-schema.org/draft-04/schema#")
+	// // JSONSchemaDialect07 is the URI for JSON Schema 07
+	// JSONSchemaDialect07 = *uri.MustParse("http://json-schema.org/draft-07/schema#")
+	// // JSONSchemaDialect04 is the URI for JSON Schema 04
+	// JSONSchemaDialect04 = *uri.MustParse("http://json-schema.org/draft-04/schema#")
 	// VersionConstraints3_0 is a semantic versioning constraint for 3.0:
 	//	>= 3.0.0, < 3.1.0
 	VersionConstraints3_0 = mustParseConstraints(">= 3.0.0, < 3.1.0")
@@ -96,8 +98,7 @@ type Validator interface {
 // NewStdValidator creates and returns a new StdValidator.
 //
 // compiler is used to compile JSON Schema for initial validation.
-// The interface is satisfied by github.com/santhosh-tekuri/jsonschema/v5
-//
+
 // Each fs.FS in resources will be walked and all files ending in .json will be
 // be added to the compiler. Defaults are provided from an embedded fs.FS.
 //
@@ -106,7 +107,7 @@ type Validator interface {
 //   - OpenAPI 3.0: "https://spec.openapis.org/oas/3.0/schema/2021-09-28"
 //   - JSON Schema 2020-12: "https://json-schema.org/draft/2020-12/schema"
 //   - JSON Schema 2019-09: "https://json-schema.org/draft/2019-09/schema"
-func NewValidator(compiler Compiler, resources ...fs.FS) (*StdValidator, error) {
+func NewValidator(compiler *jsonschema.Compiler, resources ...fs.FS) (*StdValidator, error) {
 	if compiler == nil {
 		return nil, errors.New("openapi: compiler is required")
 	}
@@ -127,23 +128,94 @@ type StdValidator struct {
 // Validate should validate the fully-resolved OpenAPI document.
 //
 // This currently only validates with JSON Schema.
-func (*StdValidator) ValidateDocument(document *Document) error {
-	// TODO: Re-validate doc bytes and nested refs with JSON Schema It feels
-	// cheesy but it is the best way to ensure that we can properly validate the
-	// document after it has been resolved. This is needed for cases like when
-	// encoding or called by end-users.
-	//
-	// Beyond that, the openapi spec claims there are validations which json
+func (sv *StdValidator) ValidateDocument(doc *Document) error {
+	// The openapi spec claims there are validations which json
 	// schema can not fully encompass. Those will need to be added here.
+	// TODO: Improve validation beyond JSON Schema
+
+	d, err := doc.MarshalJSON()
+	if err != nil {
+		return fmt.Errorf("failed to marshal document: %w", err)
+	}
+
+	dialect := doc.JSONSchemaDialect
+	if dialect == nil {
+		if VersionConstraints3_1.Check(doc.OpenAPI) {
+			dialect = &JSONSchemaDialect202012
+			// } else if VersionConstraints3_0.Check(doc.OpenAPI) {
+			// 	dialect = &JSONSchemaDialect201909
+		} else {
+			return fmt.Errorf("openapi: unable to detect OpenAPI version: %s", doc.OpenAPI)
+		}
+	}
+	if err = sv.Validate(d, doc.AbsoluteLocation(), KindDocument, *doc.OpenAPI, *dialect); err != nil {
+		return err
+	}
+	m := map[string]struct{}{}
+
+	for _, r := range doc.Refs() {
+		u := r.URI()
+		if _, ok := m[r.ResolvedNode().AbsoluteLocation().String()]; ok {
+			continue
+		} else {
+			m[r.ResolvedNode().AbsoluteLocation().String()] = struct{}{}
+		}
+		if u.Path != "" || u.Host != "" {
+			if s, ok := r.ResolvedNode().(*Schema); ok {
+				sd := dialect
+				if s.Schema != nil {
+					sd = s.Schema
+				}
+				d, err := s.MarshalJSON()
+				if err != nil {
+					return fmt.Errorf("failed to marshal schema: %w", err)
+				}
+				if err = sv.Validate(d, s.AbsoluteLocation(), KindSchema, *doc.OpenAPI, *sd); err != nil {
+					return err
+				}
+			} else {
+				d, err := r.ResolvedNode().MarshalJSON()
+				if err != nil {
+					return fmt.Errorf("failed to marshal node: %w", err)
+				}
+
+				if err = sv.Validate(d, r.ResolvedNode().AbsoluteLocation(), r.ResolvedNode().Kind(), *doc.OpenAPI, *dialect); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }
 
 func (sv *StdValidator) Validate(data []byte, resource uri.URI, kind Kind, openapi semver.Version, jsonschema uri.URI) error {
-	s, ok := sv.Schemas.OpenAPI[openapi][kind]
+	if kind == KindSchema {
+		schema, ok := sv.Schemas.JSONSchema[jsonschema]
+		if !ok {
+			return fmt.Errorf("openapi: no schema found for %q", jsonschema)
+		}
+		return schema.Validate(data)
+	}
+	var s CompiledSchema
+	var ok bool
+	if VersionConstraints3_1.Check(&openapi) {
+		s, ok = sv.Schemas.OpenAPI[Version3_1][kind]
+	}
+
 	if !ok {
 		return fmt.Errorf("openapi: schema not found for %s", kind)
 	}
-	if err := s.Validate(data); err != nil {
+
+	var i interface{}
+	if err := json.Unmarshal(data, &i); err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+	if err := s.Validate(i); err != nil {
+		b, err := json.MarshalIndent(i, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal data: %w", err)
+		}
+		fmt.Println(string(b))
 		return NewValidationError(err, kind, resource)
 	}
 	return nil
@@ -157,15 +229,15 @@ type CompiledSchema interface {
 	Validate(data interface{}) error
 }
 
-// Compiler is an interface satisfied by any type which manages and compiles
-// resources (received in the form of io.Reader) based off of a URIs (including
-// fragments).
-//
-// github.com/santhosh-tekuri/jsonschema/v5 satisfies this interface.
-type Compiler interface {
-	AddResource(id string, r io.Reader) error
-	Compile(url string) (CompiledSchema, error)
-}
+// // Compiler is an interface satisfied by any type which manages and compiles
+// // resources (received in the form of io.Reader) based off of a URIs (including
+// // fragments).
+// //
+// // github.com/santhosh-tekuri/jsonschema/v5 satisfies this interface.
+// type Compiler interface {
+// 	AddResource(id string, r io.Reader) error
+// 	Compile(url string) (CompiledSchema, error)
+// }
 
 // CompiledSchemas are used in the the StdValidator
 type CompiledSchemas struct {
@@ -183,7 +255,7 @@ type CompiledSchemas struct {
 //   - OpenAPI 3.0: "https://spec.openapis.org/oas/3.0/schema/2021-09-28"
 //   - JSON Schema 2020-12: "https://json-schema.org/draft/2020-12/schema"
 //   - JSON Schema 2019-09: "https://json-schema.org/draft/2019-09/schema"
-func SetupCompiler(compiler Compiler, resources ...fs.FS) (Compiler, error) {
+func SetupCompiler(compiler *jsonschema.Compiler, resources ...fs.FS) (*jsonschema.Compiler, error) {
 	if compiler == nil {
 		return nil, errors.New("openapi: compiler is required")
 	}
@@ -200,7 +272,7 @@ func SetupCompiler(compiler Compiler, resources ...fs.FS) (Compiler, error) {
 //   - OpenAPI 3.0 ("https://spec.openapis.org/oas/3.0/schema/2021-09-28")
 //   - JSON Schema 2020-12
 //   - JSON Schema 2019-09
-func addCompilerResources(compiler Compiler, dirs []fs.FS) error {
+func addCompilerResources(compiler *jsonschema.Compiler, dirs []fs.FS) error {
 	var err error
 	for _, dir := range dirs {
 		err = fs.WalkDir(dir, ".", func(path string, d fs.DirEntry, err error) error {
@@ -225,6 +297,12 @@ func addCompilerResources(compiler Compiler, dirs []fs.FS) error {
 			}
 
 			id := gjson.GetBytes(b, "$id").String()
+			if id == "" {
+				id = gjson.GetBytes(b, "id").String()
+			}
+			if id == "" {
+				return fmt.Errorf("openapi: $id, id not found in %s", path)
+			}
 			err = compiler.AddResource(id, bytes.NewReader(b))
 			return err
 		})
@@ -273,7 +351,7 @@ func openAPISchemaVMap(openAPISchemas []map[string]uri.URI) (map[semver.Version]
 //
 //	{ "3.1": "https://spec.openapis.org/oas/3.1/schema/2022-02-27)" }
 //	{ "3.0": "https://spec.openapis.org/oas/3.0/schema/2021-09-28"  }
-func CompileSchemas(compiler Compiler, openAPISchemas ...map[string]uri.URI) (CompiledSchemas, error) {
+func CompileSchemas(compiler *jsonschema.Compiler, openAPISchemas ...map[string]uri.URI) (CompiledSchemas, error) {
 	var err error
 
 	openapis, err := compileOpenAPISchemas(compiler, openAPISchemas)
@@ -290,24 +368,24 @@ func CompileSchemas(compiler Compiler, openAPISchemas ...map[string]uri.URI) (Co
 	}, nil
 }
 
-func compileJSONSchemaSchemas(c Compiler) (map[uri.URI]CompiledSchema, error) {
+func compileJSONSchemaSchemas(c *jsonschema.Compiler) (map[uri.URI]CompiledSchema, error) {
 	var err error
 	jsonschemas := make(map[uri.URI]CompiledSchema, 2)
 	jsonschemas[JSONSchemaDialect202012], err = c.Compile(JSON_SCHEMA_2020_12)
 	if err != nil {
-		return nil, fmt.Errorf("openapi: failed to compile JSON Schema 2020-12: %w", err)
+		return nil, err
 	}
 	jsonschemas[JSONSchemaDialect201909], err = c.Compile(JSON_SCHEMA_2019_09)
 	if err != nil {
-		return nil, fmt.Errorf("openapi: failed to compile JSON Schema 2019-09: %w", err)
+		return nil, err
 	}
 	return jsonschemas, nil
 }
 
-func compileOpenAPISchemas(c Compiler, openAPISchemas []map[string]uri.URI) (map[semver.Version]map[Kind]CompiledSchema, error) {
+func compileOpenAPISchemas(c *jsonschema.Compiler, openAPISchemas []map[string]uri.URI) (map[semver.Version]map[Kind]CompiledSchema, error) {
 	vm, err := openAPISchemaVMap(openAPISchemas)
 	if err != nil {
-		return nil, fmt.Errorf("openapi: failed to compile OpenAPI Schemas: %w", err)
+		return nil, err
 	}
 	compiled := make(map[semver.Version]map[Kind]CompiledSchema, len(vm))
 
@@ -320,12 +398,19 @@ func compileOpenAPISchemas(c Compiler, openAPISchemas []map[string]uri.URI) (map
 	return compiled, nil
 }
 
-func compileOpenAPISchemasFor(compiler Compiler, uri uri.URI) (map[Kind]CompiledSchema, error) {
+func compileOpenAPISchemasFor(compiler *jsonschema.Compiler, uri uri.URI) (map[Kind]CompiledSchema, error) {
 	uri.Fragment = ""
 	uri.RawFragment = ""
 	spec := uri.String()
 	compileDef := func(name string) (CompiledSchema, error) {
-		return compiler.Compile(spec + "#/$defs/" + name)
+		if uri.String() == "https://spec.openapis.org/oas/3.0/schema/2021-09-28" {
+			if name == "callbacks" {
+				name = "paths"
+			}
+			return compiler.Compile(spec + "#/definitions/" + Text(name).ToCamel().String())
+		} else {
+			return compiler.Compile(spec + "#/$defs/" + name)
+		}
 	}
 
 	document, err := compiler.Compile(spec)
