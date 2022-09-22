@@ -89,17 +89,17 @@ can be updated with proper coverage of that case.
 
 ## Dependencies
 
--   [github.com/santhosh-tekuri/jsonschema/v5](https://github.com/santhosh-tekuri/jsonschema/v5) - Used in the `StdValidator` to validate OpenAPI documents & components
--   [github.com/chanced/caps](https://github.com/chanced/caps) - Used for all string fields to provide case conversion and functions from `strings` as methods
--   [github.com/chanced/jsonpointer](https://github.com/chanced/jsonpointer) - Used for relative locations of all non-scalar nodes
--   [github.com/tidwall/gjson](https://github.com/tidwall/gjson) - Used in json parsing
--   [github.com/chanced/jsonx](https://github.com/chanced/jsonx) - used for raw json types and as a toolkit for json type detection & parsing
--   [github.com/chanced/maps](https://github.com/chanced/maps) - small utility library for sorting map keys
+-   [github.com/santhosh-tekuri/jsonschema/v5](https://github.com/santhosh-tekuri/jsonschema/v5) - used in the `StdValidator` to validate OpenAPI documents & components
+-   [github.com/chanced/caps](https://github.com/chanced/caps) - used for all string fields to provide case conversion and functions from `strings` as methods
+-   [github.com/chanced/jsonpointer](https://github.com/chanced/jsonpointer) - relative locations of all non-scalar nodes
+-   [github.com/tidwall/gjson](https://github.com/tidwall/gjson) - JSON parsing
+-   [github.com/chanced/jsonx](https://github.com/chanced/jsonx) - raw JSON type and a toolkit for json type detection & parsing
+-   [github.com/chanced/maps](https://github.com/chanced/maps) - small utility used to sort `Extensions`
 -   [github.com/chanced/transcode](https://github.com/chanced/transcode) - used to transform YAML into JSON and vice versa
--   [github.com/chanced/uri](https://github.com/chanced/uri) - Used to represent URIs
--   [github.com/google/go-cmp](https://github.com/google/go-cmp) - Testing purposes
--   [github.com/Masterminds/semver](https://github.com/Masterminds/semver) - Used for version detection of OpenAPI documents
+-   [github.com/chanced/uri](https://github.com/chanced/uri) - used to represent URIs
+-   [github.com/Masterminds/semver](https://github.com/Masterminds/semver) - openapi field and version detection of OpenAPI documents
 -   [gopkg.in/yaml.v3](https://gopkg.in/yaml.v3) - needed to satisfy `yaml.Marshaler` and `yaml.Unmarshaler`
+-   [github.com/google/go-cmp](https://github.com/google/go-cmp) - testing purposes
 
 ## Contributions
 
