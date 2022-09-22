@@ -34,7 +34,6 @@ documentation generation.
 -   [jsonpointer](https://github.com/chanced/jsonpointer)'s Resolve, Assign, and
     Delete do not currently work. I need to update the jsonpointer library
     before its interfaces can be implemented for types within this library.
--   Values of `$anchor` and `$dynamicAnchor` must be unique to a file.
 
 ## Usage
 
