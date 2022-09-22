@@ -102,30 +102,9 @@ with JSON Schema. Per OpenAPI's documentation, this may not be enough to
 properly encapsulate all the nuances of a specification. However, JSON Schema is
 able to successfully validate the current OpenAPI 3.1 Specification test suite.
 
-Validation something that needs work. If you have an edge case that is not
-covered, you can implement your own Validator either by wrapping `StdValidator`
-or simply creating your own.
-
-If you do find cases where the current validator is not sufficient, please open
-an issue so that the library can be updated with proper coverage in the future.
-
-Regarding JSON Schema, as of writing this, the only library able to support JSON
-Schema 2020-12 is
-[github.com/santhosh-tekuri/jsonschema](https://github.com/santhosh-tekuri/jsonschema)
-and so the `Compiler`'s interface was modeled after its API. If you would like
-to use a different implementation of JSON Schema with the `StdValidator` the
-interfaces you need to write an adapter for are:
-
-```go
-type Compiler interface {
-	AddResource(id string, r io.Reader) error
-	Compile(url string) (CompiledSchema, error)
-}
-
-type CompiledSchema interface {
-	Validate(data interface{}) error
-}
-```
+Validation is an area that still needs work. If you do find cases where the
+current validator is not sufficient, please open an issue so that the library
+can be updated with proper coverage of that case.
 
 ## Contributions
 
