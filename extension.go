@@ -1,11 +1,13 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
-	"sort"
-	"strings"
+	"fmt"
 
-	"github.com/tidwall/sjson"
+	"github.com/chanced/jsonx"
+	"github.com/chanced/maps"
+	"github.com/tidwall/gjson"
 )
 
 // Extensions for OpenAPI
@@ -44,7 +46,7 @@ import (
 // This is different from hiding the path itself from the Paths Object, because
 // the user will be aware of its existence. This allows the documentation
 // provider to finely control what the viewer can see.
-type Extensions map[string]json.RawMessage
+type Extensions map[Text]jsonx.RawMessage
 
 type extended interface {
 	exts() Extensions
@@ -55,7 +57,7 @@ type extender interface {
 }
 
 // Decode decodes all extensions into dst.
-func (e Extensions) Decode(dst interface{}) error {
+func (e Extensions) DecodeExtensions(dst interface{}) error {
 	b, err := json.Marshal(e)
 	if err != nil {
 		return err
@@ -64,8 +66,8 @@ func (e Extensions) Decode(dst interface{}) error {
 }
 
 // DecodeExtension decodes extension at key into dst.
-func (e Extensions) DecodeExtension(key string, dst interface{}) error {
-	if !strings.HasPrefix(key, "x-") {
+func (e Extensions) DecodeExtension(key Text, dst interface{}) error {
+	if !key.HasPrefix("x-") {
 		key = "x-" + key
 	}
 	return json.Unmarshal(e[key], dst)
@@ -76,35 +78,35 @@ func (e Extensions) exts() Extensions { return e }
 func (e *Extensions) setExts(v Extensions) { *e = v }
 
 // SetExtension encodes val and sets the result to key
-func (e *Extensions) SetExtension(key string, val interface{}) error {
+func (e *Extensions) SetExtension(key Text, val interface{}) error {
 	data, err := json.Marshal(val)
 	if err != nil {
 		return err
 	}
-	e.SetEncodedExtension(key, data)
+	e.SetRawExtension(key, data)
 	return nil
 }
 
-// SetEncodedExtension sets val to key
-func (e *Extensions) SetEncodedExtension(key string, val []byte) {
-	if !strings.HasPrefix(key, "x-") {
+// SetRawExtension sets the raw JSON encoded val to key
+func (e *Extensions) SetRawExtension(key Text, val []byte) {
+	if !key.HasPrefix("x-") {
 		key = "x-" + key
 	}
 	(*e)[key] = val
 }
 
 // Extension returns an extension by name
-func (e Extensions) Extension(name string) (interface{}, bool) {
-	if !strings.HasPrefix(name, "x-") {
-		name = "x-" + name
+func (e Extensions) Extension(key Text) (interface{}, bool) {
+	if !key.HasPrefix("x-") {
+		key = "x-" + key
 	}
-	v, exists := e[name]
+	v, exists := e[key]
 	return v, exists
 }
 
 // IsExtensionKey returns true if the key starts with "x-"
-func IsExtensionKey(key string) bool {
-	return strings.HasPrefix(key, "x-")
+func IsExtensionKey(key Text) bool {
+	return key.HasPrefix("x-")
 }
 
 func unmarshalExtendedJSON(data []byte, dst extender) error {
@@ -112,15 +114,12 @@ func unmarshalExtendedJSON(data []byte, dst extender) error {
 	if err := json.Unmarshal(data, dst); err != nil {
 		return err
 	}
-	var jm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &jm); err != nil {
-		return err
-	}
-	for key, d := range jm {
-		if strings.HasPrefix(key, "x-") {
-			ev[key] = d
+	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
+		if IsExtensionKey(Text(key.String())) {
+			ev[Text(key.String())] = jsonx.RawMessage(value.Raw)
 		}
-	}
+		return true
+	})
 	dst.setExts(ev)
 	return nil
 }
@@ -130,24 +129,29 @@ func marshalExtendedJSON(dst extended) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return marshalExtendedJSONInto(data, dst)
+	if !jsonx.IsObject(data) {
+		// this shouldn't happen
+		return nil, fmt.Errorf("openapi: cannot marshal extensions into non-object")
+	}
+
+	b := bytes.Buffer{}
+	b.Write(data[:len(data)-1])
+	return marshalExtensionsInto(&b, dst.exts())
 }
 
-func marshalExtendedJSONInto(data []byte, obj extended) ([]byte, error) {
+func marshalExtensionsInto(b *bytes.Buffer, e Extensions) ([]byte, error) {
 	var err error
-
-	exts := obj.exts()
-	keys := make([]string, 0, len(exts))
-	for k := range exts {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		data, err = sjson.SetBytes(data, k, exts[k])
+	for _, kv := range maps.SortByKeys(e) {
+		if b.Len() > 1 {
+			b.WriteByte(',')
+		}
+		jsonx.EncodeAndWriteString(b, kv.Key)
+		b.WriteByte(':')
+		b.Write(kv.Value)
 		if err != nil {
-			return data, err
+			return nil, err
 		}
 	}
-	return data, nil
+	b.WriteByte('}')
+	return b.Bytes(), nil
 }

@@ -1,0 +1,29 @@
+openapi: "3.1.0"
+info:
+    version: 1.0.0
+paths:
+    /ref:
+        parameters:
+            - $ref: "#/components/parameters/Referenced"
+        post:
+            requestBody:
+                $ref: "#/components/requestBodies/Referenced"
+            responses:
+                "200":
+                    $ref: "#/components/responses/Referenced"
+components:
+    parameters:
+        Referenced:
+            description: /components/parameters/Referenced
+            style: matrix
+            schema:
+                type: string
+    responses:
+        Referenced:
+            description: /components/responses/Referenced
+    requestBodies:
+        Referenced:
+            description: /components/requestBodies/Referenced
+    links:
+        Referenced:
+            description: /components/links/Referenced

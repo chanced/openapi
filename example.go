@@ -3,110 +3,125 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/openapi/yamlutil"
+	"github.com/chanced/jsonx"
+	"github.com/chanced/transcode"
+	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
-// ExampleKind indicates wheter the ExampleObj is an Example or a Reference
-type ExampleKind uint8
+// ExampleMap is an object to hold reusable ExampleMap.
+type ExampleMap = ComponentMap[*Example]
 
-const (
-	// ExampleKindObj indicates an ExampleObj
-	ExampleKindObj ExampleKind = iota
-	// ExampleKindRef indicates a Reference
-	ExampleKindRef
-)
-
-// Example is either an Example or a Reference
-type Example interface {
-	ResolveExample(ExampleResolver) (*ExampleObj, error)
-	ExampleKind() ExampleKind
-}
-
-// ExampleObj is an example for various api interactions such as Responses
+// Example is an example for various api interactions such as Responses
 //
 // In all cases, the example value is expected to be compatible with the type
 // schema of its associated value. Tooling implementations MAY choose to
 // validate compatibility automatically, and reject the example value(s) if
 // incompatible.
-type ExampleObj struct {
+type Example struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// Short description for the example.
-	Summary string `json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
+
 	// Long description for the example. CommonMark syntax MAY be used for rich
 	// text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
+
 	// Any embedded literal example. The value field and externalValue field are
 	// mutually exclusive. To represent examples of media types that cannot
 	// naturally represented in JSON or YAML, use a string value to contain the
 	// example, escaping where necessary.
-	Value json.RawMessage `json:"value,omitempty"`
+	Value jsonx.RawMessage `json:"value,omitempty"`
+
 	// A URI that points to the literal example. This provides the capability to
 	// reference examples that cannot easily be included in JSON or YAML
 	// documents. The value field and externalValue field are mutually
 	// exclusive. See the rules for resolving Relative References.
-	ExternalValue string `json:"externalValue,omitempty"`
-	Extensions    `json:"-"`
+	ExternalValue *uri.URI `json:"externalValue,omitempty"`
 }
-type example ExampleObj
+
+func (e *Example) Nodes() []Node {
+	if e == nil {
+		return nil
+	}
+	return downcastNodes(e.nodes())
+}
+func (e *Example) nodes() []node { return nil }
+
+func (*Example) Refs() []Ref { return nil }
+
+func (e *Example) Anchors() (*Anchors, error) { return nil, nil }
+
+func (*Example) Kind() Kind      { return KindExample }
+func (*Example) mapKind() Kind   { return KindExampleMap }
+func (*Example) sliceKind() Kind { return KindUndefined }
 
 // MarshalJSON marshals JSON
-func (e ExampleObj) MarshalJSON() ([]byte, error) {
+func (e Example) MarshalJSON() ([]byte, error) {
+	type example Example
+
 	return marshalExtendedJSON(example(e))
 }
 
 // UnmarshalJSON unmarshals JSON
-func (e *ExampleObj) UnmarshalJSON(data []byte) error {
+func (e *Example) UnmarshalJSON(data []byte) error {
+	type example Example
 	var v example
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
-	*e = ExampleObj(v)
+	*e = Example(v)
 	return nil
 }
 
-// MarshalYAML marshals YAML
-func (e ExampleObj) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(e)
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (e Example) MarshalYAML() (interface{}, error) {
+	j, err := e.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcode.YAMLFromJSON(j)
 }
 
-// UnmarshalYAML unmarshals YAML
-func (e *ExampleObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, e)
-}
-
-// ExampleKind returns ExampleKindObj
-func (e *ExampleObj) ExampleKind() ExampleKind { return ExampleKindObj }
-
-// ResolveExample resolves ExampleObj by returning itself. resolve is  not called.
-func (e *ExampleObj) ResolveExample(ExampleResolver) (*ExampleObj, error) {
-	return e, nil
-}
-
-// Examples is an object to hold reusable Examples.
-type Examples map[string]Example
-
-// UnmarshalJSON unmarshals JSON
-func (e *Examples) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (e *Example) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
 		return err
 	}
-	res := make(Examples, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v example
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
-		ev := ExampleObj(v)
-		res[k] = &ev
+	return json.Unmarshal(j, e)
+}
+
+func (e *Example) setLocation(loc Location) error {
+	if e == nil {
+		return nil
 	}
-	*e = res
+	e.Location = loc
 	return nil
 }
+func (e *Example) isNil() bool { return e == nil }
+
+func (*Example) refable() {}
+
+var (
+	_ node = (*Example)(nil)
+
+	_ node = (*ExampleMap)(nil)
+)
+
+// func (e *Example) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return e.resolveNodeByPointer(ptr)
+// }
+
+// func (e *Example) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return e, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(e.Location.AbsoluteLocation(), tok)
+// }

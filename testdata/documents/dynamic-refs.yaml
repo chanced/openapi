@@ -1,0 +1,5 @@
+openapi: "3.1"
+components:
+    schemas:
+        ListOfStrings:
+            $ref: https://json-schema.blog/list-of-strings

@@ -1,0 +1,9 @@
+{
+    "$ref": "#/$defs/enabledToggle",
+    "default": true,
+    "$defs": {
+        "enableToggle": {
+            "type": "boolean"
+        }
+    }
+}

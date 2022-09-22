@@ -3,25 +3,23 @@ package openapi
 import (
 	"encoding/json"
 
-	"github.com/chanced/openapi/yamlutil"
-	"github.com/tidwall/gjson"
+	"github.com/chanced/jsonx"
+	"github.com/chanced/transcode"
+	"gopkg.in/yaml.v3"
 )
 
-// ParameterKind indicates whether the entry is a ParameterDef or a Reference
-type ParameterKind uint
+// ParameterMap is a map of Parameter
+type ParameterMap = ComponentMap[*Parameter]
 
-const (
-	// ParameterKindObj is a ParameterObj
-	ParameterKindObj ParameterKind = iota
-	// ParameterKindReference indicates the Parameter is a Reference
-	ParameterKindReference
-)
-
-// Parameter is either a ParameterObject or a ReferenceObject
-type Parameter interface {
-	ParameterKind() ParameterKind
-	ResolveParameter(ParameterResolver) (*ParameterObj, error)
-}
+// ParameterSlice is list of parameters that are applicable for a given operation.
+// If a parameter is already defined at the Path Item, the new definition will
+// override it but can never remove it. The list MUST NOT include duplicated
+// parameters. A unique parameter is defined by a combination of a name and
+// location. The list can use the Reference Object to link to parameters that
+// are defined at the OpenAPI Object's components/parameters.
+//
+// Can either be a Parameter or a Reference
+type ParameterSlice = ComponentSlice[*Parameter]
 
 /*
 * Path Parameters
@@ -126,66 +124,47 @@ type Parameter interface {
 * +-----------------------+------------------------------------------------------------------------------------------------------------------------------------------+
  */
 
-// Style describes how the parameter value will be serialized depending
-// on the type of the parameter value.
-type Style string
-
-func (s Style) String() string {
-	return string(s)
-}
-
-const (
-	// StyleForm for
-	StyleForm Style = "form"
-	// StyleSimple comma-separated values. Corresponds to the
-	// {param_name} URI template.
-	StyleSimple Style = "simple"
-	// StyleMatrix  semicolon-prefixed values, also known as path-style
-	// expansion. Corresponds to the {;param_name} URI template.
-	StyleMatrix Style = "matrix"
-	// StyleLabel dot-prefixed values, also known as label expansion.
-	// Corresponds to the {.param_name} URI template.
-	StyleLabel Style = "label"
-	// StyleDeepObject a simple way of rendering nested objects using
-	// form parameters (applies to objects only).
-	StyleDeepObject Style = "deepObject"
-	// StylePipeDelimited is pipeline-separated array values. Same as
-	// collectionFormat: pipes in OpenAPI 2.0. Has effect only for non-exploded
-	// arrays (explode: false), that is, the pipe separates the array values if
-	// the array is a single parameter, as in arr=a|b|c
-	StylePipeDelimited Style = "pipeDelimited"
-)
-
-// ParameterObj describes a single operation parameter.
+// Parameter describes a single operation parameter.
 //
 // A unique parameter is defined by a combination of a name and location.
-type ParameterObj struct {
+type Parameter struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	// The name of the parameter. Parameter names are case sensitive:
-	//   - If In is "path", the name field MUST correspond to a template
-	//     expression occurring within the path field in the Paths Object.
-	//     See Path Templating for further information.
-	//   - If In is "header" and the name field is "Accept", "Content-Type"
-	//     or "Authorization", the parameter definition SHALL be ignored.
-	//   - For all other cases, the name corresponds to the parameter name
-	//     used by the in property.
+	//
+	// - If In is "path", the name field MUST correspond to a template
+	// expression occurring within the path field in the Paths Object.
+	// See Path Templating for further information.
+	//
+	// - If In is "header" and the name field is "Accept", "Content-Type"
+	// or "Authorization", the parameter definition SHALL be ignored.
+	//
+	// - For all other cases, the name corresponds to the parameter name
+	// used by the in property.
 	//
 	//  *required*
-	Name string `json:"name"`
+	Name Text `json:"name"`
+
 	// The location of the parameter. Possible values are "query", "header",
 	// "path" or "cookie".
 	//
 	//  *required*
 	In In `json:"in"`
+
 	// A brief description of the parameter. This could contain examples of use.
 	// CommonMark syntax MAY be used for rich text representation.
-	Description string `json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
+
 	// Determines whether this parameter is mandatory. If the parameter location
 	// is "path", this property is REQUIRED and its value MUST be true.
 	// Otherwise, the property MAY be included and its default value is false.
 	Required *bool `json:"required,omitempty"`
+
 	// Specifies that a parameter is deprecated and SHOULD be transitioned out
 	// of usage. Default value is false.
 	Deprecated bool `json:"deprecated,omitempty"`
+
 	// Sets the ability to pass empty-valued parameters. This is valid only for
 	// query parameters and allows sending a parameter with an empty value.
 	// Default value is false. If style is used, and if behavior is n/a (cannot
@@ -193,205 +172,190 @@ type ParameterObj struct {
 	// this property is NOT RECOMMENDED, as it is likely to be removed in a
 	// later revision.
 	AllowEmptyValue bool `json:"allowEmptyValue,omitempty"`
+
 	// Describes how the parameter value will be serialized depending on the
 	// type of the parameter value.
 	// Default values (based on value of in):
-	// 	- for query - form;
+	//  - for query - form;
 	// 	- for path - simple;
 	// 	- for header - simple;
 	// 	- for cookie - form.
-	Style string `json:"style,omitempty"`
+	Style Text `json:"style,omitempty"`
+
 	// When this is true, parameter values of type array or object generate
 	// separate parameters for each value of the array or key-value pair of the
 	// map. For other types of parameters this property has no effect. When
 	// style is form, the default value is true. For all other styles, the
 	// default value is false.
 	Explode bool `json:"explode,omitempty"`
+
 	// Determines whether the parameter value SHOULD allow reserved characters,
 	// as defined by RFC3986 :/?#[]@!$&'()*+,;= to be included without
 	// percent-encoding. This property only applies to parameters with an in
 	// value of query. The default value is false.
 	AllowReserved bool `json:"allowReserved,omitempty"`
+
 	// The schema defining the type used for the parameter.
-	Schema *SchemaObj `json:"schema,omitempty"`
+	Schema *Schema `json:"schema,omitempty"`
+
 	// Examples of the parameter's potential value. Each example SHOULD
 	// contain a value in the correct format as specified in the parameter
 	// encoding. The examples field is mutually exclusive of the example
 	// field. Furthermore, if referencing a schema that contains an example,
 	// the examples value SHALL override the example provided by the schema.
-	Examples Examples        `json:"examples,omitempty"`
-	Example  json.RawMessage `json:"example,omitempty"`
+	Examples *ExampleMap `json:"examples,omitempty"`
+
+	Example jsonx.RawMessage `json:"example,omitempty"`
 
 	// For more complex scenarios, the content property can define the media
 	// type and schema of the parameter. A parameter MUST contain either a
 	// schema property, or a content property, but not both. When example or
 	// examples are provided in conjunction with the schema object, the example
 	// MUST follow the prescribed serialization strategy for the parameter.
-
-	Content    Content `json:"content,omitempty"`
-	Extensions `json:"-"`
+	Content *ContentMap `json:"content,omitempty"`
 }
 
-// ResolveParameter resolves p by returning itself
-func (p *ParameterObj) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
-	return p, nil
+func (p *Parameter) Nodes() []Node {
+	if p == nil {
+		return nil
+	}
+	return downcastNodes(p.nodes())
 }
 
-// ParameterKind indicates that this is a Parameter for unmarshaling
-// ParameterObjs by returning ParameterKindParameter
-func (p *ParameterObj) ParameterKind() ParameterKind { return ParameterKindObj }
+func (p *Parameter) nodes() []node {
+	if p == nil {
+		return nil
+	}
+	return appendEdges(nil, p.Schema, p.Examples, p.Content)
+}
+
+func (p *Parameter) Refs() []Ref {
+	if p == nil {
+		return nil
+	}
+	var refs []Ref
+	if p.Schema != nil {
+		refs = append(refs, p.Schema.Refs()...)
+	}
+	if p.Examples != nil {
+		refs = append(refs, p.Examples.Refs()...)
+	}
+	if p.Content != nil {
+		refs = append(refs, p.Content.Refs()...)
+	}
+	return refs
+}
+
+func (p *Parameter) Anchors() (*Anchors, error) {
+	if p == nil {
+		return nil, nil
+	}
+	var anchors *Anchors
+	var err error
+	if anchors, err = anchors.merge(p.Schema.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(p.Content.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(p.Examples.Anchors()); err != nil {
+		return nil, err
+	}
+	return anchors, nil
+}
+
+// func (p *Parameter) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return p.resolveNodeByPointer(ptr)
+// }
+
+// func (p *Parameter) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return p, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "schema":
+// 		if p.Schema == nil {
+// 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+// 		}
+// 		return p.Schema.resolveNodeByPointer(nxt)
+// 	case "content":
+// 		if p.Content == nil {
+// 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+// 		}
+// 		return p.Content.resolveNodeByPointer(nxt)
+// 	case "examples":
+// 		if p.Examples == nil {
+// 			return nil, newErrNotFound(p.AbsoluteLocation(), tok)
+// 		}
+// 		return p.Examples.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(p.AbsoluteLocation(), tok)
+// 	}
+// }
 
 // MarshalJSON marshals h into JSON
-func (p ParameterObj) MarshalJSON() ([]byte, error) {
-	type parameter ParameterObj
+func (p Parameter) MarshalJSON() ([]byte, error) {
+	type parameter Parameter
 	return marshalExtendedJSON(parameter(p))
 }
 
 // UnmarshalJSON unmarshals json into p
-func (p *ParameterObj) UnmarshalJSON(data []byte) error {
-	type parameter struct {
-		Name            string          `json:"name"`
-		In              In              `json:"in"`
-		Description     string          `json:"description,omitempty"`
-		Required        *bool           `json:"required,omitempty"`
-		Deprecated      bool            `json:"deprecated,omitempty"`
-		AllowEmptyValue bool            `json:"allowEmptyValue,omitempty"`
-		Style           string          `json:"style,omitempty"`
-		Explode         bool            `json:"explode,omitempty"`
-		AllowReserved   bool            `json:"allowReserved,omitempty"`
-		Schema          *SchemaObj      `json:"-"`
-		Examples        Examples        `json:"examples,omitempty"`
-		Example         json.RawMessage `json:"example,omitempty"`
-		Content         Content         `json:"content,omitempty"`
-		Extensions      `json:"-"`
-	}
-	v := parameter{}
+func (p *Parameter) UnmarshalJSON(data []byte) error {
+	type parameter Parameter
+	var v parameter
 
 	if err := unmarshalExtendedJSON(data, &v); err != nil {
 		return err
 	}
-	g := gjson.GetBytes(data, "schema")
-	if g.Exists() {
-		s, err := unmarshalSchemaJSON([]byte(g.Raw))
-		if err != nil {
-			return err
-		}
-		v.Schema = s
-	}
-	*p = ParameterObj(v)
+	*p = Parameter(v)
 	return nil
 }
 
-// UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
-}
+func (*Parameter) Kind() Kind      { return KindParameter }
+func (*Parameter) mapKind() Kind   { return KindParameterMap }
+func (*Parameter) sliceKind() Kind { return KindParameterSlice }
 
-// MarshalYAML marshals p into YAML
-func (p ParameterObj) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(p)
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (p Parameter) MarshalYAML() (interface{}, error) {
+	j, err := p.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
+	return transcode.YAMLFromJSON(j)
 }
 
-// ParameterList is list of parameters that are applicable for a given operation.
-// If a parameter is already defined at the Path Item, the new definition will
-// override it but can never remove it. The list MUST NOT include duplicated
-// parameters. A unique parameter is defined by a combination of a name and
-// location. The list can use the Reference Object to link to parameters that
-// are defined at the OpenAPI Object's components/parameters.
-//
-// Can either be a Parameter or a Reference
-type ParameterList []Parameter
-
-// MarshalJSON marshals JSON
-func (p ParameterList) MarshalJSON() ([]byte, error) {
-	if p != nil {
-		return json.Marshal([]Parameter(p))
-	}
-	return json.Marshal(make([]Parameter, 0))
-}
-
-// UnmarshalJSON unmarshals JSON data into p
-func (p *ParameterList) UnmarshalJSON(data []byte) error {
-	var rd []json.RawMessage
-	var err error
-	if err = json.Unmarshal(data, &rd); err != nil {
-		return err
-	}
-	items := make([]Parameter, len(rd))
-	for i, d := range rd {
-		var p Parameter
-		err = unmarshalParameterJSON(d, &p)
-		if err != nil {
-			return err
-		}
-		items[i] = p
-	}
-	*p = items
-	return nil
-}
-
-func unmarshalParameterJSON(data []byte, dst *Parameter) error {
-	var err error
-	if isRefJSON(data) {
-		var v Reference
-		err = json.Unmarshal(data, &v)
-		*dst = &v
-	} else {
-		var v ParameterObj
-		err = json.Unmarshal(data, &v)
-		*dst = &v
-	}
-	return err
-}
-
-// UnmarshalYAML unmarshals YAML data into p
-func (p *ParameterList) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, p)
-}
-
-// MarshalYAML marshals p into YAML
-func (p ParameterList) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(p)
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (p *Parameter) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
 	if err != nil {
-		return nil, err
-	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
-}
-
-// Parameters is a map of Parameter
-type Parameters map[string]Parameter
-
-// UnmarshalJSON unmarshals JSON
-func (p *Parameters) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
 		return err
 	}
-	res := make(Parameters, len(dm))
-	for k, d := range dm {
-		if isRefJSON(d) {
-			v, err := unmarshalReferenceJSON(d)
-			if err != nil {
-				return err
-			}
-			res[k] = v
-			continue
-		}
-		var v ParameterObj
-		if err := unmarshalExtendedJSON(d, &v); err != nil {
-			return err
-		}
+	return json.Unmarshal(j, p)
+}
 
-		res[k] = &v
+func (p *Parameter) setLocation(loc Location) error {
+	if p == nil {
+		return nil
 	}
-	*p = res
+	p.Location = loc
+	if err := p.Schema.setLocation(loc.AppendLocation("schema")); err != nil {
+		return err
+	}
+	if err := p.Content.setLocation(loc.AppendLocation("content")); err != nil {
+		return err
+	}
+	if err := p.Examples.setLocation(loc.AppendLocation("examples")); err != nil {
+		return err
+	}
+
 	return nil
 }
+func (p *Parameter) isNil() bool { return p == nil }
+
+func (*Parameter) refable() {}
+
+var _ node = (*Parameter)(nil)

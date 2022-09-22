@@ -3,38 +3,17 @@ package openapi
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 
-	"github.com/chanced/openapi/yamlutil"
+	"github.com/chanced/transcode"
+	"github.com/chanced/uri"
 	"github.com/tidwall/gjson"
+	"gopkg.in/yaml.v3"
 )
 
-type ParameterResolver func(ref string) (*ParameterObj, error)
-
-type ResponseResolver func(ref string) (*ResponseObj, error)
-
-type ExampleResolver func(ref string) (*ExampleObj, error)
-
-type HeaderResolver func(ref string) (*HeaderObj, error)
-
-type RequestBodyResolver func(ref string) (*RequestBodyObj, error)
-
-type CallbackResolver func(ref string) (*CallbackObj, error)
-
-type PathResolver func(ref string) (*PathObj, error)
-
-type SecuritySchemeResolver func(ref string) (*SecuritySchemeObj, error)
-
-type LinkResolver func(ref string) (*LinkObj, error)
-
-type SchemaResolver func(ref string) (*SchemaObj, error)
-
-// Referencable is any object type which could also be a Reference
-type Referencable interface {
-	IsRef() bool
-}
-
 // ErrNotReference indicates not a reference
-var ErrNotReference = errors.New("error: data is not a Reference")
+var ErrNotReference = errors.New("openapi: data is not a Reference")
 
 // Reference is simple object to allow referencing other components in the
 // OpenAPI document, internally and externally.
@@ -45,137 +24,173 @@ var ErrNotReference = errors.New("error: data is not a Reference")
 //
 // See the [rules for resolving Relative
 // References](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#relativeReferencesURI).
-type Reference struct {
+type Reference[T refable] struct {
 	// The reference identifier. This MUST be in the form of a URI.
 	//
 	// 	*required*
-	Ref string `yaml:"$ref" json:"$ref"`
+	Ref *uri.URI `json:"$ref"`
+
 	// A short summary which by default SHOULD override that of the referenced
 	// component. If the referenced object-type does not allow a summary field,
 	// then this field has no effect.
-	Summary string `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Summary Text `json:"summary,omitempty"`
+
 	// A description which by default SHOULD override that of the referenced
 	// component. CommonMark syntax MAY be used for rich text representation. If
 	// the referenced object-type does not allow a description field, then this
 	// field has no effect.
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description Text `json:"description,omitempty"`
+
+	// Location of the Reference
+	Location `json:"-"`
+
+	ReferencedKind Kind `json:"-"`
+
+	Resolved T `json:"-"`
+
+	dst interface{}
+
+	resolved bool
 }
 
-// MarshalYAML marshals YAML
-func (r Reference) MarshalYAML() (interface{}, error) {
-	return yamlutil.Marshal(r)
+func (r *Reference[T]) Nodes() []Node {
+	if r == nil {
+		return nil
+	}
+	return downcastNodes(r.nodes())
 }
 
-// UnmarshalYAML unmarshals YAML
-func (r *Reference) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, r)
+func (r *Reference[T]) nodes() []node {
+	if r == nil {
+		return nil
+	}
+
+	return appendEdges(nil, r.ResolvedNode().(node))
+}
+func (r *Reference[T]) RefKind() Kind { return r.ReferencedKind }
+
+func (r *Reference[T]) URI() *uri.URI {
+	if r == nil {
+		return nil
+	}
+	return r.Ref
 }
 
-// ParameterKind returns ParameterKindReference
-func (r *Reference) ParameterKind() ParameterKind {
-	return ParameterKindReference
+func (r *Reference[T]) IsResolved() bool { return r.resolved }
+
+// resolve resolves the reference
+//
+// TODO: make this a bit less panicky
+func (r *Reference[T]) resolve(v Node) error {
+	if r == nil {
+		return fmt.Errorf("openapi: Reference is nil")
+	}
+	if r.dst == nil {
+		return fmt.Errorf("openapi: Reference dst is nil")
+	}
+	if v.Kind() != r.ReferencedKind {
+		return NewResolutionError(r, r.ReferencedKind, v.Kind())
+	}
+
+	rd := reflect.ValueOf(r.dst)
+	rv := reflect.ValueOf(v)
+	if rv.Type().AssignableTo(rd.Type().Elem()) {
+		rd.Elem().Set(rv)
+	} else {
+		return fmt.Errorf("%s is not assignable to %s", rv.Type().String(), rd.Type().String())
+	}
+
+	r.Resolved = v.(T)
+
+	return nil
 }
 
-// ResponseKind distinguishes Reference by returning HeaderKindRef
-func (r *Reference) ResponseKind() ResponseKind {
-	return ResponseKindRef
+// Referenced returns the resolved referenced Node
+func (r *Reference[T]) ResolvedNode() Node {
+	return r.Resolved
 }
 
-// ExampleKind distinguishes Reference by returning HeaderKindRef
-func (r *Reference) ExampleKind() ExampleKind {
-	return ExampleKindRef
+// Refs returns nil as instances of Reference do not contain the referenced
+// object
+func (*Reference[T]) Refs() []Ref { return nil }
+
+func (r *Reference[T]) Anchors() (*Anchors, error) { return nil, nil }
+
+func (*Reference[T]) RefType() RefType { return RefTypeComponent }
+
+// func (r *Reference[T]) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return r.resolveNodeByPointer(ptr)
+// }
+
+// func (r *Reference[T]) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return r, nil
+// 	}
+// 	tok, _ := ptr.NextToken()
+// 	return nil, newErrNotResolvable(r.Location.AbsoluteLocation(), tok)
+// }
+
+func (r Reference[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(reference[T](r))
 }
 
-// HeaderKind distinguishes Reference by returning HeaderKindRef
-func (r *Reference) HeaderKind() HeaderKind {
-	return HeaderKindRef
+type reference[T refable] Reference[T]
+
+func (r *Reference[T]) UnmarshalJSON(data []byte) error {
+	var v reference[T]
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	*r = Reference[T](v)
+	return nil
 }
 
-// RequestBodyKind returns RequestBodyKindRef
-func (r *Reference) RequestBodyKind() RequestBodyKind {
-	return RequestBodyKindRef
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (r Reference[T]) MarshalYAML() (interface{}, error) {
+	j, err := r.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcode.YAMLFromJSON(j)
 }
 
-// CallbackKind returns CallbackKindRef
-func (r *Reference) CallbackKind() CallbackKind {
-	return CallbackKindRef
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (r *Reference[T]) UnmarshalYAML(value *yaml.Node) error {
+	j, err := transcode.YAMLFromJSON([]byte(value.Value))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, r)
 }
 
-// PathKind returns PathKindRef
-func (r *Reference) PathKind() PathKind {
-	return PathKindRef
+func (r *Reference[T]) String() string {
+	return r.Ref.String()
 }
 
-// SecuritySchemeKind returns SecuritySchemeKindRef
-func (r *Reference) SecuritySchemeKind() SecuritySchemeKind {
-	return SecuritySchemeKindRef
+func (r *Reference[T]) setLocation(loc Location) error {
+	if r == nil {
+		return nil
+	}
+	r.Location = loc
+	return nil
 }
 
-// LinkKind returns LinkKindRef
-func (r *Reference) LinkKind() LinkKind {
-	return LinkKindRef
-}
+func (r *Reference[T]) Kind() Kind    { return KindReference }
+func (*Reference[T]) mapKind() Kind   { return KindUndefined }
+func (*Reference[T]) sliceKind() Kind { return KindUndefined }
 
-// ResolveParameter resolves r by invoking resolve
-func (r *Reference) ResolveParameter(resolve ParameterResolver) (*ParameterObj, error) {
-	return resolve(r.Ref)
-}
+func (r *Reference[T]) isNil() bool { return r == nil }
 
-// ResolveResponse resolves r by invoking resolve
-func (r *Reference) ResolveResponse(resolve ResponseResolver) (*ResponseObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolveExample resolves r by invoking resolve
-func (r *Reference) ResolveExample(resolve ExampleResolver) (*ExampleObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolveHeader resolves r by invoking resolve
-func (r *Reference) ResolveHeader(resolve HeaderResolver) (*HeaderObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolveRequestBody resolves r by invoking resolve
-func (r *Reference) ResolveRequestBody(resolve RequestBodyResolver) (*RequestBodyObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolveCallback resolves r by invoking resolve
-func (r *Reference) ResolveCallback(resolve CallbackResolver) (*CallbackObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolvePath resolves r by invoking resolve
-func (r *Reference) ResolvePath(resolve PathResolver) (*PathObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolveSecurityScheme resolves r by invoking resolve
-func (r *Reference) ResolveSecurityScheme(resolve SecuritySchemeResolver) (*SecuritySchemeObj, error) {
-	return resolve(r.Ref)
-}
-
-// ResolveLink resolves r by invoking resolve
-func (r *Reference) ResolveLink(resolve LinkResolver) (*LinkObj, error) {
-	return resolve(r.Ref)
-}
 func isRefJSON(data []byte) bool {
 	r := gjson.GetBytes(data, "$ref")
 	return r.Str != ""
 }
 
-func unmarshalReferenceJSON(data []byte) (*Reference, error) {
-	if !isRefJSON(data) {
-		return nil, ErrNotReference
-	}
-	var r Reference
-	return &r, json.Unmarshal(data, &r)
-}
-
-var _ SecurityScheme = (*Reference)(nil)
-var _ Path = (*Reference)(nil)
-var _ Response = (*Reference)(nil)
-var _ Example = (*Reference)(nil)
-var _ Parameter = (*Reference)(nil)
-var _ Header = (*Reference)(nil)
+var (
+	_ node = (*Reference[*Response])(nil)
+	_ Ref  = (*Reference[*Response])(nil)
+	_ ref  = (*Reference[*Response])(nil)
+)

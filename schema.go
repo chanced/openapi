@@ -1,103 +1,89 @@
 package openapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"strings"
 
-	"github.com/chanced/dynamic"
-	"github.com/chanced/openapi/yamlutil"
-	"github.com/tidwall/sjson"
-	"gopkg.in/yaml.v2"
+	"github.com/chanced/caps/text"
+	"github.com/chanced/jsonx"
+	"github.com/chanced/maps"
+	"github.com/chanced/uri"
 )
 
-// SchemaKind indicates whether the *SchemaObj is a SchemaObj, Reference, or Boolean
-type SchemaKind uint8
-
-const (
-	// SchemaKindObj = *SchemaObj
-	SchemaKindObj SchemaKind = iota
-	// SchemaKindBool = *Boolean
-	SchemaKindBool
-)
-
-// Schemas is a map of Schemas
-type Schemas map[string]*SchemaObj
-
-// UnmarshalJSON unmarshals JSON
-func (s *Schemas) UnmarshalJSON(data []byte) error {
-	var dm map[string]json.RawMessage
-	if err := json.Unmarshal(data, &dm); err != nil {
-		return err
-	}
-	res := make(Schemas, len(dm))
-
-	for k, d := range dm {
-		v, err := unmarshalSchemaJSON(d)
-		if err != nil {
-			return err
-		}
-		res[k] = v
-	}
-	*s = res
-	return nil
-}
-
-// SchemaObj allows the definition of input and output data types. These types can
-// be objects, but also primitives and arrays. This object is a superset of the
-// [JSON SchemaObj Specification Draft
+// Schema allows the definition of input and output data types. These types can
+// be objects, but also primitives and arrays. This object is a superSlice of the
+// [JSON Schema Specification Draft
 // 2020-12](https://tools.ietf.org/html/draft-bhutton-json-schema-00).
 //
-// For more information about the properties, see [JSON SchemaObj
+// For more information about the properties, see [JSON Schema
 // Core](https://tools.ietf.org/html/draft-bhutton-json-schema-00) and [JSON
-// SchemaObj
+// Schema
 // Validation](https://tools.ietf.org/html/draft-bhutton-json-schema-validation-00).
 //
-// Unless stated otherwise, the property definitions follow those of JSON SchemaObj
-// and do not add any additional semantics. Where JSON SchemaObj indicates that
+// Unless stated otherwise, the property definitions follow those of JSON Schema
+// and do not add any additional semantics. Where JSON Schema indicates that
 // behavior is defined by the application (e.g. for annotations), OAS also
 // defers the definition of semantics to the application consuming the OpenAPI
 // document.
 //
-// The OpenAPI SchemaObj Object
+// The OpenAPI Schema Object
 // [dialect](https://tools.ietf.org/html/draft-bhutton-json-schema-00#section-4.3.3)
 // is defined as requiring the [OAS base vocabulary](#baseVocabulary), in
-// addition to the vocabularies as specified in the JSON SchemaObj draft 2020-12
+// addition to the vocabularies as specified in the JSON Schema draft 2020-12
 // [general purpose
 // meta-schema](https://tools.ietf.org/html/draft-bhutton-json-schema-00#section-8).
 //
-// The OpenAPI SchemaObj Object dialect for this version of the specification is
+// The OpenAPI Schema Object dialect for this version of the specification is
 // identified by the URI `https://spec.openapis.org/oas/3.1/dialect/base` (the
 // <a name="dialectSchemaId"></a>"OAS dialect schema id").
 //
-// The following properties are taken from the JSON SchemaObj specification but
+// The following properties are taken from the JSON Schema specification but
 // their definitions have been extended by the OAS:
 //
 // - description - [CommonMark syntax](https://spec.commonmark.org/) MAY be used
 // for rich text representation. - format - See [Data Type
-// Formats](#dataTypeFormat) for further details. While relying on JSON SchemaObj's
+// Formats](#dataTypeFormat) for further details. While relying on JSON Schema's
 // defined formats, the OAS offers a few additional predefined formats.
 //
-// In addition to the JSON SchemaObj properties comprising the OAS dialect, the
-// SchemaObj Object supports keywords from any other vocabularies, or entirely
+// In addition to the JSON Schema properties comprising the OAS dialect, the
+// Schema Object supports keywords from any other vocabularies, or entirely
 // arbitrary properties.
-// A SchemaObj represents compiled version of json-schema.
-type SchemaObj struct {
-	// Always will be assigned if the schema value is a boolean
-	Always *bool  `json:"-"`
-	Schema string `json:"$schema,omitempty"`
+// A Schema represents compiled version of json-schema.
+type Schema struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
+	Schema *uri.URI `json:"$schema,omitempty"`
+
 	// The value of $id is a URI-reference without a fragment that resolves
 	// against the Retrieval URI. The resulting URI is the base URI for the
 	// schema.
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=id#id
-	ID string `json:"$id,omitempty"`
+	ID *uri.URI `json:"$id,omitempty"`
+
+	// A less common way to identify a subschema is to create a named anchor in
+	// the schema using the $anchor keyword and using that name in the URI
+	// fragment. Anchors must start with a letter followed by any number of
+	// letters, digits, -, _, :, or ..
+	//
+	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=anchor#anchor
+	Anchor Text `json:"$anchor,omitempty"`
+
+	DynamicAnchor Text `json:"$dynamicAnchor,omitempty"`
+
+	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
+
 	// At its core, JSON *SchemaObj defines the following basic types:
 	//
 	// 	"string", "number", "integer", "object", "array", "boolean", "null"
 	//
 	// https://json-schema.org/understanding-json-schema/reference/type.html#type
 	Type Types `json:"type,omitempty"`
+
 	// The "$ref" keyword is an applicator that is used to reference a
 	// statically identified schema. Its results are the results of the
 	// referenced schema. [CREF5]
@@ -111,19 +97,18 @@ type SchemaObj struct {
 	// https://json-schema.org/draft/2020-12/json-schema-core.html#ref
 	//
 	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=ref#ref
-	Ref string `json:"$ref,omitempty"`
-	// The "$defs" keyword reserves a location for schema authors to inline
-	// re-usable JSON Schemas into a more general schema. The keyword does not
-	// directly affect the validation result.
+	Ref *SchemaRef `json:"$ref,omitempty"`
+
+	// The "$dynamicRef" keyword is an applicator that allows for deferring the
+	// full resolution until runtime, at which point it is resolved each time it
+	// is encountered while evaluating an instance.
 	//
-	// This keyword's value MUST be an object. Each member value of this object
-	// MUST be a valid JSON *SchemaObj.
-	//
-	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
-	//
-	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
-	Definitions Schemas `json:"$defs,omitempty"`
-	// The format keyword allows for basic semantic identification of certain kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
+	// https://json-schema.org/draft/2020-12/json-schema-core.html#dynamic-ref
+	DynamicRef *SchemaRef `json:"$dynamicRef,omitempty"`
+
+	RecursiveRef *SchemaRef `json:"$recursiveRef,omitempty"`
+
+	// The format keyword allows for basic semantic identification of certain Kinds of string values that are commonly used. For example, because JSON doesn’t have a “DateTime” type, dates need to be encoded as strings. format allows the schema author to indicate that the string value should be interpreted as a date. By default, format is just an annotation and does not effect validation.
 	//
 	// Optionally, validator implementations can provide a configuration option to
 	// enable format to function as an assertion rather than just an annotation.
@@ -133,30 +118,23 @@ type SchemaObj struct {
 	// Expressions can do.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/string.html#format
-	Format        string `json:"format,omitempty"`
-	DynamicAnchor string `json:"$dynamicAnchor,omitempty"`
-	// The "$dynamicRef" keyword is an applicator that allows for deferring the
-	// full resolution until runtime, at which point it is resolved each time it
-	// is encountered while evaluating an instance.
-	//
-	// https://json-schema.org/draft/2020-12/json-schema-core.html#dynamic-ref
-	DynamicRef string `json:"$dynamicRef,omitempty"`
-	// A less common way to identify a subschema is to create a named anchor in
-	// the schema using the $anchor keyword and using that name in the URI
-	// fragment. Anchors must start with a letter followed by any number of
-	// letters, digits, -, _, :, or ..
-	//
-	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=anchor#anchor
-	Anchor string `json:"$anchor,omitempty"`
+	Format Text `json:"format,omitempty"`
+
 	// The const keyword is used to restrict a value to a single value.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#constant-values
-	Const json.RawMessage `json:"const,omitempty"`
+	Const jsonx.RawMessage `json:"const,omitempty"`
+
+	Required Texts `json:"required,omitempty"`
+
+	Properties *SchemaMap `json:"properties,omitempty"`
+
 	// The enum keyword is used to restrict a value to a fixed set of values. It
 	// must be an array with at least one element, where each element is unique.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#enumerated-values
-	Enum []string `json:"enum,omitempty"`
+	Enum Texts `json:"enum,omitempty"`
+
 	// The $comment keyword is strictly intended for adding comments to a
 	// schema. Its value must always be a string. Unlike the annotations title,
 	// description, and examples, JSON schema implementations aren’t allowed to
@@ -166,45 +144,57 @@ type SchemaObj struct {
 	// of the schema.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/generic.html?highlight=const#comments
-	Comments string `json:"$comment,omitempty"`
+	Comments Text `json:"$comment,omitempty"`
 
 	// The not keyword declares that an instance validates if it doesn’t
 	// validate against the given subschema.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=not#not
-	Not *SchemaObj `json:"not,omitempty"`
+	Not *Schema `json:"not,omitempty"`
+
 	// validate against allOf, the given data must be valid against all of the
 	// given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=anyof#anyof
-	AllOf SchemaSet `json:"allOf,omitempty"`
+	AllOf *SchemaSlice `json:"allOf,omitempty"`
+
 	// validate against anyOf, the given data must be valid against any (one or
 	// more) of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=allof#allof
-	AnyOf SchemaSet `json:"anyOf,omitempty"`
+	AnyOf *SchemaSlice `json:"anyOf,omitempty"`
+
 	// alidate against oneOf, the given data must be valid against exactly one of the given subschemas.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/combining.html?highlight=oneof#oneof
-	OneOf SchemaSet `json:"oneOf,omitempty"`
+	OneOf *SchemaSlice `json:"oneOf,omitempty"`
+
 	// if, then and else keywords allow the application of a subschema based on
 	// the outcome of another schema, much like the if/then/else constructs
 	// you’ve probably seen in traditional programming languages.
 	//
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	If *SchemaObj `json:"if,omitempty"`
+	If *Schema `json:"if,omitempty"`
+
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Then *SchemaObj `json:"then,omitempty"`
+	Then *Schema `json:"then,omitempty"`
+
 	// https://json-schema.org/understanding-json-schema/reference/conditionals.html#if-then-else
-	Else                 *SchemaObj `json:"else,omitempty"`
-	MinProperties        *int       `json:"minProperties,omitempty"`
-	MaxProperties        *int       `json:"maxProperties,omitempty"`
-	Required             []string   `json:"required,omitempty"`
-	Properties           Schemas    `json:"properties,omitempty"`
-	PropertyNames        *SchemaObj `json:"propertyNames,omitempty"`
-	RegexProperties      *bool      `json:"regexProperties,omitempty"`
-	PatternProperties    Schemas    `json:"patternProperties,omitempty"`
-	AdditionalProperties *SchemaObj `json:"additionalProperties,omitempty"`
+
+	Else *Schema `json:"else,omitempty"`
+
+	MinProperties *Number `json:"minProperties,omitempty"`
+
+	MaxProperties *Number `json:"maxProperties,omitempty"`
+
+	PropertyNames *Schema `json:"propertyNames,omitempty"`
+
+	RegexProperties *bool `json:"regexProperties,omitempty"`
+
+	PatternProperties *SchemaMap `json:"patternProperties,omitempty"`
+
+	AdditionalProperties *Schema `json:"additionalProperties,omitempty"`
+
 	// The dependentRequired keyword conditionally requires that certain
 	// properties must be present if a given property is present in an object.
 	// For example, suppose we have a schema representing a customer. If you
@@ -215,154 +205,432 @@ type SchemaObj struct {
 	// dependentRequired keyword is an object. Each entry in the object maps
 	// from the name of a property, p, to an array of strings listing properties
 	// that are required if p is present.
-	DependentRequired map[string][]string `json:"dependentRequired,omitempty"`
+	DependentRequired *Map[Texts] `json:"dependentRequired,omitempty"`
+
 	// The dependentSchemas keyword conditionally applies a subschema when a
 	// given property is present. This schema is applied in the same way allOf
 	// applies schemas. Nothing is merged or extended. Both schemas apply
 	// independently.
-	DependentSchemas      Schemas    `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties *SchemaObj `json:"unevaluatedProperties,omitempty"`
-	UniqueObjs            *bool      `json:"uniqueObjs,omitempty"`
+
+	DependentSchemas *SchemaMap `json:"dependentSchemas,omitempty"`
+
+	UnevaluatedProperties *Schema `json:"unevaluatedProperties,omitempty"`
+
+	UniqueItems *bool `json:"uniqueItems,omitempty"`
+
 	// List validation is useful for arrays of arbitrary length where each item
 	// matches the same schema. For this kind of array, set the items keyword to
 	// a single schema that will be used to validate all of the items in the
 	// array.
-	Items            *SchemaObj        `json:"items,omitempty"`
-	UnevaluatedObjs  *SchemaObj        `json:"unevaluatedObjs,omitempty"`
-	AdditionalObjs   *SchemaObj        `json:"additionalObjs,omitempty"`
-	PrefixObjs       SchemaSet         `json:"prefixObjs,omitempty"`
-	Contains         *SchemaObj        `json:"contains,omitempty"`
-	MinContains      *Number           `json:"minContains,omitempty"`
-	MaxContains      *Number           `json:"maxContains,omitempty"`
-	MinLength        *Number           `json:"minLength,omitempty"`
-	MaxLength        *Number           `json:"maxLength,omitempty"`
-	Pattern          *Regexp           `json:"pattern,omitempty"`
-	ContentEncoding  string            `json:"contentEncoding,omitempty"`
-	ContentMediaType string            `json:"contentMediaType,omitempty"`
-	Minimum          *Number           `json:"minimum,omitempty"`
-	ExclusiveMinimum *Number           `json:"exclusiveMinimum,omitempty"`
-	Maximum          *Number           `json:"maximum,omitempty"`
-	ExclusiveMaximum *Number           `json:"exclusiveMaximum,omitempty"`
-	MultipleOf       *Number           `json:"multipleOf,omitempty"`
-	Title            string            `json:"title,omitempty"`
-	Description      string            `json:"description,omitempty"`
-	Default          json.RawMessage   `json:"default,omitempty"`
-	ReadOnly         *bool             `json:"readOnly,omitempty"`
-	WriteOnly        *bool             `json:"writeOnly,omitempty"`
-	Examples         []json.RawMessage `json:"examples,omitempty"`
-	Example          json.RawMessage   `json:"example,omitempty"`
-	Deprecated       *bool             `json:"deprecated,omitempty"`
-	ExternalDocs     string            `json:"externalDocs,omitempty"`
-	// Deprecated: renamed to dynamicAnchor
-	RecursiveAnchor *bool `json:"$recursiveAnchor,omitempty"`
-	// Deprecated: renamed to dynamicRef
-	RecursiveRef string `json:"$recursiveRef,omitempty"`
+	//
+	// https://json-schema.org/understanding-json-schema/reference/array.html#items
+	Items *Schema `json:"items,omitempty"`
 
+	UnevaluatedItems *Schema `json:"unevaluatedItems,omitempty"`
+
+	AdditionalItems *Schema `json:"additionalItems,omitempty"`
+
+	PrefixItems *SchemaSlice `json:"prefixItems,omitempty"`
+
+	Contains *Schema `json:"contains,omitempty"`
+
+	MinContains *Number `json:"minContains,omitempty"`
+
+	MaxContains *Number `json:"maxContains,omitempty"`
+
+	MinLength *Number `json:"minLength,omitempty"`
+
+	MaxLength *Number `json:"maxLength,omitempty"`
+
+	Pattern *Regexp `json:"pattern,omitempty"`
+
+	ContentEncoding Text `json:"contentEncoding,omitempty"`
+
+	ContentMediaType Text `json:"contentMediaType,omitempty"`
+
+	Minimum *Number `json:"minimum,omitempty"`
+
+	ExclusiveMinimum *Number `json:"exclusiveMinimum,omitempty"`
+
+	Maximum *Number `json:"maximum,omitempty"`
+
+	ExclusiveMaximum *Number `json:"exclusiveMaximum,omitempty"`
+
+	MultipleOf *Number `json:"multipleOf,omitempty"`
+
+	Title Text `json:"title,omitempty"`
+
+	Description Text `json:"description,omitempty"`
+
+	Default jsonx.RawMessage `json:"default,omitempty"`
+
+	ReadOnly *bool `json:"readOnly,omitempty"`
+
+	WriteOnly *bool `json:"writeOnly,omitempty"`
+
+	Examples []jsonx.RawMessage `json:"examples,omitempty"`
+
+	Example jsonx.RawMessage `json:"example,omitempty"`
+
+	Deprecated *bool `json:"deprecated,omitempty"`
+
+	ExternalDocs Text `json:"externalDocs,omitempty"`
+
+	// When request bodies or response payloads may be one of a number of
+	// different schemas, a discriminator object can be used to aid in
+	// serialization, deserialization, and validation. The discriminator is a
+	// specific object in a schema which is used to inform the consumer of the
+	// document of an alternative schema based on the value associated with it.
+	//
+	// This object MAY be extended with Specification Extensions.
+	//
+	// The discriminator object is legal only when using one of the composite
+	// keywords oneOf, anyOf, allOf.
+	//
+	// 3.1:
+	//
+	// https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#discriminatorObject
+	//
+	// 3.0:
+	//
+	// https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#discriminatorObject
 	Discriminator *Discriminator `json:"discriminator,omitempty"`
+
 	// This MAY be used only on properties schemas. It has no effect on root
 	// schemas. Adds additional metadata to describe the XML representation of
 	// this property.
-	XML        *XML `json:"xml,omitempty"`
-	Extensions `json:"-"`
-	Keywords   map[string]json.RawMessage `json:"-"`
+	XML *XML `json:"xml,omitempty"`
+
+	// The "$defs" keyword reserves a location for schema authors to inline
+	// re-usable JSON Schemas into a more general schema. The keyword does not
+	// directly affect the validation result.
+	//
+	// This keyword's value MUST be an object. Each member value of this object
+	// MUST be a valid JSON *SchemaObj.
+	//
+	// https://json-schema.org/draft/2020-12/json-schema-core.html#defs
+	//
+	// https://json-schema.org/understanding-json-schema/structuring.html?highlight=defs#defs
+	Definitions *SchemaMap `json:"$defs,omitempty"`
+
+	Keywords map[Text]jsonx.RawMessage `json:"-"`
 }
 
-type schema SchemaObj
+func (s *Schema) Nodes() []Node {
+	if s == nil {
+		return nil
+	}
+	return downcastNodes(s.nodes())
+}
 
-// Detail returns a ptr to the *SchemaObj
-func (s SchemaObj) Detail() *SchemaObj {
-	return &s
+func (s *Schema) nodes() []node {
+	return appendEdges(nil, s.Ref,
+		s.DynamicRef,
+		s.RecursiveRef,
+		s.Properties,
+		s.Not,
+		s.AllOf,
+		s.AnyOf,
+		s.OneOf,
+		s.If,
+		s.Then,
+		s.Else,
+		s.PropertyNames,
+		s.PatternProperties,
+		s.AdditionalProperties,
+		s.DependentSchemas,
+		s.UnevaluatedProperties,
+		s.Items,
+		s.UnevaluatedItems,
+		s.AdditionalItems,
+		s.PrefixItems,
+		s.Contains,
+		s.Discriminator,
+		s.XML,
+		s.Definitions,
+	)
+}
+
+func (s *Schema) Refs() []Ref {
+	if s == nil {
+		return nil
+	}
+	var refs []Ref
+	if s.Ref != nil {
+		refs = append(refs, s.Ref)
+	}
+	if s.DynamicRef != nil {
+		refs = append(refs, s.DynamicRef)
+	}
+	if s.RecursiveRef != nil {
+		refs = append(refs, s.RecursiveRef)
+	}
+	refs = append(refs, s.Definitions.Refs()...)
+	refs = append(refs, s.Not.Refs()...)
+	refs = append(refs, s.AllOf.Refs()...)
+	refs = append(refs, s.AnyOf.Refs()...)
+	refs = append(refs, s.OneOf.Refs()...)
+	refs = append(refs, s.If.Refs()...)
+	refs = append(refs, s.Then.Refs()...)
+	refs = append(refs, s.Else.Refs()...)
+	refs = append(refs, s.Properties.Refs()...)
+	refs = append(refs, s.PropertyNames.Refs()...)
+	refs = append(refs, s.PatternProperties.Refs()...)
+	refs = append(refs, s.AdditionalProperties.Refs()...)
+	refs = append(refs, s.DependentSchemas.Refs()...)
+	refs = append(refs, s.UnevaluatedProperties.Refs()...)
+	refs = append(refs, s.Items.Refs()...)
+	refs = append(refs, s.UnevaluatedItems.Refs()...)
+	refs = append(refs, s.AdditionalItems.Refs()...)
+	refs = append(refs, s.PrefixItems.Refs()...)
+	refs = append(refs, s.Contains.Refs()...)
+	refs = append(refs, s.XML.Refs()...)
+
+	return refs
+}
+
+func (s *Schema) Anchors() (*Anchors, error) {
+	if s == nil {
+		return nil, nil
+	}
+	anchors := &Anchors{
+		Standard: make(map[text.Text]Anchor),
+		Dynamic:  make(map[text.Text]Anchor),
+	}
+	if s.Anchor != "" {
+		anchors.Standard[s.Anchor] = Anchor{
+			Location: s.Location.AppendLocation("$anchor"),
+			In:       s,
+			Name:     s.Anchor,
+			Type:     AnchorTypeRegular,
+		}
+	}
+	if s.DynamicAnchor != "" {
+		anchors.Dynamic[s.DynamicAnchor] = Anchor{
+			Location: s.Location.AppendLocation("$dynamicAnchor"),
+			In:       s,
+			Name:     s.DynamicAnchor,
+			Type:     AnchorTypeDynamic,
+		}
+	}
+	if s.RecursiveAnchor != nil {
+		anchors.Recursive = &Anchor{
+			Location: s.Location.AppendLocation("$recursiveAnchor"),
+			In:       s,
+			Name:     "",
+			Type:     AnchorTypeRecursive,
+		}
+	}
+	var err error
+
+	if anchors, err = anchors.merge(s.Ref.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Definitions.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.DynamicRef.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Not.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.AllOf.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.AnyOf.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.OneOf.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.If.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Then.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Else.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Properties.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.PropertyNames.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.PatternProperties.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.AdditionalProperties.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.DependentSchemas.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.UnevaluatedProperties.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Items.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.UnevaluatedItems.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.AdditionalItems.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.PrefixItems.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.Contains.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.RecursiveRef.Anchors()); err != nil {
+		return nil, err
+	}
+	if anchors, err = anchors.merge(s.XML.Anchors()); err != nil {
+		return nil, err
+	}
+
+	return anchors, nil
 }
 
 // MarshalJSON marshals JSON
-func (s SchemaObj) MarshalJSON() ([]byte, error) {
-	if s.Always != nil {
-		return json.Marshal(s.Always)
-	}
-	data, err := marshalExtendedJSON(schema(s))
-	if s.Keywords != nil {
-		for k, v := range s.Keywords {
-			data, err = sjson.SetBytes(data, k, v)
-			if err != nil {
-				return data, err
-			}
-		}
-	}
-	return data, err
-}
-
-// SchemaKind returns SchemaKindObj
-func (s *SchemaObj) SchemaKind() SchemaKind { return SchemaKindObj }
-
-// ResolveSchema resolves *SchemaObj by returning s
-func (s *SchemaObj) ResolveSchema(SchemaResolver) (*SchemaObj, error) {
-	return s, nil
-}
-
-// UnmarshalJSON unmarshals JSON
-func (s *SchemaObj) UnmarshalJSON(data []byte) error {
-	sv, err := unmarshalSchemaJSON(data)
-	*s = *sv
-	return err
-}
-
-// MarshalYAML first marshals and unmarshals into JSON and then marshals into
-// YAML
-func (s SchemaObj) MarshalYAML() (interface{}, error) {
-	b, err := json.Marshal(s)
+func (s Schema) MarshalJSON() ([]byte, error) {
+	type schema Schema
+	b := bytes.Buffer{}
+	data, err := json.Marshal(schema(s))
 	if err != nil {
 		return nil, err
 	}
-	var v interface{}
-	err = json.Unmarshal(b, &v)
-	return v, err
+	// trimming the last }
+	b.Write(data[:len(data)-1])
+
+	if len(s.Keywords) == 0 && len(s.Extensions) == 0 && b.Len() < 10 {
+		bs := b.String()
+		switch bs {
+		case "{":
+			return []byte("true"), nil
+		case `{"not":true`:
+			return []byte("false"), nil
+		}
+	}
+	if s.Keywords != nil {
+		for _, kv := range maps.SortByKeys(s.Keywords) {
+			if b.Len() > 2 {
+				b.WriteString(",")
+			}
+			jsonx.EncodeAndWriteString(&b, kv.Key)
+			b.WriteByte(':')
+			if kv.Value != nil {
+				bb, err := json.Marshal(kv.Value)
+				if err != nil {
+					return nil, err
+				}
+				b.Write(bb)
+			}
+		}
+	}
+	b.WriteByte('}')
+	return b.Bytes(), err
 }
 
-// UnmarshalYAML unmarshals yaml into s
-func (s *SchemaObj) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return yamlutil.Unmarshal(unmarshal, s)
+// UnmarshalJSON unmarshals JSON
+func (s *Schema) UnmarshalJSON(data []byte) error {
+	t := jsonx.TypeOf(data)
+	switch t {
+	case jsonx.TypeBool:
+		return s.unmarshalJSONBool(data)
+	case jsonx.TypeObject:
+		return s.unmarshalJSONObj(data)
+	default:
+		return &json.UnmarshalTypeError{Value: t.String(), Type: reflect.TypeOf(s)}
+	}
 }
 
-// IsStrings returns false
-func (s *SchemaObj) IsStrings() bool {
-	return false
+func (s *Schema) unmarshalJSONBool(data []byte) error {
+	if jsonx.IsTrue(data) {
+		*s = Schema{}
+		return nil
+	} else {
+		*s = Schema{Not: &Schema{}}
+		return nil
+	}
 }
 
-// IsBool returns false
-func (s *SchemaObj) IsBool() bool {
-	return false
+func (s *Schema) unmarshalJSONObj(data []byte) error {
+	res := Schema{}
+
+	d := map[Text]jsonx.RawMessage{}
+	err := json.Unmarshal(data, &d)
+	if err != nil {
+		return err
+	}
+	fields := res.fields()
+	for k, v := range d {
+		if f, ok := fields[k.String()]; ok {
+			err = json.Unmarshal(v, f)
+			if err != nil {
+				return err
+			}
+		} else if strings.HasPrefix(k.String(), "x-") {
+			if res.Extensions == nil {
+				res.Extensions = Extensions{}
+			}
+			res.Extensions[k] = v
+		} else {
+			if res.Keywords == nil {
+				res.Keywords = make(map[Text]jsonx.RawMessage)
+			}
+			res.Keywords[k] = v
+		}
+	}
+	if err != nil {
+		return err
+	}
+	if res.Ref != nil {
+		res.Ref.SchemaRefKind = SchemaRefTypeRef
+	}
+	if res.DynamicRef != nil {
+		res.DynamicRef.SchemaRefKind = SchemaRefTypeDynamic
+	}
+	if res.RecursiveRef != nil {
+		res.RecursiveRef.SchemaRefKind = SchemaRefTypeRecursive
+	}
+	*s = res
+
+	return nil
 }
 
-// IsRef returns true if s.Ref is set
-func (s *SchemaObj) IsRef() bool {
-	return s.Ref != ""
-}
-
-// SetKeyword encodes and sets the keyword key to the encoded value
-func (s *SchemaObj) SetKeyword(key string, value interface{}) error {
+// SetKeyword marshals value and sets the encoded json to key in Keywords
+//
+// If setting the value as []byte, it should be in the form of json.RawMessage
+// or jsonx.RawMessage as both types implement json.Marshaler
+func (s *Schema) SetKeyword(key Text, value interface{}) error {
 	b, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
-	return s.SetEncodedKeyword(key, b)
+	return s.setEncodedKeyword(key, b)
 }
 
 // SetEncodedKeyword sets the keyword key to value
-func (s *SchemaObj) SetEncodedKeyword(key string, value []byte) error {
-	if strings.HasPrefix(key, "x-") {
+func (s *Schema) setEncodedKeyword(key Text, value []byte) error {
+	if key.HasPrefix("x-") {
 		return errors.New("keyword keys may not start with \"x-\"")
 	}
-	s.Keywords[key] = value
+	s.Keywords[Text(key)] = value
 	return nil
 }
 
 // DecodeKeyword unmarshals the keyword's raw data into dst
-func (s *SchemaObj) DecodeKeyword(key string, dst interface{}) error {
+func (s *Schema) DecodeKeyword(key Text, dst interface{}) error {
 	return json.Unmarshal(s.Keywords[key], dst)
 }
 
 // DecodeKeywords unmarshals all keywords raw data into dst
-func (s *SchemaObj) DecodeKeywords(dst interface{}) error {
+func (s *Schema) DecodeKeywords(dst interface{}) error {
 	data, err := json.Marshal(s.Keywords)
 	if err != nil {
 		return err
@@ -370,225 +638,513 @@ func (s *SchemaObj) DecodeKeywords(dst interface{}) error {
 	return json.Unmarshal(data, dst)
 }
 
-// SchemaSet is a slice of **SchemaObj
-type SchemaSet []*SchemaObj
+func (s *Schema) fields() map[string]interface{} {
+	return map[string]interface{}{
+		"$schema":               &s.Schema,
+		"$id":                   &s.ID,
+		"type":                  &s.Type,
+		"$ref":                  &s.Ref,
+		"$defs":                 &s.Definitions,
+		"format":                &s.Format,
+		"$dynamicAnchor":        &s.DynamicAnchor,
+		"$dynamicRef":           &s.DynamicRef,
+		"$anchor":               &s.Anchor,
+		"const":                 &s.Const,
+		"enum":                  &s.Enum,
+		"$comment":              &s.Comments,
+		"not":                   &s.Not,
+		"allOf":                 &s.AllOf,
+		"anyOf":                 &s.AnyOf,
+		"oneOf":                 &s.OneOf,
+		"if":                    &s.If,
+		"then":                  &s.Then,
+		"else":                  &s.Else,
+		"minProperties":         &s.MinProperties,
+		"maxProperties":         &s.MaxProperties,
+		"required":              &s.Required,
+		"properties":            &s.Properties,
+		"propertyNames":         &s.PropertyNames,
+		"regexProperties":       &s.RegexProperties,
+		"patternProperties":     &s.PatternProperties,
+		"additionalProperties":  &s.AdditionalProperties,
+		"dependentRequired":     &s.DependentRequired,
+		"dependentSchemas":      &s.DependentSchemas,
+		"unevaluatedProperties": &s.UnevaluatedProperties,
+		"uniqueItems":           &s.UniqueItems,
+		"items":                 &s.Items,
+		"unevaluatedItems":      &s.UnevaluatedItems,
+		"additionalItems":       &s.AdditionalItems,
+		"prefixItems":           &s.PrefixItems,
+		"contains":              &s.Contains,
+		"minContains":           &s.MinContains,
+		"maxContains":           &s.MaxContains,
+		"minLength":             &s.MinLength,
+		"maxLength":             &s.MaxLength,
+		"pattern":               &s.Pattern,
+		"contentEncoding":       &s.ContentEncoding,
+		"contentMediaType":      &s.ContentMediaType,
+		"minimum":               &s.Minimum,
+		"exclusiveMinimum":      &s.ExclusiveMinimum,
+		"maximum":               &s.Maximum,
+		"exclusiveMaximum":      &s.ExclusiveMaximum,
+		"multipleOf":            &s.MultipleOf,
+		"title":                 &s.Title,
+		"description":           &s.Description,
+		"default":               &s.Default,
+		"readOnly":              &s.ReadOnly,
+		"writeOnly":             &s.WriteOnly,
+		"examples":              &s.Examples,
+		"example":               &s.Example,
+		"deprecated":            &s.Deprecated,
+		"externalDocs":          &s.ExternalDocs,
+		"$recursiveAnchor":      &s.RecursiveAnchor,
+		"$recursiveRef":         &s.RecursiveRef,
+		"discriminator":         &s.Discriminator,
+		"xml":                   &s.XML,
+	}
+}
 
-//  UnmarshalJSON unmarshals JSON
-func (s *SchemaSet) UnmarshalJSON(data []byte) error {
-	var j []dynamic.JSON
-	if err := json.Unmarshal(data, &j); err != nil {
+func (*Schema) Kind() Kind      { return KindSchema }
+func (*Schema) mapKind() Kind   { return KindSchemaMap }
+func (*Schema) sliceKind() Kind { return KindSchemaSlice }
+
+func (s *Schema) setLocation(loc Location) error {
+	if s == nil {
+		return nil
+	}
+	s.Location = loc
+
+	if err := s.Ref.setLocation(loc.AppendLocation("$ref")); err != nil {
 		return err
 	}
-	res := make(SchemaSet, len(j))
-	for i, d := range j {
-		v, err := unmarshalSchemaJSON(d)
-		if err != nil {
-			return err
-		}
-		res[i] = v
+	if err := s.Definitions.setLocation(loc.AppendLocation("$defs")); err != nil {
+		return err
 	}
-	*s = res
+	if err := s.DynamicRef.setLocation(loc.AppendLocation("$dynamicRef")); err != nil {
+		return err
+	}
+	if err := s.Not.setLocation(loc.AppendLocation("not")); err != nil {
+		return err
+	}
+	if err := s.AllOf.setLocation(loc.AppendLocation("allOf")); err != nil {
+		return err
+	}
+	if err := s.AnyOf.setLocation(loc.AppendLocation("anyOf")); err != nil {
+		return err
+	}
+	if err := s.OneOf.setLocation(loc.AppendLocation("oneOf")); err != nil {
+		return err
+	}
+	if err := s.If.setLocation(loc.AppendLocation("if")); err != nil {
+		return err
+	}
+	if err := s.Then.setLocation(loc.AppendLocation("then")); err != nil {
+		return err
+	}
+	if err := s.Else.setLocation(loc.AppendLocation("else")); err != nil {
+		return err
+	}
+	if err := s.Properties.setLocation(loc.AppendLocation("properties")); err != nil {
+		return err
+	}
+	if err := s.PropertyNames.setLocation(loc.AppendLocation("propertyNames")); err != nil {
+		return err
+	}
+	if err := s.PatternProperties.setLocation(loc.AppendLocation("patternProperties")); err != nil {
+		return err
+	}
+	if err := s.AdditionalProperties.setLocation(loc.AppendLocation("additionalProperties")); err != nil {
+		return err
+	}
+	if err := s.DependentSchemas.setLocation(loc.AppendLocation("dependentSchemas")); err != nil {
+		return err
+	}
+
+	if err := s.UnevaluatedProperties.setLocation(loc.AppendLocation("unevaluatedProperties")); err != nil {
+		return err
+	}
+	if err := s.Items.setLocation(loc.AppendLocation("items")); err != nil {
+		return err
+	}
+	if err := s.UnevaluatedItems.setLocation(loc.AppendLocation("unevaluatedItems")); err != nil {
+		return err
+	}
+	if err := s.AdditionalItems.setLocation(loc.AppendLocation("additionalItems")); err != nil {
+		return err
+	}
+	if err := s.PrefixItems.setLocation(loc.AppendLocation("prefixItems")); err != nil {
+		return err
+	}
+	if err := s.Contains.setLocation(loc.AppendLocation("contains")); err != nil {
+		return err
+	}
+	if err := s.RecursiveRef.setLocation(loc.AppendLocation("$recursiveRef")); err != nil {
+		return err
+	}
+	if err := s.Discriminator.setLocation(loc.AppendLocation("discriminator")); err != nil {
+		return err
+	}
+	if err := s.XML.setLocation(loc.AppendLocation("xml")); err != nil {
+		return err
+	}
 	return nil
 }
 
-func unmarshalSchemaJSON(data []byte) (*SchemaObj, error) {
-	var str string
-	l := len(data)
-	if l >= 4 && l <= 5 {
-		str = string(data)
+// Clone returns a deep copy of Schema. This is to avoid overriding the initial
+// Schema when dealing with $dynamicRef and $recursiveRef.
+func (s *Schema) Clone() *Schema {
+	if s == nil {
+		return nil
 	}
-	switch {
-	case str == "true":
-		t := true
-		return &SchemaObj{Always: &t}, nil
-	case str == "false":
-		f := false
-		return &SchemaObj{Always: &f}, nil
-	default:
-		return unmarshalSchemaObjJSON(data)
+	var recAnc *bool
+	if s.RecursiveAnchor != nil {
+		*recAnc = *s.RecursiveAnchor
 	}
-}
-
-func unmarshalSchemaObjJSON(data []byte) (*SchemaObj, error) {
-	var err error
-	exts := Extensions{}
-	kw := make(map[string]json.RawMessage)
-	var dst partialschema
-	if err = json.Unmarshal(data, &dst); err != nil {
-		return nil, err
-	}
-	var jm map[string]json.RawMessage
-	if err = json.Unmarshal(data, &jm); err != nil {
-		return nil, err
+	var cnst jsonx.RawMessage
+	if s.Const != nil {
+		cnst = make(jsonx.RawMessage, len(s.Const))
+		copy(cnst, s.Const)
 	}
 
-	for key, d := range jm {
-		if strings.HasPrefix(key, "x-") {
-			exts[key] = d
-		} else if set, isSchema := schemaFieldSetters[key]; isSchema {
-			var v *SchemaObj
-			v, err = unmarshalSchemaJSON(d)
-			if err != nil {
-				return nil, err
-			}
-			set(&dst, v)
-		} else if _, isfield := jsfields[key]; !isfield {
-			kw[key] = d
+	var required text.Texts
+	if s.Required != nil {
+		required = make(text.Texts, len(s.Required))
+		copy(required, s.Required)
+	}
+	var example jsonx.RawMessage
+	if s.Example != nil {
+		example = make(jsonx.RawMessage, len(s.Example))
+		copy(example, s.Example)
+	}
+	var examples []jsonx.RawMessage
+	if s.Examples != nil {
+		examples = make([]jsonx.RawMessage, len(s.Examples))
+		copy(examples, s.Examples)
+	}
+	var enum text.Texts
+	if s.Enum != nil {
+		enum = make(text.Texts, len(s.Enum))
+		copy(enum, s.Enum)
+	}
+	var minprops *jsonx.Number
+	if s.MinProperties != nil {
+		v := *s.MinProperties
+		minprops = &v
+	}
+	var maxprops *jsonx.Number
+	if s.MaxProperties != nil {
+		v := *s.MaxProperties
+		maxprops = &v
+	}
+	var regexpProps *bool
+	if s.RegexProperties != nil {
+		v := *s.RegexProperties
+		regexpProps = &v
+	}
+	var depReq *Map[Texts]
+	if s.DependentRequired != nil {
+		i := make([]KeyValue[Texts], len(s.DependentRequired.Items))
+		copy(i, s.DependentRequired.Items)
+		depReq = &Map[Texts]{Items: i}
+	}
+	var uniqItems *bool
+	if s.UniqueItems != nil {
+		v := *s.UniqueItems
+		uniqItems = &v
+	}
+	var minContains *jsonx.Number
+	if s.MinContains != nil {
+		v := *s.MinContains
+		minContains = &v
+	}
+	var maxContains *jsonx.Number
+	if s.MaxContains != nil {
+		v := *s.MaxContains
+		maxContains = &v
+	}
+	var minLen *jsonx.Number
+	if s.MinLength != nil {
+		v := *s.MinLength
+		minLen = &v
+	}
+	var maxLen *jsonx.Number
+	if s.MaxLength != nil {
+		v := *s.MaxLength
+		maxLen = &v
+	}
+	var min *jsonx.Number
+	if s.Minimum != nil {
+		v := *s.Minimum
+		min = &v
+	}
+	var max *jsonx.Number
+	if s.Maximum != nil {
+		v := *s.Maximum
+		max = &v
+	}
+
+	var exclMin *jsonx.Number
+	if s.ExclusiveMinimum != nil {
+		v := *s.ExclusiveMinimum
+		exclMin = &v
+	}
+	var exclMax *jsonx.Number
+	if s.ExclusiveMaximum != nil {
+		v := *s.ExclusiveMaximum
+		exclMax = &v
+	}
+	var multipleOf *jsonx.Number
+	if s.MultipleOf != nil {
+		v := *s.MultipleOf
+		multipleOf = &v
+	}
+	var readonly *bool
+	if s.ReadOnly != nil {
+		v := *s.ReadOnly
+		readonly = &v
+	}
+	var writeOnly *bool
+	if s.WriteOnly != nil {
+		v := *s.WriteOnly
+		writeOnly = &v
+	}
+	var deprecated *bool
+	if s.Deprecated != nil {
+		v := *s.Deprecated
+		deprecated = &v
+	}
+	var k map[Text]jsonx.RawMessage
+	if s.Keywords != nil {
+		k = make(map[Text]jsonx.RawMessage, len(s.Keywords))
+		for key, value := range s.Keywords {
+			k[key] = value
 		}
 	}
-	res := SchemaObj(dst)
-	res.Keywords = kw
-	res.Extensions = exts
-	return &res, err
+	var id *uri.URI
+	if s.ID != nil {
+		id = s.ID.Clone()
+	}
+	var pattern *Regexp
+	if s.Pattern != nil {
+		pattern = &Regexp{s.Pattern.Copy()}
+	}
+	cloned := &Schema{
+		RecursiveAnchor:       recAnc,
+		Const:                 cnst,
+		Required:              required,
+		Enum:                  enum,
+		Example:               example,
+		Examples:              examples,
+		MinProperties:         minprops,
+		MaxProperties:         maxprops,
+		RegexProperties:       regexpProps,
+		DependentRequired:     depReq,
+		UniqueItems:           uniqItems,
+		MinContains:           minContains,
+		MaxContains:           maxContains,
+		MinLength:             minLen,
+		MaxLength:             maxLen,
+		Minimum:               min,
+		Maximum:               max,
+		ExclusiveMinimum:      exclMin,
+		ExclusiveMaximum:      exclMax,
+		MultipleOf:            multipleOf,
+		ReadOnly:              readonly,
+		WriteOnly:             writeOnly,
+		Deprecated:            deprecated,
+		Keywords:              k,
+		Schema:                s.Schema,
+		ID:                    id,
+		Title:                 s.Title,
+		Description:           s.Description,
+		Default:               s.Default,
+		ExternalDocs:          s.ExternalDocs,
+		Format:                s.Format,
+		ContentMediaType:      s.ContentMediaType,
+		Discriminator:         s.Discriminator.Clone(),
+		XML:                   s.XML.Clone(),
+		Definitions:           s.Definitions.Clone(),
+		Anchor:                s.Anchor,
+		DynamicAnchor:         s.DynamicAnchor,
+		Ref:                   s.Ref.Clone(),
+		Type:                  s.Type.Clone(),
+		DynamicRef:            s.DynamicRef.Clone(),
+		Not:                   s.Not.Clone(),
+		AllOf:                 s.AllOf.Clone(),
+		AnyOf:                 s.AnyOf.Clone(),
+		RecursiveRef:          s.RecursiveRef.Clone(),
+		OneOf:                 s.OneOf.Clone(),
+		Properties:            s.Properties.Clone(),
+		Comments:              s.Comments,
+		PropertyNames:         s.PropertyNames.Clone(),
+		PatternProperties:     s.PatternProperties.Clone(),
+		If:                    s.If.Clone(),
+		Then:                  s.Then.Clone(),
+		Else:                  s.Else.Clone(),
+		AdditionalProperties:  s.AdditionalProperties.Clone(),
+		DependentSchemas:      s.DependentSchemas.Clone(),
+		UnevaluatedProperties: s.UnevaluatedProperties.Clone(),
+		Items:                 s.Items.Clone(),
+		UnevaluatedItems:      s.UnevaluatedItems.Clone(),
+		AdditionalItems:       s.AdditionalItems.Clone(),
+		PrefixItems:           s.PrefixItems.Clone(),
+		Contains:              s.Contains.Clone(),
+		Pattern:               pattern,
+		ContentEncoding:       s.ContentEncoding,
+		Extensions:            cloneExtensions(s.Extensions),
+		Location:              s.Location,
+	}
+	return cloned
 }
 
-var schemaFieldSetters = map[string]func(s *partialschema, v *SchemaObj){
-	"not":                   func(s *partialschema, v *SchemaObj) { s.Not = v },
-	"if":                    func(s *partialschema, v *SchemaObj) { s.If = v },
-	"then":                  func(s *partialschema, v *SchemaObj) { s.Then = v },
-	"else":                  func(s *partialschema, v *SchemaObj) { s.Else = v },
-	"propertyNames":         func(s *partialschema, v *SchemaObj) { s.PropertyNames = v },
-	"additionalProperties":  func(s *partialschema, v *SchemaObj) { s.AdditionalProperties = v },
-	"unevaluatedProperties": func(s *partialschema, v *SchemaObj) { s.UnevaluatedProperties = v },
-	"items":                 func(s *partialschema, v *SchemaObj) { s.Items = v },
-	"contains":              func(s *partialschema, v *SchemaObj) { s.Contains = v },
-	"unevaluatedObjs":       func(s *partialschema, v *SchemaObj) { s.UnevaluatedObjs = v },
-	"additionalObjs":        func(s *partialschema, v *SchemaObj) { s.AdditionalObjs = v },
+func cloneExtensions(e Extensions) Extensions {
+	if e == nil {
+		return nil
+	}
+	a := make(Extensions, len(e))
+	for k, v := range e {
+		a[k] = v
+	}
+	return a
 }
 
-var jsfields = map[string]struct{}{
-	"$schema":               {},
-	"$id":                   {},
-	"type":                  {},
-	"$ref":                  {},
-	"$defs":                 {},
-	"format":                {},
-	"$dynamicAnchor":        {},
-	"$dynamicRef":           {},
-	"$anchor":               {},
-	"const":                 {},
-	"enum":                  {},
-	"$comment":              {},
-	"not":                   {},
-	"allOf":                 {},
-	"anyOf":                 {},
-	"oneOf":                 {},
-	"if":                    {},
-	"then":                  {},
-	"else":                  {},
-	"minProperties":         {},
-	"maxProperties":         {},
-	"required":              {},
-	"properties":            {},
-	"propertyNames":         {},
-	"regexProperties":       {},
-	"patternProperties":     {},
-	"additionalProperties":  {},
-	"dependentRequired":     {},
-	"dependentSchemas":      {},
-	"unevaluatedProperties": {},
-	"uniqueObjs":            {},
-	"items":                 {},
-	"unevaluatedObjs":       {},
-	"additionalObjs":        {},
-	"prefixObjs":            {},
-	"contains":              {},
-	"minContains":           {},
-	"maxContains":           {},
-	"minLength":             {},
-	"maxLength":             {},
-	"pattern":               {},
-	"contentEncoding":       {},
-	"contentMediaType":      {},
-	"minimum":               {},
-	"exclusiveMinimum":      {},
-	"maximum":               {},
-	"exclusiveMaximum":      {},
-	"multipleOf":            {},
-	"title":                 {},
-	"description":           {},
-	"default":               {},
-	"readOnly":              {},
-	"writeOnly":             {},
-	"examples":              {},
-	"deprecated":            {},
-	"externalDocs":          {},
-	"$recursiveAnchor":      {},
-	"$recursiveRef":         {},
-	"discriminator":         {},
-	"xml":                   {},
-}
+func (s *Schema) isNil() bool { return s == nil }
 
-type partialschema struct {
-	Always                *bool               `json:"-"`
-	Schema                string              `json:"$schema,omitempty"`
-	ID                    string              `json:"$id,omitempty"`
-	Type                  Types               `json:"type,omitempty"`
-	Ref                   string              `json:"$ref,omitempty"`
-	Definitions           Schemas             `json:"$defs,omitempty"`
-	Format                string              `json:"format,omitempty"`
-	DynamicAnchor         string              `json:"$dynamicAnchor,omitempty"`
-	DynamicRef            string              `json:"$dynamicRef,omitempty"`
-	Anchor                string              `json:"$anchor,omitempty"`
-	Const                 json.RawMessage     `json:"const,omitempty"`
-	Enum                  []string            `json:"enum,omitempty"`
-	Comments              string              `json:"$comment,omitempty"`
-	Not                   *SchemaObj          `json:"-"`
-	AllOf                 SchemaSet           `json:"allOf,omitempty"`
-	AnyOf                 SchemaSet           `json:"anyOf,omitempty"`
-	OneOf                 SchemaSet           `json:"oneOf,omitempty"`
-	If                    *SchemaObj          `json:"-"`
-	Then                  *SchemaObj          `json:"-"`
-	Else                  *SchemaObj          `json:"-"`
-	MinProperties         *int                `json:"minProperties,omitempty"`
-	MaxProperties         *int                `json:"maxProperties,omitempty"`
-	Required              []string            `json:"required,omitempty"`
-	Properties            Schemas             `json:"properties,omitempty"`
-	PropertyNames         *SchemaObj          `json:"-"`
-	RegexProperties       *bool               `json:"regexProperties,omitempty"`
-	PatternProperties     Schemas             `json:"patternProperties,omitempty"`
-	AdditionalProperties  *SchemaObj          `json:"-"`
-	DependentRequired     map[string][]string `json:"dependentRequired,omitempty"`
-	DependentSchemas      Schemas             `json:"dependentSchemas,omitempty"`
-	UnevaluatedProperties *SchemaObj          `json:"-"`
-	UniqueObjs            *bool               `json:"uniqueObjs,omitempty"`
-	Items                 *SchemaObj          `json:"-"`
-	UnevaluatedObjs       *SchemaObj          `json:"-"`
-	AdditionalObjs        *SchemaObj          `json:"-"`
-	PrefixObjs            SchemaSet           `json:"prefixObjs,omitempty"`
-	Contains              *SchemaObj          `json:"-"`
-	MinContains           *Number             `json:"minContains,omitempty"`
-	MaxContains           *Number             `json:"maxContains,omitempty"`
-	MinLength             *Number             `json:"minLength,omitempty"`
-	MaxLength             *Number             `json:"maxLength,omitempty"`
-	Pattern               *Regexp             `json:"pattern,omitempty"`
-	ContentEncoding       string              `json:"contentEncoding,omitempty"`
-	ContentMediaType      string              `json:"contentMediaType,omitempty"`
-	Minimum               *Number             `json:"minimum,omitempty"`
-	ExclusiveMinimum      *Number             `json:"exclusiveMinimum,omitempty"`
-	Maximum               *Number             `json:"maximum,omitempty"`
-	ExclusiveMaximum      *Number             `json:"exclusiveMaximum,omitempty"`
-	MultipleOf            *Number             `json:"multipleOf,omitempty"`
-	Title                 string              `json:"title,omitempty"`
-	Description           string              `json:"description,omitempty"`
-	Default               json.RawMessage     `json:"default,omitempty"`
-	ReadOnly              *bool               `json:"readOnly,omitempty"`
-	WriteOnly             *bool               `json:"writeOnly,omitempty"`
-	Examples              []json.RawMessage   `json:"examples,omitempty"`
-	Example               json.RawMessage     `json:"example,omitempty"`
-	Deprecated            *bool               `json:"deprecated,omitempty"`
-	ExternalDocs          string              `json:"externalDocs,omitempty"`
-	RecursiveAnchor       *bool               `json:"$recursiveAnchor,omitempty"`
-	RecursiveRef          string              `json:"$recursiveRef,omitempty"`
-	Discriminator         *Discriminator      `json:"discriminator,omitempty"`
-	XML                   *XML                `json:"xml,omitempty"`
-	Extensions            `json:"-"`
-	Keywords              map[string]json.RawMessage `json:"-"`
-}
+var _ node = (*Schema)(nil)
 
-var (
-	_ json.Marshaler   = (*SchemaObj)(nil)
-	_ json.Unmarshaler = (*SchemaObj)(nil)
-	_ yaml.Unmarshaler = (*SchemaObj)(nil)
-	_ yaml.Marshaler   = (*SchemaObj)(nil)
-)
+// func (s *Schema) ResolveByAnchor(anchor Text) (*Schema, error) {
+// }
+
+// func (s *Schema) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return s.resolveNodeByPointer(ptr)
+// }
+
+// func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return s, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+
+// 	switch tok {
+// 	case "ref":
+// 		if s.Ref == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Ref.resolveNodeByPointer(nxt)
+// 	case "definitions":
+// 		if s.Definitions == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Definitions.resolveNodeByPointer(nxt)
+// 	case "dynamicRef":
+// 		if s.DynamicRef == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.DynamicRef.resolveNodeByPointer(nxt)
+// 	case "not":
+// 		if s.Not == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Not.resolveNodeByPointer(nxt)
+// 	case "allOf":
+// 		if s.AllOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AllOf.resolveNodeByPointer(nxt)
+// 	case "anyOf":
+// 		if s.AnyOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AnyOf.resolveNodeByPointer(nxt)
+// 	case "oneOf":
+// 		if s.OneOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.OneOf.resolveNodeByPointer(nxt)
+// 	case "if":
+// 		if s.If == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.If.resolveNodeByPointer(nxt)
+// 	case "then":
+// 		if s.Then == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Then.resolveNodeByPointer(nxt)
+// 	case "else":
+// 		if s.Else == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Else.resolveNodeByPointer(nxt)
+// 	case "properties":
+// 		if s.Properties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Properties.resolveNodeByPointer(nxt)
+// 	case "propertyNames":
+// 		if s.PropertyNames == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PropertyNames.resolveNodeByPointer(nxt)
+// 	case "patternProperties":
+// 		if s.PatternProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PatternProperties.resolveNodeByPointer(nxt)
+// 	case "additionalProperties":
+// 		if s.AdditionalProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AdditionalProperties.resolveNodeByPointer(nxt)
+// 	case "dependentSchemas":
+// 		if s.DependentSchemas == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.DependentSchemas.resolveNodeByPointer(nxt)
+// 	case "unevaluatedProperties":
+// 		if s.UnevaluatedProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.UnevaluatedProperties.resolveNodeByPointer(nxt)
+// 	case "items":
+// 		if s.Items == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Items.resolveNodeByPointer(nxt)
+// 	case "unevaluatedItems":
+// 		if s.UnevaluatedItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
+// 	case "additionalItems":
+// 		if s.AdditionalItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AdditionalItems.resolveNodeByPointer(nxt)
+// 	case "prefixItems":
+// 		if s.PrefixItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PrefixItems.resolveNodeByPointer(nxt)
+// 	case "contains":
+// 		if s.Contains == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Contains.resolveNodeByPointer(nxt)
+// 	case "recursiveRef":
+// 		if s.RecursiveRef == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.RecursiveRef.resolveNodeByPointer(nxt)
+// 	case "xml":
+// 		if s.XML == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.XML.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+// 	}
+// }
