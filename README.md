@@ -58,7 +58,7 @@ import (
 )
 
 //go:embed spec
-var spec embed.FS
+var specFiles embed.FS
 
 func main() {
     ctx := context.Background()
@@ -73,7 +73,7 @@ func main() {
     }
 
     fn := func(_ context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error){
-        f, err := schema.Open(fp)
+        f, err := specFiles.Open(fp)
         if err != nil {
             log.Fatal(err)
         }
