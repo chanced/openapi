@@ -36,13 +36,6 @@ documentation generation.
     Delete do not currently work. I need to update the jsonpointer library
     before its interfaces can be implemented for types within this library.
 -   Values of `$anchor` and `$dynamicAnchor` must be unique to a file.
-    Conditional `$dynamicAnchor` `$recursiveAnchor` are going to be challenging.
-    See below.
--   `$dynamicRef` and `$recursiveRef` are incredibly tricky with respect to
-    static analysis, which is what this library was built for. You should avoid
-    conditional branches with `$dynamicAnchor`s within the same file. If you
-    need a conditional dynamics, move the branch into its own file and have the
-    conditional statement reference the branch.
 
 ## Usage
 
