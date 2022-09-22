@@ -1,4 +1,4 @@
-# openapi - an OpenAPI 3.x library for Go
+# openapi - An OpenAPI 3.x library for go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/chanced/openapi.svg)](https://pkg.go.dev/github.com/chanced/openapi)
 
