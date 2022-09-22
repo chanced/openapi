@@ -13,7 +13,7 @@ offer building blocks for code and documentation generation.
 
 -   `$ref` resolution
 -   All keys retain their order from the markup using slices of key/values which
-    aids with code generation.
+    aids in code generation.
 -   Validation ([see the validation section](#validation))
 -   All non-primitive nodes have an absolute & relative location
 -   Strings are [text.Text](https://github.com/chanced/caps) which has case
