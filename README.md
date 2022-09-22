@@ -1,18 +1,18 @@
 # openapi - an OpenAPI 3.x library for Go
 
-openapi is a library for for [OpenAPI
-3.1](https://spec.openapis.org/oas/v3.1.0). The primary purpose of the package
-is to offer building blocks for code and documentation generation.
+openapi is a library for for OpenAPI 3.x ([3.1](https://spec.openapis.org/oas/v3.1.0),
+[3.0](https://spec.openapis.org/oas/v3.0.3)).
+
+The primary purpose of the package is to offer building blocks for code and
+documentation generation.
 
 :warning: This library is in an alpha state; expect breaking changes and bugs.
 
 ## Features
 
 -   `$ref` resolution
--   All keys retain their order from the markup. This makes for a bit more
-    of a complicated API but prevents the need for further resorting to keep
-    code generation consistent
--   Supports both JSON and YAML
+-   All keys retain their order from the markup using slices of key/values which
+    aids with code generation.
 -   Validation ([see the validation seciton](#validation))
 -   All non-primitive nodes have an absolute & relative location
 -   Strings are [text.Text](https://github.com/chanced/caps) which has case
@@ -20,6 +20,7 @@ is to offer building blocks for code and documentation generation.
 -   Extensions, unknown JSON Schema keywords, examples, and a few other fields
     are instances of [jsonx.RawMessage](https://github.com/chanced/jsonx) which
     comes with a few helper methods.
+-   Supports both JSON and YAML
 
 ## Issues
 
@@ -53,6 +54,7 @@ import (
     "embed"
     "io"
     "path/filepath"
+    "log"
 )
 
 //go:embed spec
@@ -61,20 +63,34 @@ var spec embed.FS
 func main() {
     ctx := context.Background()
 
-    c, _ := openapi.SetupCompiler(jsonschema.NewCompiler()) // adding schema files
-    v, _ := openapi.NewValidator(c)
+    c, err := openapi.SetupCompiler(jsonschema.NewCompiler()) // adding schema files
+    if err != nil {
+        log.Fatal(err)
+    }
+    v, err := openapi.NewValidator(c)
+    if err != nil {
+        log.Fatal(err)
+    }
 
     fn := func(_ context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error){
-        // quick and simple example
-        // be sure to handle errors
-        f, _ := schema.Open(fp)
+        f, err := schema.Open(fp)
+        if err != nil {
+            log.Fatal(err)
+        }
         // you can return either JSON or YAML
-        d, _ := io.ReadAll(f)
+        d, err := io.ReadAll(f)
+        if err != nil{
+            log.fatal(err)
+        }
         // use the uri or the data to determine the Kind
         return openapi.KindDocument, d, nil
     }
     // you can Load either JSON or YAML
-    doc, _ := openapi.Load(ctx, "spec/openapi.yaml", v, fn)
+    // Load validates the Document as well.
+    doc, err := openapi.Load(ctx, "spec/openapi.yaml", v, fn)
+    if err != nil{
+        log.Fatal(err)
+    }
     _ = doc // *openapi.Document
 }
 ```
