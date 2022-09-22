@@ -22,19 +22,6 @@ documentation generation.
     comes with a few helper methods.
 -   Supports both JSON and YAML
 
-## Issues
-
--   **Testing.** Code coverage is definitely lacking (44%). As I find time, I'll
-    add coverage.
--   **`$dynamicRef` / `$dynamicAnchor`** is not really supported. While the
-    references are loaded, the dynamic overriding is not.
--   **Documentation / Comments**
--   **Validation.** [See the Validation section](#validation).
--   **Errors.** Errors and error messages need a lot of work.
--   [jsonpointer](https://github.com/chanced/jsonpointer)'s Resolve, Assign, and
-    Delete do not currently work. I need to update the jsonpointer library
-    before its interfaces can be implemented for types within this library.
-
 ## Usage
 
 ```go
