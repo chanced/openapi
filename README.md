@@ -1,6 +1,7 @@
 # openapi - an OpenAPI 3.x library for Go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/chanced/openapi.svg)](https://pkg.go.dev/github.com/chanced/openapi)
+
 openapi is a library for for OpenAPI 3.x ([3.1](https://spec.openapis.org/oas/v3.1.0),
 [3.0](https://spec.openapis.org/oas/v3.0.3)).
 
@@ -14,7 +15,7 @@ documentation generation.
 -   `$ref` resolution
 -   All keys retain their order from the markup using slices of key/values which
     aids with code generation.
--   Validation ([see the validation seciton](#validation))
+-   Validation ([see the validation section](#validation))
 -   All non-primitive nodes have an absolute & relative location
 -   Strings are [text.Text](https://github.com/chanced/caps) which has case
     conversions and `strings` functions as methods.
