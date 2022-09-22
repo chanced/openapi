@@ -2,11 +2,10 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/chanced/openapi.svg)](https://pkg.go.dev/github.com/chanced/openapi)
 
-openapi is a library for for OpenAPI [3.1](https://spec.openapis.org/oas/v3.1.0),
-[3.0](https://spec.openapis.org/oas/v3.0.3).
-
-The primary purpose of the package is to offer building blocks for code and
-documentation generation.
+openapi is a library for parsing and validating OpenAPI
+[3.1](https://spec.openapis.org/oas/v3.1.0),
+[3.0](https://spec.openapis.org/oas/v3.0.3). The intent of the library is to
+offer building blocks for code and documentation generation.
 
 :warning: This library is in an alpha state; expect breaking changes and bugs.
 
