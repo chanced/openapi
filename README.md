@@ -90,7 +90,7 @@ can be updated with proper coverage of that case.
 ## Dependencies
 
 -   [github.com/santhosh-tekuri/jsonschema/v5](https://github.com/santhosh-tekuri/jsonschema/v5) - used in the `StdValidator` to validate OpenAPI documents & components
--   [github.com/chanced/caps](https://github.com/chanced/caps) - used for all string fields to provide case conversion and functions from `strings` as methods
+-   [github.com/chanced/caps/text](https://github.com/chanced/caps) - used for all string fields to provide case conversion and functions from `strings` as methods
 -   [github.com/chanced/jsonpointer](https://github.com/chanced/jsonpointer) - relative locations of all non-scalar nodes
 -   [github.com/tidwall/gjson](https://github.com/tidwall/gjson) - JSON parsing
 -   [github.com/chanced/jsonx](https://github.com/chanced/jsonx) - raw JSON type and a toolkit for json type detection & parsing
