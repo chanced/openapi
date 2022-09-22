@@ -53,6 +53,9 @@ import (
 // arbitrary properties.
 // A Schema represents compiled version of json-schema.
 type Schema struct {
+	Extensions `json:"-"`
+	Location   `json:"-"`
+
 	Schema *uri.URI `json:"$schema,omitempty"`
 
 	// The value of $id is a URI-reference without a fragment that resolves
@@ -312,8 +315,7 @@ type Schema struct {
 
 	Keywords map[Text]jsonx.RawMessage `json:"-"`
 
-	Extensions `json:"-"`
-	Location   `json:"-"`
+	Cloned bool
 }
 
 func (s *Schema) Nodes() []Node {
@@ -495,143 +497,6 @@ func (s *Schema) Anchors() (*Anchors, error) {
 
 	return anchors, nil
 }
-
-// func (s *Schema) ResolveByAnchor(anchor Text) (*Schema, error) {
-// }
-
-// func (s *Schema) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return s.resolveNodeByPointer(ptr)
-// }
-
-// func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return s, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-
-// 	switch tok {
-// 	case "ref":
-// 		if s.Ref == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Ref.resolveNodeByPointer(nxt)
-// 	case "definitions":
-// 		if s.Definitions == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Definitions.resolveNodeByPointer(nxt)
-// 	case "dynamicRef":
-// 		if s.DynamicRef == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.DynamicRef.resolveNodeByPointer(nxt)
-// 	case "not":
-// 		if s.Not == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Not.resolveNodeByPointer(nxt)
-// 	case "allOf":
-// 		if s.AllOf == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.AllOf.resolveNodeByPointer(nxt)
-// 	case "anyOf":
-// 		if s.AnyOf == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.AnyOf.resolveNodeByPointer(nxt)
-// 	case "oneOf":
-// 		if s.OneOf == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.OneOf.resolveNodeByPointer(nxt)
-// 	case "if":
-// 		if s.If == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.If.resolveNodeByPointer(nxt)
-// 	case "then":
-// 		if s.Then == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Then.resolveNodeByPointer(nxt)
-// 	case "else":
-// 		if s.Else == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Else.resolveNodeByPointer(nxt)
-// 	case "properties":
-// 		if s.Properties == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Properties.resolveNodeByPointer(nxt)
-// 	case "propertyNames":
-// 		if s.PropertyNames == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.PropertyNames.resolveNodeByPointer(nxt)
-// 	case "patternProperties":
-// 		if s.PatternProperties == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.PatternProperties.resolveNodeByPointer(nxt)
-// 	case "additionalProperties":
-// 		if s.AdditionalProperties == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.AdditionalProperties.resolveNodeByPointer(nxt)
-// 	case "dependentSchemas":
-// 		if s.DependentSchemas == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.DependentSchemas.resolveNodeByPointer(nxt)
-// 	case "unevaluatedProperties":
-// 		if s.UnevaluatedProperties == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.UnevaluatedProperties.resolveNodeByPointer(nxt)
-// 	case "items":
-// 		if s.Items == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Items.resolveNodeByPointer(nxt)
-// 	case "unevaluatedItems":
-// 		if s.UnevaluatedItems == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
-// 	case "additionalItems":
-// 		if s.AdditionalItems == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.AdditionalItems.resolveNodeByPointer(nxt)
-// 	case "prefixItems":
-// 		if s.PrefixItems == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.PrefixItems.resolveNodeByPointer(nxt)
-// 	case "contains":
-// 		if s.Contains == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.Contains.resolveNodeByPointer(nxt)
-// 	case "recursiveRef":
-// 		if s.RecursiveRef == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.RecursiveRef.resolveNodeByPointer(nxt)
-// 	case "xml":
-// 		if s.XML == nil {
-// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
-// 		}
-// 		return s.XML.resolveNodeByPointer(nxt)
-// 	default:
-// 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
-// 	}
-// }
 
 // MarshalJSON marshals JSON
 func (s Schema) MarshalJSON() ([]byte, error) {
@@ -937,24 +802,30 @@ func (s *Schema) Clone() *Schema {
 	if s.RecursiveAnchor != nil {
 		*recAnc = *s.RecursiveAnchor
 	}
-	cnst := make(jsonx.RawMessage, len(s.Const))
+	var cnst jsonx.RawMessage
 	if s.Const != nil {
+		cnst = make(jsonx.RawMessage, len(s.Const))
 		copy(cnst, s.Const)
 	}
-	required := make(text.Texts, len(s.Required))
+
+	var required text.Texts
 	if s.Required != nil {
+		required = make(text.Texts, len(s.Required))
 		copy(required, s.Required)
 	}
-	example := make(jsonx.RawMessage, len(s.Example))
+	var example jsonx.RawMessage
 	if s.Example != nil {
+		example = make(jsonx.RawMessage, len(s.Example))
 		copy(example, s.Example)
 	}
-	examples := make([]jsonx.RawMessage, len(s.Examples))
+	var examples []jsonx.RawMessage
 	if s.Examples != nil {
+		examples = make([]jsonx.RawMessage, len(s.Examples))
 		copy(examples, s.Examples)
 	}
-	enum := make(text.Texts, len(s.Enum))
+	var enum text.Texts
 	if s.Enum != nil {
+		enum = make(text.Texts, len(s.Enum))
 		copy(enum, s.Enum)
 	}
 	var minprops *jsonx.Number
@@ -1059,7 +930,7 @@ func (s *Schema) Clone() *Schema {
 	if s.Pattern != nil {
 		pattern = &Regexp{s.Pattern.Copy()}
 	}
-	return &Schema{
+	cloned := &Schema{
 		RecursiveAnchor:       recAnc,
 		Const:                 cnst,
 		Required:              required,
@@ -1124,7 +995,9 @@ func (s *Schema) Clone() *Schema {
 		ContentEncoding:       s.ContentEncoding,
 		Extensions:            cloneExtensions(s.Extensions),
 		Location:              s.Location,
+		Cloned:                true,
 	}
+	return cloned
 }
 
 func cloneExtensions(e Extensions) Extensions {
@@ -1141,3 +1014,140 @@ func cloneExtensions(e Extensions) Extensions {
 func (s *Schema) isNil() bool { return s == nil }
 
 var _ node = (*Schema)(nil)
+
+// func (s *Schema) ResolveByAnchor(anchor Text) (*Schema, error) {
+// }
+
+// func (s *Schema) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return s.resolveNodeByPointer(ptr)
+// }
+
+// func (s *Schema) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return s, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+
+// 	switch tok {
+// 	case "ref":
+// 		if s.Ref == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Ref.resolveNodeByPointer(nxt)
+// 	case "definitions":
+// 		if s.Definitions == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Definitions.resolveNodeByPointer(nxt)
+// 	case "dynamicRef":
+// 		if s.DynamicRef == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.DynamicRef.resolveNodeByPointer(nxt)
+// 	case "not":
+// 		if s.Not == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Not.resolveNodeByPointer(nxt)
+// 	case "allOf":
+// 		if s.AllOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AllOf.resolveNodeByPointer(nxt)
+// 	case "anyOf":
+// 		if s.AnyOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AnyOf.resolveNodeByPointer(nxt)
+// 	case "oneOf":
+// 		if s.OneOf == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.OneOf.resolveNodeByPointer(nxt)
+// 	case "if":
+// 		if s.If == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.If.resolveNodeByPointer(nxt)
+// 	case "then":
+// 		if s.Then == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Then.resolveNodeByPointer(nxt)
+// 	case "else":
+// 		if s.Else == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Else.resolveNodeByPointer(nxt)
+// 	case "properties":
+// 		if s.Properties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Properties.resolveNodeByPointer(nxt)
+// 	case "propertyNames":
+// 		if s.PropertyNames == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PropertyNames.resolveNodeByPointer(nxt)
+// 	case "patternProperties":
+// 		if s.PatternProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PatternProperties.resolveNodeByPointer(nxt)
+// 	case "additionalProperties":
+// 		if s.AdditionalProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AdditionalProperties.resolveNodeByPointer(nxt)
+// 	case "dependentSchemas":
+// 		if s.DependentSchemas == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.DependentSchemas.resolveNodeByPointer(nxt)
+// 	case "unevaluatedProperties":
+// 		if s.UnevaluatedProperties == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.UnevaluatedProperties.resolveNodeByPointer(nxt)
+// 	case "items":
+// 		if s.Items == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Items.resolveNodeByPointer(nxt)
+// 	case "unevaluatedItems":
+// 		if s.UnevaluatedItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.UnevaluatedItems.resolveNodeByPointer(nxt)
+// 	case "additionalItems":
+// 		if s.AdditionalItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.AdditionalItems.resolveNodeByPointer(nxt)
+// 	case "prefixItems":
+// 		if s.PrefixItems == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.PrefixItems.resolveNodeByPointer(nxt)
+// 	case "contains":
+// 		if s.Contains == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.Contains.resolveNodeByPointer(nxt)
+// 	case "recursiveRef":
+// 		if s.RecursiveRef == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.RecursiveRef.resolveNodeByPointer(nxt)
+// 	case "xml":
+// 		if s.XML == nil {
+// 			return nil, newErrNotFound(s.AbsoluteLocation(), tok)
+// 		}
+// 		return s.XML.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(s.Location.AbsoluteLocation(), tok)
+// 	}
+// }

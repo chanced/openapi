@@ -198,6 +198,9 @@ func (c *Component[T]) setLocation(loc Location) error {
 }
 
 func (c *Component[T]) Anchors() (*Anchors, error) {
+	if c == nil {
+		return nil, nil
+	}
 	if c.Reference != nil {
 		return nil, nil
 	}

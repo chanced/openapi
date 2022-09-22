@@ -84,7 +84,7 @@ func (sr *SchemaRef) resolve(n Node) error {
 	}
 
 	if s, ok := n.(*Schema); ok {
-		sr.Resolved = s.Clone()
+		sr.Resolved = s
 		return nil
 	}
 	return NewResolutionError(sr, KindSchema, n.Kind())
@@ -165,7 +165,7 @@ func (sr *SchemaRef) Clone() *SchemaRef {
 			absolute: sr.Location.absolute,
 			relative: sr.Location.relative,
 		},
-		Resolved:      sr.Resolved, // should this be cloned?
+		Resolved:      sr.Resolved.Clone(), // should this be cloned?
 		SchemaRefKind: sr.SchemaRefKind,
 	}
 }

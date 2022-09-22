@@ -66,7 +66,6 @@ type Node interface {
 
 type node interface {
 	Node
-
 	setLocation(loc Location) error
 	// init(ctx context.Context, resolver *resolver) error
 	// resolveNodeByPointer(ctx context.Context, resolver *resolver, p jsonpointer.Pointer) (node, error)

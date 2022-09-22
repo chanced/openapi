@@ -111,64 +111,6 @@ func (d *Document) Refs() []Ref {
 	return refs
 }
 
-// func (d *Document) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if err := ptr.Validate(); err != nil {
-// 		return nil, err
-// 	}
-// 	return d.resolveNodeByPointer(ptr)
-// }
-
-// func (d *Document) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
-// 	if ptr.IsRoot() {
-// 		return d, nil
-// 	}
-// 	nxt, tok, _ := ptr.Next()
-// 	switch tok {
-// 	case "tags":
-// 		if d.Tags == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Tags.resolveNodeByPointer(nxt)
-// 	case "servers":
-// 		if d.Servers == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Servers.resolveNodeByPointer(nxt)
-// 	case "paths":
-// 		if d.Paths == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Paths.resolveNodeByPointer(nxt)
-// 	case "webhooks":
-// 		if d.Webhooks == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Webhooks.resolveNodeByPointer(nxt)
-// 	case "components":
-// 		if d.Components == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Components.resolveNodeByPointer(nxt)
-// 	case "externalDocs":
-// 		if d.ExternalDocs == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.ExternalDocs.resolveNodeByPointer(nxt)
-// 	case "info":
-// 		if d.Info == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Info.resolveNodeByPointer(nxt)
-// 	case "security":
-// 		if d.Security == nil {
-// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
-// 		}
-// 		return d.Security.resolveNodeByPointer(nxt)
-// 	default:
-// 		return nil, newErrNotResolvable(d.AbsoluteLocation(), tok)
-// 	}
-// }
-
 func (d *Document) nodes() []node {
 	edges := appendEdges(nil, d.Info)
 	edges = appendEdges(edges, d.Tags)
@@ -290,3 +232,61 @@ func (d *Document) Anchors() (*Anchors, error) {
 }
 
 var _ node = (*Document)(nil)
+
+// func (d *Document) ResolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if err := ptr.Validate(); err != nil {
+// 		return nil, err
+// 	}
+// 	return d.resolveNodeByPointer(ptr)
+// }
+
+// func (d *Document) resolveNodeByPointer(ptr jsonpointer.Pointer) (Node, error) {
+// 	if ptr.IsRoot() {
+// 		return d, nil
+// 	}
+// 	nxt, tok, _ := ptr.Next()
+// 	switch tok {
+// 	case "tags":
+// 		if d.Tags == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Tags.resolveNodeByPointer(nxt)
+// 	case "servers":
+// 		if d.Servers == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Servers.resolveNodeByPointer(nxt)
+// 	case "paths":
+// 		if d.Paths == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Paths.resolveNodeByPointer(nxt)
+// 	case "webhooks":
+// 		if d.Webhooks == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Webhooks.resolveNodeByPointer(nxt)
+// 	case "components":
+// 		if d.Components == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Components.resolveNodeByPointer(nxt)
+// 	case "externalDocs":
+// 		if d.ExternalDocs == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.ExternalDocs.resolveNodeByPointer(nxt)
+// 	case "info":
+// 		if d.Info == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Info.resolveNodeByPointer(nxt)
+// 	case "security":
+// 		if d.Security == nil {
+// 			return nil, newErrNotFound(d.AbsoluteLocation(), tok)
+// 		}
+// 		return d.Security.resolveNodeByPointer(nxt)
+// 	default:
+// 		return nil, newErrNotResolvable(d.AbsoluteLocation(), tok)
+// 	}
+// }

@@ -4,7 +4,8 @@
     "$defs": {
         "string-items": {
             "$dynamicAnchor": "T",
-            "type": "string"
+            "type": "string",
+            "$comment": "A string item"
         }
     },
     "$ref": "/list-of-t"

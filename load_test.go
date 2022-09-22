@@ -111,12 +111,12 @@ func TestDynamicRefs(t *testing.T) {
 		t.Error(err)
 	}
 
-	litter.Dump(doc)
-	if doc.Components.Schemas.Get("ListOfStrings").Ref.Resolved.Ref.Resolved == nil {
+	// litter.Dump(doc)
+	los := doc.Components.Schemas.Get("ListOfStrings")
+	if los.Ref.Resolved.Ref.Resolved == nil {
 		t.Error("expected /list-of-t to be resolved")
 	}
-
-	_ = doc
+	litter.Dump(los.Ref.Resolved)
 }
 
 type NoopValidator struct{}
