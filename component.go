@@ -45,7 +45,7 @@ func (c *Component[T]) URI() *uri.URI {
 	return c.Reference.Ref
 }
 
-// MakeReference converts the Component into a refernce, altering the path of
+// MakeReference converts the Component into a reference, altering the path of
 // all nested nodes.
 func (c *Component[T]) MakeReference(ref uri.URI) error {
 	if c.Object.isNil() {

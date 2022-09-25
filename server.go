@@ -12,7 +12,7 @@ type (
 	ServerVariableMap = ObjMap[*ServerVariable]
 )
 
-// Server represention of a Server.
+// Server representation of a Server.
 type Server struct {
 	Location   `json:"-"`
 	Extensions `json:"-"`

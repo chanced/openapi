@@ -25,7 +25,7 @@ type Node interface {
 	// Kind returns the Kind for the given Node
 	Kind() Kind
 
-	// Anchors returns a list of all Anchors in the Node and all decendants.
+	// Anchors returns a list of all Anchors in the Node and all descendants.
 	Anchors() (*Anchors, error)
 
 	// Refs returns a list of all Refs from the Node and all descendants.

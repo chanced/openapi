@@ -1,6 +1,8 @@
 # openapi - An OpenAPI 3.x library for go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/chanced/openapi.svg)](https://pkg.go.dev/github.com/chanced/openapi)
+[![Latest Version](https://img.shields.io/github/v/tag/chanced/caps.svg?sort=semver&style=flat-square&label=version&color=blue)](https://img.shields.io/github/v/tag/chanced/caps.svg?sort=semver&style=flat-square&label=version&color=blue)
+![Build Status](https://img.shields.io/github/workflow/status/chanced/caps/Build?style=flat-square)
 
 openapi is a library for parsing and validating OpenAPI
 [3.1](https://spec.openapis.org/oas/v3.1.0),
