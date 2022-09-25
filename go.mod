@@ -9,7 +9,7 @@ require (
 	github.com/chanced/jsonx v0.0.7
 	github.com/chanced/maps v0.0.3
 	github.com/chanced/transcode v0.2.4
-	github.com/chanced/uri v0.2.1
+	github.com/chanced/uri v0.3.4
 	github.com/google/go-cmp v0.5.9
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.1
 	github.com/tidwall/gjson v1.14.3
