@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ObjMapEntry[T node] struct {
+type Item[T node] struct {
 	Location
 	Key   Text
 	Value T
@@ -20,7 +20,7 @@ type ObjMapEntry[T node] struct {
 // ObjMap is a map of OpenAPI Objects of type T
 type ObjMap[T node] struct {
 	Location
-	Items []ObjMapEntry[T]
+	Items []Item[T]
 }
 
 func (*ObjMap[T]) Kind() Kind {
@@ -82,12 +82,12 @@ func (om *ObjMap[T]) Get(key Text) T {
 func (om *ObjMap[T]) Set(key Text, obj T) {
 	if om == nil || om.Items == nil {
 		*om = ObjMap[T]{
-			Items: []ObjMapEntry[T]{},
+			Items: []Item[T]{},
 		}
 	}
 	for i, kv := range om.Items {
 		if kv.Key == key {
-			om.Items[i] = ObjMapEntry[T]{
+			om.Items[i] = Item[T]{
 				Location: om.AppendLocation(key.String()),
 				Key:      key,
 				Value:    obj,
@@ -95,7 +95,7 @@ func (om *ObjMap[T]) Set(key Text, obj T) {
 			return
 		}
 	}
-	om.Items = append(om.Items, ObjMapEntry[T]{
+	om.Items = append(om.Items, Item[T]{
 		Location: om.AppendLocation(key.String()),
 		Key:      key,
 		Value:    obj,
@@ -123,7 +123,7 @@ func (om *ObjMap[T]) UnmarshalJSON(data []byte) error {
 		if err = json.Unmarshal([]byte(value.Raw), &pi); err != nil {
 			return false
 		}
-		m.Items = append(m.Items, ObjMapEntry[T]{Key: Text(key.String()), Value: pi})
+		m.Items = append(m.Items, Item[T]{Key: Text(key.String()), Value: pi})
 		return true
 	})
 	*om = m

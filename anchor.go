@@ -28,9 +28,33 @@ type Anchor struct {
 }
 
 type Anchors struct {
-	Standard  map[Text]Anchor // $anchor
-	Recursive *Anchor         // $recursiveAnchor
-	Dynamic   map[Text]Anchor // $dynamicAnchor
+	Standard  []Anchor // $anchor
+	Recursive *Anchor  // $recursiveAnchor
+	Dynamic   []Anchor // $dynamicAnchor
+}
+
+func (a *Anchors) StandardAnchor(name Text) *Anchor {
+	if a == nil {
+		return nil
+	}
+	for _, anchor := range a.Standard {
+		if anchor.Name == name {
+			return &anchor
+		}
+	}
+	return nil
+}
+
+func (a *Anchors) DynamicAnchor(name Text) *Anchor {
+	if a == nil {
+		return nil
+	}
+	for _, anchor := range a.Dynamic {
+		if anchor.Name == name {
+			return &anchor
+		}
+	}
+	return nil
 }
 
 func (a *Anchors) merge(b *Anchors, err error) (*Anchors, error) {
@@ -52,19 +76,9 @@ func (a *Anchors) merge(b *Anchors, err error) (*Anchors, error) {
 			Dynamic:  b.Dynamic,
 		}, nil
 	}
-	for k, bv := range b.Standard {
-		if av, ok := a.Standard[k]; ok {
-			return nil, &DuplicateAnchorError{&av, &bv}
-		}
-		a.Standard[k] = bv
-	}
-
-	for k, bv := range b.Dynamic {
-		if av, ok := a.Dynamic[k]; ok {
-			return nil, &DuplicateAnchorError{&av, &bv}
-		}
-		a.Dynamic[k] = bv
-	}
-
-	return a, nil
+	return &Anchors{
+		Standard:  append(a.Standard, b.Standard...),
+		Dynamic:   append(a.Dynamic, b.Dynamic...),
+		Recursive: a.Recursive,
+	}, nil
 }

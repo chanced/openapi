@@ -26,7 +26,7 @@ func (si *SchemaItem) Clone() SchemaItem {
 	}
 }
 
-// SchemaMap is a psuedo, ordered map ofASew3 Schemas
+// SchemaMap is a pseudo, ordered map ofASew3 Schemas
 //
 // Under the hood, SchemaMap is a slice of SchemaEntry
 type SchemaMap struct {

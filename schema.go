@@ -393,25 +393,22 @@ func (s *Schema) Anchors() (*Anchors, error) {
 	if s == nil {
 		return nil, nil
 	}
-	anchors := &Anchors{
-		Standard: make(map[text.Text]Anchor),
-		Dynamic:  make(map[text.Text]Anchor),
-	}
+	anchors := &Anchors{}
 	if s.Anchor != "" {
-		anchors.Standard[s.Anchor] = Anchor{
+		anchors.Standard = []Anchor{{
 			Location: s.Location.AppendLocation("$anchor"),
 			In:       s,
 			Name:     s.Anchor,
 			Type:     AnchorTypeRegular,
-		}
+		}}
 	}
 	if s.DynamicAnchor != "" {
-		anchors.Dynamic[s.DynamicAnchor] = Anchor{
+		anchors.Dynamic = []Anchor{{
 			Location: s.Location.AppendLocation("$dynamicAnchor"),
 			In:       s,
 			Name:     s.DynamicAnchor,
 			Type:     AnchorTypeDynamic,
-		}
+		}}
 	}
 	if s.RecursiveAnchor != nil {
 		anchors.Recursive = &Anchor{

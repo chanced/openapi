@@ -392,8 +392,8 @@ func (l *loader) resolveRemoteRef(ctx context.Context, r refctx) (*nodectx, erro
 		return nil, NewError(fmt.Errorf("openapi: failed to resolve anchors: %w", err), r.AbsoluteLocation())
 	}
 
-	an, ok := as.Standard[a]
-	if !ok {
+	an := as.StandardAnchor(a)
+	if an == nil {
 		return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 	}
 
@@ -436,8 +436,11 @@ func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error
 
 	switch r.RefType() {
 	case RefTypeSchemaDynamicRef:
-		a, ok := r.root.anchors.Dynamic[Text(r.URI().Fragment)]
-		if !ok {
+		a := r.root.anchors.DynamicAnchor(Text(r.URI().Fragment))
+		if a == nil {
+			a = r.root.anchors.StandardAnchor(Text(r.URI().Fragment))
+		}
+		if a == nil {
 			return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 		}
 		err := r.resolve(a.In)
@@ -465,8 +468,8 @@ func (l *loader) resolveLocalRef(ctx context.Context, r refctx) (*nodectx, error
 			anchors:    r.root.anchors,
 		}, nil
 	case RefTypeSchema:
-		a, ok := r.root.anchors.Standard[Text(r.URI().Fragment)]
-		if !ok {
+		a := r.root.anchors.StandardAnchor(Text(r.URI().Fragment))
+		if a == nil {
 			return nil, NewError(fmt.Errorf("openapi:  not found: %s", u), r.AbsoluteLocation())
 		}
 		err := r.resolve(a.In)
