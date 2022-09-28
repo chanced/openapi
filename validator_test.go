@@ -2,6 +2,7 @@ package openapi_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"io/fs"
@@ -11,6 +12,7 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/chanced/uri"
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	"gopkg.in/yaml.v3"
 )
 
 func TestValidation(t *testing.T) {
@@ -95,4 +97,39 @@ func TestValidation(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected document to be valid, received: %v", err)
 	}
+}
+
+// issue #19
+// https://github.com/chanced/openapi/issues/19
+func TestValidator_Schema(t *testing.T) {
+	// ctx := context.Background()
+
+	c, err := openapi.SetupCompiler(jsonschema.NewCompiler()) // adding schema files
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, err := openapi.NewValidator(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := testdata.Open("testdata/schemas/string-map.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err := io.ReadAll(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var s openapi.Schema
+	err = yaml.Unmarshal(d, &s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err = json.Marshal(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	v.Validate(d, *uri.MustParse("testdata/schemas/string-map.yaml"), openapi.KindSchema, openapi.Version3_1, openapi.JSONSchemaDialect202012)
 }

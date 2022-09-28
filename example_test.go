@@ -1,4 +1,4 @@
-package openapi_test
+package openapi
 
 // import (
 // 	"encoding/json"
