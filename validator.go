@@ -190,12 +190,18 @@ func (sv *StdValidator) ValidateDocument(doc *Document) error {
 }
 
 func (sv *StdValidator) Validate(data []byte, resource uri.URI, kind Kind, openapi semver.Version, jsonschema uri.URI) error {
+	var i interface{}
+
 	if kind == KindSchema {
 		schema, ok := sv.Schemas.JSONSchema[jsonschema]
 		if !ok {
 			return fmt.Errorf("openapi: no schema found for %q", jsonschema)
 		}
-		return schema.Validate(data)
+		if err := json.Unmarshal(data, &i); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
+
+		return schema.Validate(i)
 	}
 	var s CompiledSchema
 	var ok bool
@@ -207,16 +213,10 @@ func (sv *StdValidator) Validate(data []byte, resource uri.URI, kind Kind, opena
 		return fmt.Errorf("openapi: schema not found for %s", kind)
 	}
 
-	var i interface{}
 	if err := json.Unmarshal(data, &i); err != nil {
 		return fmt.Errorf("failed to unmarshal data: %w", err)
 	}
 	if err := s.Validate(i); err != nil {
-		b, err := json.MarshalIndent(i, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal data: %w", err)
-		}
-		fmt.Println(string(b))
 		return NewValidationError(err, kind, resource)
 	}
 	return nil
