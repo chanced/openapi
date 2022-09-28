@@ -125,7 +125,11 @@ func (cs *ComponentSlice[T]) MarshalYAML() (interface{}, error) {
 
 // UnmarshalYAML implements yaml.Unmarshaler
 func (cs *ComponentSlice[T]) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcode.YAMLFromJSON([]byte(value.Value))
+	v, err := yaml.Marshal(value)
+	if err != nil {
+		return err
+	}
+	j, err := transcode.JSONFromYAML(v)
 	if err != nil {
 		return err
 	}

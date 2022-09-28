@@ -10,7 +10,9 @@ import (
 	"github.com/chanced/caps/text"
 	"github.com/chanced/jsonx"
 	"github.com/chanced/maps"
+	"github.com/chanced/transcode"
 	"github.com/chanced/uri"
+	"gopkg.in/yaml.v3"
 )
 
 // Schema allows the definition of input and output data types. These types can
@@ -787,6 +789,28 @@ func (s *Schema) setLocation(loc Location) error {
 	return nil
 }
 
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
+func (s Schema) MarshalYAML() (interface{}, error) {
+	j, err := s.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return transcode.YAMLFromJSON(j)
+}
+
+// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
+func (s *Schema) UnmarshalYAML(value *yaml.Node) error {
+	v, err := yaml.Marshal(value)
+	if err != nil {
+		return err
+	}
+	j, err := transcode.JSONFromYAML(v)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, s)
+}
+
 // Clone returns a deep copy of Schema. This is to avoid overriding the initial
 // Schema when dealing with $dynamicRef and $recursiveRef.
 func (s *Schema) Clone() *Schema {
@@ -1002,6 +1026,7 @@ func cloneExtensions(e Extensions) Extensions {
 	for k, v := range e {
 		a[k] = v
 	}
+
 	return a
 }
 

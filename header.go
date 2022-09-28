@@ -151,29 +151,15 @@ func (h Header) MarshalYAML() (interface{}, error) {
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (h *Header) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcode.YAMLFromJSON([]byte(value.Value))
+	v, err := yaml.Marshal(value)
+	if err != nil {
+		return err
+	}
+	j, err := transcode.JSONFromYAML(v)
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(j, h)
-}
-
-// UnmarshalYAML satisfies gopkg.in/yaml.v3 Marshaler interface
-func (s Schema) MarshalYAML() (interface{}, error) {
-	j, err := s.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	return transcode.YAMLFromJSON(j)
-}
-
-// UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
-func (s *Schema) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcode.YAMLFromJSON([]byte(value.Value))
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(j, s)
 }
 
 func (h *Header) setLocation(loc Location) error {

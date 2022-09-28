@@ -155,7 +155,11 @@ func (i Info) MarshalYAML() (interface{}, error) {
 
 // UnmarshalYAML satisfies gopkg.in/yaml.v3 Unmarshaler interface
 func (i *Info) UnmarshalYAML(value *yaml.Node) error {
-	j, err := transcode.YAMLFromJSON([]byte(value.Value))
+	v, err := yaml.Marshal(value)
+	if err != nil {
+		return err
+	}
+	j, err := transcode.JSONFromYAML(v)
 	if err != nil {
 		return err
 	}
