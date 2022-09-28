@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"testing"
 
 	"github.com/Masterminds/semver"
@@ -22,13 +23,14 @@ func TestLoadRefComponent(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	doc, err := openapi.Load(ctx, "testdata/documents/comprefs.yaml", NoopValidator{}, func(ctx context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error) {
+	loadfn := func(ctx context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error) {
 		b, err := io.ReadAll(f)
 		if err != nil {
 			return 0, nil, err
 		}
 		return openapi.KindDocument, b, nil
-	})
+	}
+	doc, err := openapi.Load(ctx, "testdata/documents/comprefs.yaml", NoopValidator{}, loadfn)
 	if err != nil {
 		t.Error(err)
 	}
@@ -53,27 +55,68 @@ func TestLoadRefComponent(t *testing.T) {
 	}
 }
 
-func TestLoad(t *testing.T) {
-	f, err := testdata.Open("testdata/documents/petstore.yaml")
+func TestLoad_Local(t *testing.T) {
+	ctx := context.Background()
+	dir, err := fs.Sub(testdata, "testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.Background()
-	doc, err := openapi.Load(ctx, "testdata/documents/petstore.yaml", NoopValidator{}, func(ctx context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error) {
+	f, err := dir.Open("documents/petstore.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loadfn := func(ctx context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error) {
 		b, err := io.ReadAll(f)
 		// fmt.Println(string(b))
 		if err != nil {
 			return 0, nil, err
 		}
 		return openapi.KindDocument, b, nil
-	})
+	}
+
+	doc, err := openapi.Load(ctx, "https://documents/petstore.yaml", NoopValidator{}, loadfn)
 	if err != nil {
 		t.Error(err)
 	}
 	if doc == nil {
 		t.Errorf("failed to load document")
 	}
-	// litter.Dump(doc)
+}
+
+func TestLoad_Remote(t *testing.T) {
+	ctx := context.Background()
+	dir, err := fs.Sub(testdata, "testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	loadfn := func(ctx context.Context, uri uri.URI, kind openapi.Kind) (openapi.Kind, []byte, error) {
+		var f fs.File
+		var err error
+		if uri.String() == "https://example.com/schemas/string-map" {
+			f, err = dir.Open("schemas/string-map.yaml")
+		} else {
+			f, err = dir.Open("documents/remote-refs.yaml")
+		}
+		if err != nil {
+			return 0, nil, err
+		}
+		b, err := io.ReadAll(f)
+		if err != nil {
+			return 0, nil, err
+		}
+		fmt.Println("kind", kind)
+		return kind, b, nil
+	}
+
+	// testing loading remote refs
+	doc, err := openapi.Load(ctx, "testdata/documents/remote-refs.yaml", NoopValidator{}, loadfn)
+	if err != nil {
+		t.Error(err)
+	}
+	if doc == nil {
+		t.Errorf("failed to load document")
+	}
 }
 
 func TestDynamicRefs(t *testing.T) {

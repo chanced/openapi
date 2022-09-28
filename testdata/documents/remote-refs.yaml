@@ -1,0 +1,13 @@
+openapi: 3.1.0
+paths:
+    /generic:
+        # parameters:
+        #   - name: objparam
+        #     style:
+        post:
+            operationId: createGenericMap
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: https://example.com/schemas/string-map

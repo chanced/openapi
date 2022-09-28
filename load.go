@@ -134,6 +134,7 @@ type loader struct {
 	nodes       map[string]nodectx
 	dynamicRefs []refctx
 	refs        []refctx
+	dialect     *uri.URI
 }
 
 func (l *loader) load(ctx context.Context, location uri.URI, ek Kind, openapi *semver.Version, dialect *uri.URI) (Node, error) {
@@ -144,6 +145,10 @@ func (l *loader) load(ctx context.Context, location uri.URI, ek Kind, openapi *s
 	if err != nil {
 		return nil, err
 	}
+	if openapi == nil && l.doc != nil {
+		openapi = l.doc.OpenAPI
+	}
+
 	switch k {
 	case KindDocument:
 		return l.loadDocument(ctx, data, location)
@@ -196,6 +201,8 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	if err != nil {
 		return nil, NewError(fmt.Errorf("failed to determine OpenAPI schema dialect: %w", err), u)
 	}
+	l.dialect = sd
+
 	if sd == nil {
 		return nil, NewError(fmt.Errorf("failed to determine OpenAPI schema dialect"), u)
 	}
@@ -229,7 +236,7 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 	dc.anchors = anchors
 
 	l.nodes[u.String()] = dc
-	if err = l.init(&dc, &dc, doc.nodes(), *v, *sd); err != nil {
+	if err = l.traverse(&dc, &dc, doc.nodes(), *v, *sd); err != nil {
 		return nil, err
 	}
 	// we only traverse the references after the top-level document is fully
@@ -258,7 +265,7 @@ func (l *loader) loadDocument(ctx context.Context, data []byte, u uri.URI) (*Doc
 			r.root.resolvedRefs = append(r.root.resolvedRefs, r)
 		}
 		for _, n := range nodes {
-			if err = l.init(&dc, n.root, n.nodes(), n.openapi, n.jsonschema); err != nil {
+			if err = l.traverse(&dc, n.root, n.nodes(), n.openapi, n.jsonschema); err != nil {
 				return nil, err
 			}
 		}
@@ -315,17 +322,25 @@ func (l *loader) resolveRemoteRef(ctx context.Context, r refctx) (*nodectx, erro
 			return nil, NewError(fmt.Errorf("openapi: ref URI not found: %s", u), r.AbsoluteLocation())
 		}
 	} else {
-		// we need to load the root resource first we need to load the resource
-		// we need to check to see if there is a reference pointing to the root first
-		// so we know what the expected type is
 		rus := rooturi.String()
-		for _, x := range l.refs {
-			if x.URI().String() == rus {
-				// found it. we load that one first.
-				if _, err := l.load(ctx, rooturi, x.RefKind(), nil, nil); err != nil {
-					return nil, err
+
+		// if this is ref points to the root of a file, we need to load it
+		if u.String() == rus {
+			// the ref is the root so we need to load it
+			if _, err := l.load(ctx, *u, r.RefKind(), nil, nil); err != nil {
+				return nil, err
+			}
+		} else {
+			// otherwise we need to check to see if there is a ref pointing to
+			// the root so we know what the expected kind is
+			for _, x := range l.refs {
+				if x.URI().String() == rus {
+					// found it. we load that one first.
+					if _, err := l.load(ctx, rooturi, x.RefKind(), nil, nil); err != nil {
+						return nil, err
+					}
+					break
 				}
-				break
 			}
 		}
 
@@ -504,7 +519,7 @@ func (l *loader) getDocumentSchemaDialect(doc *Document) (*uri.URI, error) {
 	return nil, fmt.Errorf("failed to determine OpenAPI schema dialect")
 }
 
-func (l *loader) init(node *nodectx, root *nodectx, nodes []node, openapi semver.Version, jsonschema uri.URI) error {
+func (l *loader) traverse(node *nodectx, root *nodectx, nodes []node, openapi semver.Version, jsonschema uri.URI) error {
 	for _, n := range nodes {
 		nc, err := newNodeCtx(n, root, &openapi, &jsonschema)
 		if err != nil {
@@ -518,9 +533,9 @@ func (l *loader) init(node *nodectx, root *nodectx, nodes []node, openapi semver
 			if !r.IsResolved() {
 				l.refs = append(l.refs, refctx{root: root, in: node, ref: r, openapi: nc.openapi, jsonschema: nc.jsonschema})
 			}
-			return nil
+			continue
 		}
-		if err := l.init(&nc, root, n.nodes(), nc.openapi, nc.jsonschema); err != nil {
+		if err := l.traverse(&nc, root, n.nodes(), nc.openapi, nc.jsonschema); err != nil {
 			return err
 		}
 	}
@@ -539,6 +554,7 @@ func (l *loader) loadSchema(ctx context.Context, data []byte, u uri.URI, v semve
 	s.setLocation(loc)
 	nc := nodectx{node: &s, openapi: v, jsonschema: u}
 	nc.root = &nc
+
 	a, err := s.Anchors()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load anchors: %w", err)
@@ -555,6 +571,15 @@ func (l *loader) loadSchema(ctx context.Context, data []byte, u uri.URI, v semve
 	} else {
 		l.nodes[u.String()] = nc
 	}
+
+	d := s.Schema
+	if d == nil {
+		d = l.dialect
+	}
+	if err = l.traverse(&nc, &nc, s.nodes(), *l.doc.OpenAPI, *d); err != nil {
+		return nil, err
+	}
+
 	return &s, nil
 }
 

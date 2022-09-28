@@ -1,0 +1,8 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://example.com/schemas/string-map
+$ref: "#/$defs/StringMap"
+$defs:
+    StringMap:
+        type: object
+        additionalProperties:
+            type: string
