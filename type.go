@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/chanced/jsonx"
+	"github.com/chanced/transcode"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -45,6 +47,7 @@ type Type = Text
 // Types is a set of Types. A single Type marshals/unmarshals into a string
 // while 2+ marshals into an array.
 type Types []Type
+
 type types Types
 
 func (t Types) Clone() Types {
@@ -154,3 +157,33 @@ func (t *Types) UnmarshalJSON(data []byte) error {
 	*t = Types(v)
 	return err
 }
+
+func (t *Types) UnmarshalYAML(value *yaml.Node) error {
+	v, err := yaml.Marshal(value)
+	if err != nil {
+		return err
+	}
+	j, err := transcode.JSONFromYAML(v)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, t)
+}
+
+func (t Types) MarshalYAML() (interface{}, error) {
+	j, err := t.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	var v interface{}
+	err = json.Unmarshal(j, &v)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+var (
+	_ yaml.Unmarshaler = (*Types)(nil)
+	_ yaml.Marshaler   = (Types)(nil)
+)
