@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/chanced/caps/text"
 	"github.com/chanced/transcode"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
 )
 
 type PathItemEntry struct {
-	Key      string
+	Key      text.Text
 	PathItem *PathItem
 }
 
